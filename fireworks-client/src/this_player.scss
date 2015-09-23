@@ -1,0 +1,119 @@
+
+
+
+@mixin pulse($name, $color) {
+    .#{$name} {
+        -webkit-animation: #{$name}-animation 1s infinite alternate;
+        -moz-animation: #{$name}-animation 1s infinite alternate;
+        -animation: #{$name}-animation 1s infinite alternate;
+    }
+
+    @-webkit-keyframes #{$name}-animation {
+        from { @include box-shadow(0px, 0px, 16px, rgba(0,0,0,0.5)); }
+        to { @include box-shadow(0px, 0px, 16px, $color); }
+    }
+    @-moz-keyframes #{$name}-animation {
+        from { @include box-shadow(0px, 0px, 16px, rgba(0,0,0,0.5)); }
+        to { @include box-shadow(0px, 0px, 16px, $color); }
+    }
+    @keyframes #{$name}-animation {
+        from { @include box-shadow(0px, 0px, 16px, rgba(0,0,0,0.5)); }
+        to { @include box-shadow(0px, 0px, 16px, $color); }
+    }
+}
+
+.hand-container {
+    span {
+        display: inline-block;
+    }
+
+    img {
+        width: 20vw;
+        position: relative;
+
+        @include radius(1.6vw);
+        @include box-shadow(0px, 0px, 16px, rgba(0,0,0,0.5));
+        @include transition(all .3s ease);
+    }
+
+    .card-in-hand-first {
+        @extend .card-in-hand;
+
+        margin-left: 0;
+    }
+
+    .card-in-hand-rest {        
+        @extend .card-in-hand;
+
+        margin-left: -10vw;
+    }
+
+    .card-in-hand {
+        margin-top: 6vh;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .hover-card {
+        @include transform(translateY(-1vh));
+    }
+    
+    .active-card {
+        @include transform(translateY(-5vh));
+    }
+
+    .hint-decor {
+        position: absolute;
+        top: -3vh;
+        left: 5vh;
+        z-index: 10;
+        font-size: 4vw;
+        opacity: 0.25;
+    }
+
+    @include pulse(blue-pulse, $card-blue);
+    @include pulse(green-pulse, $card-green);
+    @include pulse(red-pulse, $card-red);
+    @include pulse(white-pulse, $card-white);
+    @include pulse(yellow-pulse, $card-yellow);
+
+    .menu-container {
+        width: 100%;
+        position: absolute;
+        @include transform(translateY(-5vh));
+        display: flex;
+        justify-content: center;
+
+        ul.menu {
+            margin: 0;
+            list-style-type: none;
+            padding: 0px;
+            display: inline-block;
+            @include box-shadow(0px, 5px, 16px, rgba(0,0,0,0.5));
+
+            a {
+                padding: 16px 30px 16px 30px;
+                min-width: 10vw;
+                text-align: center;
+                @include transition(all .3s ease);
+                display: block;
+                background-color: $color-theme;
+                text-decoration: none;
+                color: $theme-font-color;
+            }
+
+            a:hover {
+                background-color: $color-theme-light;
+            }
+        }
+    }
+
+    .fade-in-appear {
+        opacity: 0.01;
+        transition: opacity .3s ease-in;
+    }
+
+    .fade-in-appear.fade-in-appear-active {
+        opacity: 1;
+    }
+}
