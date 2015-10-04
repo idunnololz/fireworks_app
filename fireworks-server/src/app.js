@@ -18,6 +18,8 @@ var genId = () => {
 var playerManager = new PlayerManager();
 var game = new Game();
 
+io.set( 'origins', '*domain.com*:*' );
+
 /*
 
 The protocol:

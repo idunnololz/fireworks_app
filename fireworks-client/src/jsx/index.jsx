@@ -20,8 +20,8 @@ require(['jquery', 'React', 'libs/socket.io', 'app/game_room', 'libs/timeout_tra
         },
         joinGameClick(e) {
             this.setState({where: PAGE_IN_ROOM, socket: io(
-            //    "https://pure-journey-3550.herokuapp.com")});
-              "http://localhost:3000")});
+                "https://murmuring-mountain-5923.herokuapp.com")});
+            //  "http://localhost:3000")});
         },
         focus() {
             this.refs.gameRoom.focus();
