@@ -1,5 +1,5 @@
-define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app/info_bar'], 
-    function ($, React, ChatBox, Player, ThisPlayer, InfoBar) {
+define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app/info_bar', 'app/menu_bar', 'app/game_board', 'app/dialog_game_over'], 
+    function ($, React, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog) {
 
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
     
@@ -15,7 +15,13 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
 
     var history = [];
 
+    const UI_EVENT_SHOW_DIALOG = 1;
+    const UI_EVENT_SHOW_TOAST = 2;
+    const UI_EVENT_WAIT = 3;
+    const UI_EVENT_SHOW_YOUR_TURN = 4;
+
     var GameRoom = React.createClass({displayName: "GameRoom",
+        batchState: {},
         getInitialState:function() {
             return {
                 playerInfo: undefined,
@@ -25,10 +31,34 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 lives: 0,
                 hints: 0,
 
+                showDialog: false,
+                dialogTitle: "",
+                dialogMessage: "",
+
                 showToast: false,
-                toastTitle: "",
                 toastMessage: "",
+
+                showYourTurn: false,
+                showGameOverDialog: false,
+                time: undefined,
+
+                toRun: [],
+                isIdle: true,
+                board: [undefined, undefined, undefined, undefined, undefined],
+                discards: [[], [], [], [], []]
             };
+        },
+        getLives:function() {
+            return this.state.lives;
+        },
+        setLives:function(lives) {
+            this.setState({lives: lives});
+        },
+        getHints:function() {
+            return this.state.hints;
+        },
+        setHints:function(hints) {
+            this.setState({hints: hints});
         },
         componentWillMount:function() {
             var s = this.props.socket;
@@ -46,17 +76,24 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
             }.bind(this));
             s.on('playerJoined', function(msg)  {
                 console.log(msg);
-                var ps = this.state.playersInGame;
-                ps.push(msg);
-                this.setState({playersInGame: ps});
+                if (this.state.mode === MODE_PLAYING) {
+                    // TODO
+                } else {
+                    var ps = this.state.playersInGame;
+                    ps.push(msg);
+                    this.setState({playersInGame: ps});
+                }
             }.bind(this));
             s.on('playerLeft', function(msg)  {
-                console.log(msg);
-                var ps = this.state.playersInGame;
-                ps = ps.filter(function(val)  {
-                    return val.playerId !== msg.playerId;
-                });
-                this.setState({playersInGame: ps});
+                if (this.state.mode === MODE_PLAYING) {
+                    // TODO
+                } else {
+                    var ps = this.state.playersInGame;
+                    ps = ps.filter(function(val)  {
+                        return val.playerId !== msg.playerId;
+                    });
+                    this.setState({playersInGame: ps});
+                }
             }.bind(this));
             s.on('isHost', function(msg)  {
                 // for when the host changes...
@@ -90,6 +127,9 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
             s.emit('getId');
             s.emit('getGameInfo');
         },
+        getTurnIndex:function() {
+            return this.state.turnIndex % this.state.numPlayers;
+        },     
         isMyTurn:function() {
             return this.state.playerInfo.playerIndex === this.state.turnIndex % this.state.numPlayers;
         },
@@ -112,17 +152,35 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                         break;
                     case EVENT_PLAY:
                         this.props.socket.emit('play', {
-                            card: arg1
+                            cardId: arg1
+                        });
+                        break;
+                    case EVENT_DISCARD:
+                        this.props.socket.emit('discard', {
+                            cardId: arg1
                         });
                         break;
                 }
+
+                return true;
             }
+
+            return false;
         },
         hint:function(target, hintType, cardIds) {
             this.tryDoMove(EVENT_HINT, target, hintType, cardIds);
         },
-        play:function(card) {
-            this.tryDoMove(EVENT_PLAY, card);
+        play:function(cardId) {
+            this.tryDoMove(EVENT_PLAY, cardId);
+        },
+        discard:function(cardId) {
+            this.tryDoMove(EVENT_DISCARD, cardId);
+        },
+        getMenuBarRef:function() {
+            return this.refs.menuBar;
+        },
+        getGameBoardRef:function() {
+            return this.refs.gameBoard;
         },
         getPlayerWithId:function(playerId) {
             var players = this.state.playersInGame;
@@ -135,6 +193,23 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
             }
             return null;
         },
+        batchUpdatePlayer:function(newPlayerInfo) {
+            var playerId = newPlayerInfo.playerId;
+            var players = this.state.playersInGame;
+            var len = players.length;
+            for (var i = 0; i < len; i++) {
+                var p = players[i];
+                if (p.playerId === playerId) {
+                    players[i] = newPlayerInfo;
+                    if (this.state.playerInfo.playerId === playerId) {
+                        $.extend(this.batchState, {playerInfo: newPlayerInfo, playersInGame: players});
+                    } else {
+                        $.extend(this.batchState, {playersInGame: players});
+                    }
+                    break;
+                }
+            }
+        },
         handleGameEvent:function(gameEvent) {
             switch (gameEvent.eventType) {
                 case EVENT_DRAW_HAND:
@@ -144,6 +219,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     this.setState({
                         turnIndex: this.state.turnIndex + 1
                     });
+                    //this.checkIfMyTurn();
                     break;
                 case EVENT_HINT:
                     if (gameEvent.data.target === this.state.playerInfo.playerId) {
@@ -151,7 +227,8 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                         this.refs.thisPlayer.animateHint(gameEvent.data);
                     } else {
                         // if someone hinted someone else...
-                        // TODO
+                        var p = this.refs["player" + gameEvent.data.target];
+                        p.animateHint(gameEvent.data);
                     }
 
                     history.push(gameEvent);
@@ -160,7 +237,111 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                         turnIndex: this.state.turnIndex + 1,
                         hints: this.state.hints - 1
                     });
+                    this.checkIfMyTurn();
                     break;
+                case EVENT_PLAY:
+                    // this event is actually quite complicated and a lot can happen...
+                    
+                    // there are two primary cases here:
+                    // 1) The play is valid, in which case we want to flip the card and the animate the play
+                    // 2) The play is invalid, in which case we want to flip the card, animate the card to the discard pile and animate life
+
+                    if (gameEvent.playerId === this.state.playerInfo.playerId) {
+                        this.refs.thisPlayer.animatePlay(gameEvent);
+                    } else {
+                        var p = this.refs["player" + gameEvent.playerId];
+                        p.animatePlay(gameEvent);
+                    }
+
+                    history.push(gameEvent);
+
+                    this.setState({
+                        turnIndex: this.state.turnIndex + 1
+                    });
+                    this.checkIfMyTurn();
+                    break;
+                case EVENT_DISCARD:
+                    if (gameEvent.playerId === this.state.playerInfo.playerId) {
+                        this.refs.thisPlayer.animateDiscard(gameEvent);
+                    } else {
+                        var p = this.refs["player" + gameEvent.playerId];
+                        p.animateDiscard(gameEvent);
+                    }
+
+                    history.push(gameEvent);
+
+                    this.setState({
+                        turnIndex: this.state.turnIndex + 1
+                    });
+                    this.checkIfMyTurn();
+                    break;
+                default:
+                    console.log(gameEvent);
+                    break;
+            }
+        },
+        updateBoard:function(cardPlayed) {
+            var curBoard = this.state.board;
+            var boardIndex;
+            switch (CardUtils.getCardColor(cardPlayed.cardType)) {
+                case CardUtils.Color.BLUE:
+                    boardIndex = 0;
+                    break;
+                case CardUtils.Color.GREEN:
+                    boardIndex = 1;
+                    break;
+                case CardUtils.Color.RED:
+                    boardIndex = 2;
+                    break;
+                case CardUtils.Color.WHITE:
+                    boardIndex = 3;
+                    break;
+                case CardUtils.Color.YELLOW:
+                    boardIndex = 4;
+                    break;
+            }
+
+            curBoard[boardIndex] = cardPlayed;
+            $.extend(this.batchState, {board: curBoard});
+        },
+        onNewHand:function(playerId, newHand) {
+            var player = this.getPlayerWithId(playerId);
+            player.hand = newHand;
+            this.batchUpdatePlayer(player);
+        },
+        addToDiscards:function(card) {
+            var index;
+            switch (CardUtils.getCardColor(card.cardType)) {
+                case CardUtils.Color.BLUE:
+                    index = 0;
+                    break;
+                case CardUtils.Color.GREEN:
+                    index = 1;
+                    break;
+                case CardUtils.Color.RED:
+                    index = 2;
+                    break;
+                case CardUtils.Color.WHITE:
+                    index = 3;
+                    break;
+                case CardUtils.Color.YELLOW:
+                    index = 4;
+                    break;
+            }
+
+            var discards = this.state.discards;
+            discards[index].push(card);
+            discards[index] = discards[index].sort(function(a, b)  {
+                return a.cardType - b.cardType;
+            });
+            $.extend(this.batchState, {discards: discards});
+        },
+        commitState:function() {
+            this.setState(this.batchState);
+        },
+        checkIfMyTurn:function() {
+            if (this.isMyTurn()) {
+                this.showYourTurn();
             }
         },
         componentDidUpdate:function(prevProps, prevState) {
@@ -172,6 +353,10 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 } else {
                     // probably need for player to decide on a move...
                 }
+            }
+
+            if (this.state.lives === 0 && this.state.mode === MODE_PLAYING && !this.state.showGameOverDialog) {
+                this.setState({showGameOverDialog: true, time: this.refs.infoBar.getTime()});
             }
         },
         isMyTurn:function() {
@@ -216,22 +401,106 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 }
             }.bind(this));
         },
-        showToast:function(title, message, interval) {
-            this.setState({
-                toastTitle: title,
-                toastMessage: message,
-                showToast: true
-            });
+        showTimedDialog:function(title, message, interval) {
+            this.pushRunnable({eventType: UI_EVENT_SHOW_DIALOG, title: title, message: message, interval: interval});
+        },
+        showToast:function(message, interval) {
+            this.pushRunnable({eventType: UI_EVENT_SHOW_TOAST, message: message, interval: interval});
+        },
+        wait:function(interval) {
+            this.pushRunnable({eventType: UI_EVENT_WAIT, interval: interval});
+        },
+        showYourTurn:function() {
+            this.pushRunnable({eventType: UI_EVENT_SHOW_YOUR_TURN});
+        },
+        pushRunnable:function(runnable) {
+            var toRun = this.state.toRun;
+            toRun.push(runnable);
+            this.setState({toRun: toRun});
 
-            setTimeout(function()  {
-                this.setState({showToast: false});
-            }.bind(this), interval);
+            if (this.state.isIdle) {
+                this.runNext();
+            }
+        },
+        getCardRes:function(card) {
+            return "res/cards/" + CardUtils.getResourceNameForCard(card.cardType);
+        },
+        getSmallCardRes:function(card) {
+            return "res/cards/" + CardUtils.getResourceNameForSmallCard(card.cardType);
+        },
+        preloadResource:function(resName, callback) {
+            (function(url, promise)  {
+                var img = new Image();
+                img.onload = function() {
+                    promise.resolve();
+                };
+                img.src = url;
+            })(resName, promise = $.Deferred());
+
+            $.when.apply($, promise).done(function() {
+              callback();
+            });
+        },
+        runNext:function() {
+            var toRun = this.state.toRun;
+            if (toRun.length != 0) {
+                var next = toRun.shift();
+                var nextState;
+
+                switch (next.eventType) {
+                    case UI_EVENT_SHOW_DIALOG:
+                        nextState = {
+                            dialogTitle: next.title,
+                            dialogMessage: next.message,
+                            showDialog: true
+                        };
+
+                        setTimeout(function()  {
+                            this.setState({showDialog: false});
+                            this.runNext();
+                        }.bind(this), next.interval);
+                        break;
+                    case UI_EVENT_SHOW_TOAST:
+                        nextState = {
+                            toastMessage: next.message,
+                            showToast: true
+                        };
+
+                        setTimeout(function()  {
+                            this.setState({showToast: false});
+                            this.runNext();
+                        }.bind(this), next.interval);
+                        break;
+                    case UI_EVENT_WAIT:
+                        setTimeout(function()  {
+                            this.runNext();
+                        }.bind(this), next.interval);
+                        break;
+                    case UI_EVENT_SHOW_YOUR_TURN:
+                        nextState = {
+                            showYourTurn: true
+                        };
+
+                        setTimeout(function()  {
+                            this.setState({showYourTurn: false});
+                            this.runNext();
+                        }.bind(this), 1400);
+                        break;
+                }
+                if (nextState === undefined) {nextState = {};}
+                nextState.isIdle = false;
+                nextState.toRun = toRun;
+                this.setState(nextState);
+            } else {
+                this.setState({isIdle: true});
+            }
         },
         render:function() {
             var thisPlayer = this.state.playerInfo;
             var topInterface = [];
             var bottomInterface = [];
             var toastView;
+            var dialogViews = [];
 
             switch (this.state.mode) {
                 case MODE_LOADING:
@@ -246,7 +515,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                             React.createElement("div", {className: "waiting-content"}, 
                                 React.createElement("div", null, this.state.isHost ? "You are the host" : "Waiting on host"), 
                                 this.state.isHost ? 
-                                    React.createElement("a", {onClick: this.handleOnStartGameClick}, "Start the Game") :
+                                    React.createElement("a", {className: "button", onClick: this.handleOnStartGameClick}, "Start the Game") :
                                     null, 
                                 
                                 React.createElement("h1", null, "Players"), 
@@ -267,9 +536,10 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     var playersExcludingSelf = [];
                     var index = this.state.playerInfo.playerIndex;
                     var len = allPlayers.length;
-                    console.log(("index: " + index));
-                    for (var i = (index + 1) % len; i !== index; i = (i + 1) % len) {
-                        playersExcludingSelf.push(allPlayers[i]);
+                    if (len > 1) {
+                        for (var i = (index + 1) % len; i !== index; i = (i + 1) % len) {
+                            playersExcludingSelf.push(allPlayers[i]);
+                        }
                     }
                     playerInterfaces = $.map(playersExcludingSelf, function(val)  {
                         return (
@@ -278,7 +548,8 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                                     ref: "player" + val.playerId, 
                                     playerInfo: val, 
                                     onOpen: this.onPlayerOpen, 
-                                    hint: this.hint})
+                                    hint: this.hint, 
+                                    manager: this})
                             )
                         );
                     }.bind(this));
@@ -324,29 +595,58 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
 
                     topInterface.push(
                         React.createElement("div", {className: "main-side"}, 
-                            React.createElement("div", {className: "top-size"}, 
+                            React.createElement("div", {className: "top-side"}, 
                                 top
-                            )
+                            ), 
+                            React.createElement(GameBoard, {
+                                ref: "gameBoard", 
+                                board: this.state.board, 
+                                discards: this.state.discards})
                         )
                     );
 
                     topInterface.push(
+                        React.createElement(MenuBar, {
+                            ref: "menuBar", 
+                            manager: this})
+                    );
+
+                    topInterface.push(
                         React.createElement(InfoBar, {
+                            ref: "infoBar", 
                             hints: this.state.hints, 
-                            lives: this.state.lives}
-                            )
+                            lives: this.state.lives})
                     );
 
                     break;
             }
 
-            if (this.state.showToast) {
+            if (this.state.showDialog) {
                 toastView = (
                     React.createElement("div", {className: "toast-container"}, 
                         React.createElement("div", {className: "toast"}, 
-                            React.createElement("h1", null, this.state.toastTitle), 
-                            React.createElement("p", null, this.state.toastMessage)
+                            React.createElement("h1", null, this.state.dialogTitle), 
+                            React.createElement("p", null, this.state.dialogMessage)
                         )
+                    )
+                );
+            }
+
+            if (this.state.showYourTurn) {
+                toastView = (
+                    React.createElement("div", {className: "special-text-container"}, 
+                        React.createElement("div", {className: "left"}, "YOUR"), 
+                        React.createElement("div", {className: "right"}, "TURN")
+                    )
+                );
+            }
+
+            if (this.state.showGameOverDialog) {
+                dialogViews.push(
+                    React.createElement("div", {className: "dialog-container"}, 
+                        React.createElement(GameOverDialog, {
+                            board: this.state.board, 
+                            totalTime: this.state.time})
                     )
                 );
             }
@@ -365,7 +665,8 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                             handleSpecialCommand: this.handleSpecialCommand}), 
                         bottomInterface
                     ), 
-                    toastView
+                    toastView, 
+                    dialogViews
                 )
             );
         }

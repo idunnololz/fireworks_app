@@ -3,7 +3,7 @@
   flex-direction: column;
 
   .message-content {
-    background-color: $color-theme-darker;
+    background-color: rgba(0,0,0,0.5);
     flex: 1 0 auto;
   }
 
@@ -30,7 +30,7 @@
   }
 
   .message-box {
-    background-color: $color-theme-dark;
+    background-color: rgba(0,0,0,0.4);
     flex-basis: 30px;
 
     border-style: none;

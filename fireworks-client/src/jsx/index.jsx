@@ -19,7 +19,9 @@ require(['jquery', 'React', 'libs/socket.io', 'app/game_room', 'libs/timeout_tra
             };
         },
         joinGameClick(e) {
-            this.setState({where: PAGE_IN_ROOM, socket: io("http://localhost:3000")});
+            this.setState({where: PAGE_IN_ROOM, socket: io(
+            //    "https://pure-journey-3550.herokuapp.com")});
+              "http://localhost:3000")});
         },
         focus() {
             this.refs.gameRoom.focus();
@@ -30,7 +32,7 @@ require(['jquery', 'React', 'libs/socket.io', 'app/game_room', 'libs/timeout_tra
                 case PAGE_JOIN_GAME:
                     content = (
                         <div key={PAGE_JOIN_GAME} className="join-game-container">
-                            <a className="join-game" onClick={this.joinGameClick}>Join Game</a>
+                            <a className="button join-game" onClick={this.joinGameClick}>Join Game</a>
                         </div>
                     );
                     break;

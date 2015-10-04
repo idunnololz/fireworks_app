@@ -45,6 +45,7 @@ define(['jquery', 'React', 'libs/nano_scroller'], function ($, React) {
         },
         componentDidUpdate:function() {
             $(".nano").nanoScroller();
+            $(".nano").nanoScroller({ scroll: 'bottom' });
         },
         v:function(msg) {
             var messages = this.state.messages;

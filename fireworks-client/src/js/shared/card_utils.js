@@ -83,11 +83,44 @@
         YELLOW: 4,
     };
 
+    const Card = {
+        BLUE_1: 0x00000001,
+        BLUE_2: 0x00000002,
+        BLUE_3: 0x00000004,
+        BLUE_4: 0x00000008,
+        BLUE_5: 0x00000010,
+
+        GREEN_1: 0x00000020,
+        GREEN_2: 0x00000040,
+        GREEN_3: 0x00000080,
+        GREEN_4: 0x00000100,
+        GREEN_5: 0x00000200,
+
+        RED_1: 0x00000400,
+        RED_2: 0x00000800,
+        RED_3: 0x00001000,
+        RED_4: 0x00002000,
+        RED_5: 0x00004000,
+
+        WHITE_1: 0x00008000,
+        WHITE_2: 0x00010000,
+        WHITE_3: 0x00020000,
+        WHITE_4: 0x00040000,
+        WHITE_5: 0x00080000,
+
+        YELLOW_1: 0x00100000,
+        YELLOW_2: 0x00200000,
+        YELLOW_3: 0x00400000,
+        YELLOW_4: 0x00800000,
+        YELLOW_5: 0x01000000,
+    };
+
     exports.Color = Color;
+    exports.Card = Card;
     
     exports.FIVES = [0x0010, 0x0200, 0x4000, 0x00080000, 0x01000000];
 
-    exports.getCardName = (id) => {
+    exports.getCardName = function(id)  {
         var name = "";
 
         if ((id & BLUE_MASK) != 0) {
@@ -125,52 +158,52 @@
         return name;
     }
 
-    exports.getHint = (hint) => {
+    exports.getHint = function(hint)  {
         if (hint < 5) {
             return COLOR_NAMES[hint];
         }
-        return NUMBER_NAMES[hint - 5];
+        return NUMBER_NAMES[hint - 5 - 1];
     }
 
-    exports.isColorHint = (hint) => {
+    exports.isColorHint = function(hint)  {
         return hint < 5;
     }
 
-    exports.isNumberHint = (hint) => {
+    exports.isNumberHint = function(hint)  {
         return hint >= 5 && hint < 10;
     }
 
-    exports.getHintColor = (hint) => {
+    exports.getHintColor = function(hint)  {
         return hint;
     }
 
-    exports.getHintNumber = (hint) => {
+    exports.getHintNumber = function(hint)  {
         return hint - 5;
     }
 
-    exports.colorToHint = (color) => {
+    exports.colorToHint = function(color)  {
         return color;
     }
 
-    exports.numberToHint = (number) => {
+    exports.numberToHint = function(number)  {
         return number + 5;
     }
 
-    exports.getNextPlayable = (card, color) => {
+    exports.getNextPlayable = function(card, color)  {
         card = (card << 1) & COLOR_MASKS[color];
         return card;
     }
 
-    exports.isOne = (card) => {
+    exports.isOne = function(card)  {
         return card == 0x0001 || card == 0x0020 || card == 0x0400
             || card == 0x00008000 || card == 0x00100000;
     }
 
-    exports.isUnknownCard = (card) => {
+    exports.isUnknownCard = function(card)  {
         return card === UNKNOWN_CARD;
     }
 
-    exports.getResourceNameForCard = (card) => {
+    exports.getResourceNameForCard = function(card)  {
         if (a.has(card)) {
             return a.get(card)[0] + ".png";
         } else {
@@ -178,7 +211,15 @@
         }
     }
 
-    exports.getCardColor = (cardType) => {
+    exports.getResourceNameForSmallCard = function(card)  {
+        if (a.has(card)) {
+            return a.get(card)[1] + ".png";
+        } else {
+            return "card_back.png";
+        }
+    }
+
+    exports.getCardColor = function(cardType)  {
         if ((cardType & BLUE_MASK) != 0) {
             return Color.BLUE;
         } else if ((cardType & GREEN_MASK) != 0) {
@@ -194,7 +235,7 @@
     }
 
 
-    exports.getAllCardsWithColor = (color, cards) => {
+    exports.getAllCardsWithColor = function(color, cards)  {
         var results = [];
         var mask = COLOR_MASKS[color];
         var len = cards.length;
@@ -220,11 +261,11 @@
         return n;
     }
 
-    exports.getCardNumber = (cardType) => {
+    exports.getCardNumber = function(cardType)  {
         return (32 - numberOfLeadingZeros(cardType)) % 5;
     }
 
-    exports.getAllCardsWithNumber = (number, cards) => {
+    exports.getAllCardsWithNumber = function(number, cards)  {
         var results = [];
         var len = cards.length;
         for (var i = 0; i < len; i++) {

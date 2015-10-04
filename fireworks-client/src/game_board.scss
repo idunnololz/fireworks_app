@@ -1,0 +1,149 @@
+.board {
+    flex: 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin-top: 1vh;
+    margin-bottom: 1vh;
+    align-items: center;
+
+    .card-container {
+        flex: 0 auto;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        position: relative;
+
+        .max-z-index {
+            z-index: 100;
+        }
+
+        .card-slot {
+            width: 7vw;
+            min-height: 9.8vw;
+            margin-left: 1vw;
+            margin-right: 1vw;
+        }
+
+        .card {
+            @include box-shadow(0px, 0px, 16px, rgba(0,0,0,0.5));
+            @include radius(0.5vw);
+            width: 100%;
+        }
+    }
+
+    .discards-container {
+        box-sizing: content-box;
+        position: absolute;
+        z-index: 99;
+        width: 100%;
+        height: 100%;
+        top: -7vh;
+        padding: 7vh 0vw 13vh 0vw;
+
+        .discards {
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: $color-theme-second;
+
+            .card {
+                opacity: 0;
+            }
+
+            .card-slot {
+                width: 7vw;
+                min-height: 9.8vw;
+                margin-left: 1vw;
+                margin-right: 1vw;
+            }
+
+            .important-card {
+                font-weight: 700;
+            }
+
+            .text-blue {
+                color: $card-blue;
+            }
+
+            .text-green {
+                color: $card-green;
+            }
+
+            .text-red {
+                color: $card-red;
+            }
+
+            .text-white {
+                color: $card-blue;
+            }
+
+            .text-yellow {
+                color: $card-yellow;
+            }
+
+            h1 {
+                margin-top: 1vw;
+                margin-bottom: 0;
+                font-size: x-large;
+                font-weight: 300;
+                padding-left: 1vw;
+                padding-right: 1vw;
+            }
+
+            p {
+                font-size: medium;
+                font-weight: 400;
+                text-align: center;
+            }
+
+            .discard-container {
+                display: flex;
+                flex-direction: column;
+            }
+
+            a {
+                @include transition(all .3s ease);
+                display: inline-block;
+                padding: 0.7vw 2vw 0.7vw 2vw;
+                align-self: flex-end;
+                background-color: $color-theme-dark;
+                @include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.5));
+                text-decoration: none;
+                margin-right: 1vw;
+                margin-bottom: 1vw;
+                color: $theme-font-color;
+            }
+
+
+            a:hover {
+                background-color: $color-theme-darker;
+            }
+
+            a:active {
+
+            }
+        }
+    }
+
+    .fade-enter {
+        opacity: 0.01;
+    }
+
+    .fade-enter.fade-enter-active {
+        opacity: 1;
+        transition: opacity .3s ease-in;
+    }
+
+    .fade-leave {
+        opacity: 1;
+    }
+
+    .fade-leave.fade-leave-active {
+        opacity: 0.01;
+        transition: opacity .3s ease-in;
+    }
+}

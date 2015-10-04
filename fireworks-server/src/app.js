@@ -3,7 +3,7 @@ import express from 'express';
 import Player from './player';
 import Log from './log';
 import PlayerManager from './player_manager';
-import CardUtils from './../../shared/js/card_utils';
+import CardUtils from './../shared/card_utils';
 
 var http = require('http').Server(express);
 var io = require('socket.io')(http);
@@ -166,18 +166,39 @@ io.on('connection', function(socket){
     socket.on('play', (msg) => {
         /**
          * Expects an object with fields:
-         *  card: The card to play
+         *  cardId: The id of the card to play
          */
-        var card = game.play(playerId, msg.card);
+        var card = game.play(playerId, msg.cardId);
         var event = {
             playerId: playerId, 
             eventType: EVENT_PLAY,
             data: msg,
             lives: game.getLives(),
-            draw: card
+            draw: {cardId: card.cardId, cardType: CardUtils.UNKNOWN_CARD},
+            played: game.getCardWithId(msg.cardId)
         };
-        io.to(game.getId()).emit('gameEvent', event);
-
+        socket.emit('gameEvent', event);
+        event.draw = card;
+        socket.broadcast.to(game.getId()).emit('gameEvent', event);
+        game.pushEvent(event);
+    });
+    socket.on('discard', (msg) => {
+        /**
+         * Expects an object with fields:
+         *  cardId: The id of the card to discard
+         */
+        var card = game.discard(playerId, msg.cardId);
+        var event = {
+            playerId: playerId, 
+            eventType: EVENT_DISCARD,
+            data: msg,
+            hints: game.getHints(),
+            draw: {cardId: card.cardId, cardType: CardUtils.UNKNOWN_CARD},
+            discarded: game.getCardWithId(msg.cardId)
+        };
+        socket.emit('gameEvent', event);
+        event.draw = card;
+        socket.broadcast.to(game.getId()).emit('gameEvent', event);
         game.pushEvent(event);
     });
 
@@ -209,11 +230,16 @@ io.on('connection', function(socket){
         }
     });
 
+    socket.on('error', (err) => { 
+        console.error(err.stack); // TODO, cleanup 
+    });
+
     function getPlayersInGame() {
         return game.getAllPlayersInGame();
     }
 });
 
-http.listen(3000, function(){
-    console.log('listening on *:3000');
+var port = process.env.PORT || 3000;
+http.listen(port, function(){
+    console.log('listening on ' + port);
 });

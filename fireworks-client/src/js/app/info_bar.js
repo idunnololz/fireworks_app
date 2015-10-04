@@ -7,10 +7,21 @@ define(['jquery', 'React'], function ($, React) {
                 seconds: 0
             };
         },
-        componentWillMount:function() {
-        },
         componentDidMount:function() {
             setInterval(this.updateTime, 1000);
+        },
+        componentDidUpdate:function(prevProps, prevState) {
+            if (prevProps.lives > this.props.lives) {
+                // lives went down... make lives flash for a bit...
+                var $lifeCount = $(React.findDOMNode(this.refs.lifeCount));
+                $lifeCount.css('animation', 'anim-flash-red 0.3s 0s 10 alternate');
+            } else if (prevProps.lives < this.props.lives) {
+                console.log("Wtf... We can't gain lives...");
+            }
+            if (prevProps.hints < this.props.hints) {
+                var $hintCount = $(React.findDOMNode(this.refs.hintCount));
+                $hintCount.css('animation', 'anim-flash-green 0.3s 0s 10 alternate');
+            }
         },
         updateTime:function() {
             var hours = this.state.hours;
@@ -30,6 +41,9 @@ define(['jquery', 'React'], function ($, React) {
                 minutes: minutes,
                 seconds: seconds
             });
+        },
+        getTime:function() {
+            return {hours: this.state.hours, minutes: this.state.minutes, seconds: this.state.seconds};
         },
         render:function() {
             var hours = this.state.hours;
@@ -64,10 +78,12 @@ define(['jquery', 'React'], function ($, React) {
 
             return (
                 React.createElement("div", {className: "info-bar"}, 
-                    React.createElement("span", null, this.props.lives), 
-                    React.createElement("span", {className: "lives"}), 
+                    React.createElement("div", {className: "centered-container", ref: "lifeCount"}, 
+                        React.createElement("span", null, this.props.lives), 
+                        React.createElement("span", {className: "lives"})
+                    ), 
                     React.createElement("span", {className: "space"}, this.props.hints), 
-                    React.createElement("span", {className: "hints"}), 
+                    React.createElement("span", {className: "hints", ref: "hintCount"}), 
                     React.createElement("span", {style: {marginLeft:"4px"}}, formattedTime)
                 )
             );

@@ -7,10 +7,21 @@ define(['jquery', 'React'], function ($, React) {
                 seconds: 0
             };
         },
-        componentWillMount() {
-        },
         componentDidMount() {
             setInterval(this.updateTime, 1000);
+        },
+        componentDidUpdate(prevProps, prevState) {
+            if (prevProps.lives > this.props.lives) {
+                // lives went down... make lives flash for a bit...
+                var $lifeCount = $(React.findDOMNode(this.refs.lifeCount));
+                $lifeCount.css('animation', 'anim-flash-red 0.3s 0s 10 alternate');
+            } else if (prevProps.lives < this.props.lives) {
+                console.log("Wtf... We can't gain lives...");
+            }
+            if (prevProps.hints < this.props.hints) {
+                var $hintCount = $(React.findDOMNode(this.refs.hintCount));
+                $hintCount.css('animation', 'anim-flash-green 0.3s 0s 10 alternate');
+            }
         },
         updateTime() {
             var hours = this.state.hours;
@@ -30,6 +41,9 @@ define(['jquery', 'React'], function ($, React) {
                 minutes: minutes,
                 seconds: seconds
             });
+        },
+        getTime() {
+            return {hours: this.state.hours, minutes: this.state.minutes, seconds: this.state.seconds};
         },
         render() {
             var hours = this.state.hours;
@@ -64,10 +78,12 @@ define(['jquery', 'React'], function ($, React) {
 
             return (
                 <div className="info-bar">
-                    <span>{this.props.lives}</span>
-                    <span className="lives"></span>
+                    <div className="centered-container" ref="lifeCount">
+                        <span>{this.props.lives}</span>
+                        <span className="lives"></span>
+                    </div>
                     <span className="space">{this.props.hints}</span>
-                    <span className="hints"></span>
+                    <span className="hints" ref="hintCount"></span>
                     <span style={{marginLeft:"4px"}}>{formattedTime}</span>
                 </div>
             );

@@ -18,21 +18,28 @@ export default class OnlineGame extends Game {
         this.cardCounter = 0;
         this.cardMap = new Map();
 
+        this.spectators = [];
+
         this.history = [];
     }
 
     addPlayer(player) {
-        super.addPlayer();
-        var id = player.getId();
-        if (this.log) {
-            Log.d(TAG, "Added player with id " + id);
-        }
-        this.players[id] = player;
-        if (this.host === undefined) {
-            this.host = player;
-        }
+        if (this.isGameStarted()) {
+            this.spectators.push(player);
+            Log.d(TAG, "Added spectator with id " + player.getId());
+        } else {
+            super.addPlayer();
+            var id = player.getId();
+            if (this.log) {
+                Log.d(TAG, "Added player with id " + id);
+            }
+            this.players[id] = player;
+            if (this.host === undefined) {
+                this.host = player;
+            }
 
-        this.playersArr.push(player);
+            this.playersArr.push(player);
+        }
     }
 
     getAllPlayersInGame() {
@@ -102,9 +109,23 @@ export default class OnlineGame extends Game {
         }
     }
 
-    play(playerId, card) {
-        if (this.state === STATE_OK) {
-            return this.transformCard(super.play(this.players[playerId].getIndex(), card));
+    play(playerId, cardId) {
+        var cardObj = this.cardMap.get(cardId);
+        if (cardObj === undefined) {
+            Log.d(TAG, `Player with id ${playerId} tried to play invalid card with id ${cardId}.`);
+        } else if (this.state === STATE_OK) {
+            return this.transformCard(super.play(this.players[playerId].getIndex(), cardObj.cardType));
+        } else {
+            // handle issue...
+        }
+    }
+
+    discard(playerId, cardId) {
+        var cardObj = this.cardMap.get(cardId);
+        if (cardObj === undefined) {
+            Log.d(TAG, `Player with id ${playerId} tried to discard invalid card with id ${cardId}.`);
+        } else if (this.state === STATE_OK) {
+            return this.transformCard(super.discard(this.players[playerId].getIndex(), cardObj.cardType));
         } else {
             // handle issue...
         }
@@ -135,6 +156,10 @@ export default class OnlineGame extends Game {
             this.cardMap.set(cardObj.cardId, cardObj);
             return cardObj;
         });
+    }
+
+    getCardWithId(cardId) {
+        return this.cardMap.get(cardId);
     }
 
     pushEvent(event) {

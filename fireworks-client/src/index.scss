@@ -3,10 +3,66 @@
 @import 'chatbox';
 @import 'this_player';
 @import 'info_bar';
+@import 'menu_bar';
+@import 'game_board';
+@import 'dialog_game_over';
 
 html, body {
   height: 100%;
   overflow: hidden;
+}
+
+@include keyframes(special-text-animation-r) {
+  0% { 
+    opacity: 0; 
+    transform: translateX(-140px);
+  }
+  25% { 
+    opacity: 1; 
+    transform: translateX(-10px);
+  }
+  75% { 
+    opacity: 1; 
+    transform: translateX(10px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(140px);
+  }
+}
+
+@include keyframes(special-text-animation-l) {
+  0% { 
+    opacity: 0; 
+    transform: translateX(140px);
+  }
+  25% { 
+    opacity: 1; 
+    transform: translateX(10px);
+  }
+  75% { 
+    opacity: 1; 
+    transform: translateX(-10px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-140px);
+  }
+}
+
+@include keyframes(fade-in-out) {
+  0% { 
+    opacity: 0; 
+  }
+  22% { 
+    opacity: 1; 
+  }
+  78% { 
+    opacity: 1; 
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .game-room {
@@ -15,6 +71,45 @@ html, body {
   display: flex;
   flex-direction: column;
   position: relative;
+
+  .special-text-container {
+    @include transition(all .3s ease);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.9);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 1vh;
+
+    @include animation('fade-in-out 1.6s');
+
+    div {
+      font-family: $theme-condensed-style;
+      font-size: 5vh;
+      color: #fff;
+    }
+
+    div.right {
+      opacity: 0;
+      @include animation('special-text-animation-r 1.4s ease-in');
+    }
+    div.left {
+      opacity: 0;
+      @include animation('special-text-animation-l 1.4s ease-in');
+    }
+  }
+
+  .dialog-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
 
   .toast-container {
     position: fixed;
@@ -80,12 +175,12 @@ html, body {
       flex: 2 auto;
       display: flex;
       flex-direction: column;
-    }
 
-    .top-size {
-      flex: 1 auto;
-      display: flex;
-      flex-direction: row;
+      .top-side {
+        flex: 1 auto;
+        display: flex;
+        flex-direction: row;
+      }
     }
 
     .player-holder {
@@ -219,7 +314,7 @@ html, body {
 }
 // Nano stuff
 
-a {
+a.button{
   @include transition(all .3s ease);
   cursor: pointer;
   padding: 10px 20px 10px 20px;
@@ -227,7 +322,7 @@ a {
   background-color: $color-theme-light;
 }
 
-a:hover {
+a.button:hover {
   background-color: $color-theme-lighter;
 }
 

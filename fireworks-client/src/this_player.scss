@@ -1,5 +1,10 @@
-
-
+.notransition {
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -o-transition: none !important;
+  -ms-transition: none !important;
+  transition: none !important;
+}
 
 @mixin pulse($name, $color) {
     .#{$name} {
@@ -22,7 +27,32 @@
     }
 }
 
+@include pulse(blue-pulse, $card-blue);
+@include pulse(green-pulse, $card-green);
+@include pulse(red-pulse, $card-red);
+@include pulse(white-pulse, $card-white);
+@include pulse(yellow-pulse, $card-yellow);
+
 .hand-container {
+    margin-left: 10vw;
+
+    @include keyframes(anim-draw) {
+        0% {  
+            transform: translateY(20vw);
+        }
+        100% {
+            transform: translateY(0);
+        }
+    }
+
+    .card-draw {
+        @include animation('anim-draw 0.3s ease');
+    }
+
+    .shift {
+        @include transform(translateX(-20vw / 2));
+    }
+
     span {
         display: inline-block;
     }
@@ -31,31 +61,61 @@
         width: 20vw;
         position: relative;
 
-        @include radius(1.6vw);
         @include box-shadow(0px, 0px, 16px, rgba(0,0,0,0.5));
+        @include radius(1.6vw);
         @include transition(all .3s ease);
     }
 
-    .card-in-hand-first {
-        @extend .card-in-hand;
-
-        margin-left: 0;
-    }
-
-    .card-in-hand-rest {        
-        @extend .card-in-hand;
-
-        margin-left: -10vw;
-    }
-
     .card-in-hand {
+        margin-left: -10vw;
         margin-top: 6vh;
-        cursor: pointer;
         position: relative;
+        @include transition(all 0.3s ease);
     }
 
-    .hover-card {
+    .card-container {
+        @include transition(all 0.3s ease);
+        z-index: 1;
+
+        display: inline-block;
+
+        .card {
+            @include transition(all 0.3s ease);
+            transform-style: preserve-3d;
+            width: 100%;
+            height: 100%;
+
+            .front {
+                position: absolute;
+                top: 0px;
+                left: 0px;
+                width: 100%;
+                height: 100%;
+                backface-visibility: hidden;
+            }
+
+            .back {
+                display: block;
+                transform: rotateY(180deg);
+                backface-visibility: hidden;
+            }
+        }
+    }
+
+    .card-container {
+        position: relative;
+        -webkit-perspective: 1000px;
+        -moz-perspective: 1000px;
+        -o-perspective: 1000px;
+        perspective: 1000px;
+    }
+
+    .hoverable:hover {
         @include transform(translateY(-1vh));
+    }
+
+    .flip {
+        transform: rotateY(180deg);
     }
     
     .active-card {
@@ -71,12 +131,6 @@
         opacity: 0.25;
     }
 
-    @include pulse(blue-pulse, $card-blue);
-    @include pulse(green-pulse, $card-green);
-    @include pulse(red-pulse, $card-red);
-    @include pulse(white-pulse, $card-white);
-    @include pulse(yellow-pulse, $card-yellow);
-
     .menu-container {
         width: 100%;
         position: absolute;
@@ -90,6 +144,7 @@
             padding: 0px;
             display: inline-block;
             @include box-shadow(0px, 5px, 16px, rgba(0,0,0,0.5));
+            background-color: $color-theme;
 
             a {
                 padding: 16px 30px 16px 30px;

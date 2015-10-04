@@ -9,14 +9,42 @@
     padding: 0 24px 5vh 24px;
 }
 
+.invisible {
+    opacity: 0;
+}
+
 .player-container {
     display: flex;
     flex-direction: column;
     @include transition(all .3s ease);
 
+    @include keyframes(anim-draw) {
+        0% {  
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .card-draw {
+        @include animation('anim-draw 0.3s ease');
+    }
+
+    .turn-indicator {
+        color: #cfd100;
+    }
+
     h1 {
         font-weight: 300;
         font-size: large;
+        @include transition(all .3s ease);
+    }
+
+    .special {
+        position: absolute;
+        top: 0px;
+        left: 0px;
     }
 
     .container-open {
@@ -58,12 +86,24 @@
         }
     }
 
-    .card-container {
+    .centering-container {
         flex: 1 auto;
+        @include transition(all .3s ease);
+        display: flex;
+        justify-content: center;
+    }
+
+    .card-container {
+        margin-left: 7vw;
+        flex: 0 auto;
         @include transition(all .3s ease);
 
         span {
             display: inline-block;
+        }
+
+        .shift {
+            @include transform(translateX(-3vw));
         }
 
         img {
@@ -84,11 +124,8 @@
             @include transform(translateY(-3vh));
         }
 
-        .card-in-hand-first {
-            margin-left: 0;
-        }
-
-        .card-in-hand-rest {
+        .card-in-hand {
+            @include transition(all 0.3s ease);
             margin-left: -7vw;
         }
     }

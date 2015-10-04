@@ -1,5 +1,5 @@
 import Deck from './deck';
-import CardUtils from './../../shared/js/card_utils';
+import CardUtils from './../shared/card_utils';
 import util from 'util';
 
 export default class Game {
