@@ -18,7 +18,7 @@ var genId = () => {
 var playerManager = new PlayerManager();
 var game = new Game();
 
-io.set( 'origins', '*domain.com*:*' );
+io.set( 'origins', '*idunnololz.com*:*' );
 
 /*
 
