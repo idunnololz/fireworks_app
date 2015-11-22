@@ -4,6 +4,7 @@ export default class Player {
         this.id = id;
         this.name = "";
         this.index = -1;
+        this.location = -1;
     }
 
     getId() {
@@ -32,5 +33,9 @@ export default class Player {
 
     getSocket() {
         return this.socket;
+    }
+
+    setLocation(loc) {
+        this.location = loc;
     }
 }

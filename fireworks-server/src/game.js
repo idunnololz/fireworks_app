@@ -160,6 +160,10 @@ export default class Game {
         return this._draw(playerIndex);
     }
 
+    getDeck() {
+        return this.deck;
+    }
+
     getLives() {
         return this.lives;
     }

@@ -1,5 +1,6 @@
-define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app/info_bar', 'app/menu_bar', 'app/game_board', 'app/dialog_game_over'], 
-    function ($, React, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog) {
+define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app/info_bar', 'app/menu_bar', 'app/game_board', 
+    'app/dialog_game_over', 'app/history_dialog'], 
+    function ($, React, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog, HistoryDialog) {
 
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
     
@@ -12,6 +13,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
     const EVENT_HINT = 2;
     const EVENT_DISCARD = 3;
     const EVENT_PLAY = 4;
+    const EVENT_DECLARE_GAME_OVER = 5;
 
     var history = [];
 
@@ -19,6 +21,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
     const UI_EVENT_SHOW_TOAST = 2;
     const UI_EVENT_WAIT = 3;
     const UI_EVENT_SHOW_YOUR_TURN = 4;
+    const UI_EVENT_SHOW_GAME_OVER = 5;
 
     var GameRoom = React.createClass({
         batchState: {},
@@ -30,6 +33,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 playersInGame: [],
                 lives: 0,
                 hints: 0,
+                cardsLeft: 0,
 
                 showDialog: false,
                 dialogTitle: "",
@@ -45,7 +49,11 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 toRun: [],
                 isIdle: true,
                 board: [undefined, undefined, undefined, undefined, undefined],
-                discards: [[], [], [], [], []]
+                discards: [[], [], [], [], []],
+
+                showHistory: false,
+                history: [],
+                isGameOver: false,
             };
         },
         getLives() {
@@ -62,7 +70,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
         },
         componentWillMount() {
             var s = this.props.socket;
-            s.on('getId', (msg) => {
+            s.on('getSelf', (msg) => {
                 var m = {playerInfo: {playerName: msg.playerName, playerId: msg.playerId}};
                 this.setState(m);
             });
@@ -107,6 +115,8 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     }
                 }
 
+                console.log(msg.deckSize);
+
                 this.setState({
                     mode: MODE_PLAYING, 
                     playerInfo: pi,
@@ -114,13 +124,14 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     playersInGame: players,
                     numPlayers: players.length,
                     hints: msg.hints,
-                    lives: msg.lives
+                    lives: msg.lives,
+                    cardsLeft: msg.deckSize
                 });
             });
             s.on('gameEvent', (msg) => {
                 this.handleGameEvent(msg);
             });
-            s.emit('getId');
+            s.emit('getSelf');
             s.emit('getGameInfo');
         },
         getTurnIndex() {
@@ -178,6 +189,9 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
         getGameBoardRef() {
             return this.refs.gameBoard;
         },
+        getThisPlayerRef() {
+            return this.refs.thisPlayer;
+        },
         getPlayerWithId(playerId) {
             var players = this.state.playersInGame;
             var len = players.length;
@@ -207,13 +221,17 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
             }
         },
         handleGameEvent(gameEvent) {
+            var newHistory = this.state.history;
+            newHistory.push(gameEvent);
             switch (gameEvent.eventType) {
                 case EVENT_DRAW_HAND:
                     var p = this.getPlayerWithId(gameEvent.playerId);
                     p.hand = gameEvent.data;
 
                     this.setState({
-                        turnIndex: this.state.turnIndex + 1
+                        history: newHistory,
+                        turnIndex: this.state.turnIndex + 1,
+                        cardsLeft: Math.max(0, this.state.cardsLeft - gameEvent.data.length)
                     });
                     //this.checkIfMyTurn();
                     break;
@@ -230,6 +248,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     history.push(gameEvent);
 
                     this.setState({
+                        history: newHistory,
                         turnIndex: this.state.turnIndex + 1,
                         hints: this.state.hints - 1
                     });
@@ -252,7 +271,9 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     history.push(gameEvent);
 
                     this.setState({
-                        turnIndex: this.state.turnIndex + 1
+                        history: newHistory,
+                        turnIndex: this.state.turnIndex + 1,
+                        cardsLeft: Math.max(0, this.state.cardsLeft - 1)
                     });
                     this.checkIfMyTurn();
                     break;
@@ -267,9 +288,14 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     history.push(gameEvent);
 
                     this.setState({
-                        turnIndex: this.state.turnIndex + 1
+                        history: newHistory,
+                        turnIndex: this.state.turnIndex + 1,
+                        cardsLeft: Math.max(0, this.state.cardsLeft - 1)
                     });
                     this.checkIfMyTurn();
+                    break;
+                case EVENT_DECLARE_GAME_OVER:
+                    this.showGameOverDialog();
                     break;
                 default:
                     console.log(gameEvent);
@@ -351,8 +377,8 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 }
             }
 
-            if (this.state.lives === 0 && this.state.mode === MODE_PLAYING && !this.state.showGameOverDialog) {
-                this.setState({showGameOverDialog: true, time: this.refs.infoBar.getTime()});
+            if (this.state.lives === 0 && this.state.mode === MODE_PLAYING && !this.state.isGameOver) {
+                this.showGameOverDialog();
             }
         },
         isMyTurn() {
@@ -397,6 +423,16 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 }
             });
         },
+        closeAll() {
+            var filteredPlayers = this.state.playersInGame;
+            $.each(filteredPlayers, (index, val) => {
+                var ref = this.refs["player" + val.playerId];
+                if (ref !== undefined) {
+                    ref.close();
+                }
+            });
+            this.refs.thisPlayer.close();
+        },
         showTimedDialog(title, message, interval) {
             this.pushRunnable({eventType: UI_EVENT_SHOW_DIALOG, title: title, message: message, interval: interval});
         },
@@ -408,6 +444,10 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
         },
         showYourTurn() {
             this.pushRunnable({eventType: UI_EVENT_SHOW_YOUR_TURN});
+        },
+        showGameOverDialog() {
+            this.setState({isGameOver: true});
+            this.pushRunnable({eventType: UI_EVENT_SHOW_GAME_OVER});
         },
         pushRunnable(runnable) {
             var toRun = this.state.toRun;
@@ -480,7 +520,10 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                         setTimeout(() => {
                             this.setState({showYourTurn: false});
                             this.runNext();
-                        }, 1400);
+                        }, 1200);
+                        break;
+                    case UI_EVENT_SHOW_GAME_OVER:
+                        this.setState({showGameOverDialog: true, time: this.refs.infoBar.getTime()});
                         break;
                 }
                 if (nextState === undefined) {nextState = {};}
@@ -491,11 +534,21 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 this.setState({isIdle: true});
             }
         },
+        onBgClick(e) {
+            this.closeAll();
+        },
+        onHistoryClick(e) {
+            this.setState({showHistory: true});
+        },
+        onHistoryDialogDoneClick(e) {
+            this.setState({showHistory: false});
+        },
         render() {
             var thisPlayer = this.state.playerInfo;
             var topInterface = [];
             var bottomInterface = [];
             var toastView;
+            var specialView;
             var dialogViews = [];
 
             switch (this.state.mode) {
@@ -604,6 +657,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     topInterface.push(
                         <MenuBar
                             ref="menuBar"
+                            onHistoryClick={this.onHistoryClick}
                             manager={this}/>
                     );
 
@@ -611,16 +665,17 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                         <InfoBar
                             ref="infoBar"
                             hints={this.state.hints}
-                            lives={this.state.lives}/>
+                            lives={this.state.lives}
+                            cardsLeft={this.state.cardsLeft}/>
                     );
 
                     break;
             }
 
             if (this.state.showDialog) {
-                toastView = (
-                    <div className="toast-container">
-                        <div className="toast">
+                dialogViews = (
+                    <div className="dialog-container">
+                        <div className="timed-dialog">
                             <h1>{this.state.dialogTitle}</h1>
                             <p>{this.state.dialogMessage}</p>
                         </div>
@@ -629,7 +684,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
             }
 
             if (this.state.showYourTurn) {
-                toastView = (
+                specialView = (
                     <div className="special-text-container">
                         <div className="left">YOUR</div>
                         <div className="right">TURN</div>
@@ -647,6 +702,30 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 );
             }
 
+            if (this.state.showHistory) {
+                dialogViews.push(
+                    <div className="dialog-container">
+                        <HistoryDialog
+                            playerInfo={this.state.playerInfo}
+                            history={this.state.history}
+                            onDoneClick={this.onHistoryDialogDoneClick}
+                            manager={this}/>
+                    </div>
+                );
+            }
+
+            if (this.state.showToast) {
+                console.log("showing toast");
+                toastView = (
+                    <div key="toast" className="toast-inner-container">
+                        <div className="toast">
+                        {this.state.toastMessage}
+                        </div>
+                    </div>
+                );
+            }
+
+            // onClick={this.onBgClick}
             return (
                 <div className="game-room">
                     <div className="top-content">
@@ -661,8 +740,15 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                             handleSpecialCommand={this.handleSpecialCommand}/>
                         {bottomInterface}
                     </div>
-                    {toastView}
-                    {dialogViews}
+                    {specialView}
+                    <div className="toast-container">
+                        <ReactCSSTransitionGroup transitionName="drop" transitionEnterTimeout={300} transitionLeaveTimeout={300}>
+                            {toastView}
+                        </ReactCSSTransitionGroup>
+                    </div>
+                    <ReactCSSTransitionGroup transitionName="fade" transitionEnterTimeout={250} transitionLeaveTimeout={250}>
+                        {dialogViews}
+                    </ReactCSSTransitionGroup>
                 </div>
             );
         }

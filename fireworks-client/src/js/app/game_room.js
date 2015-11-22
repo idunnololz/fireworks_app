@@ -1,5 +1,6 @@
-define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app/info_bar', 'app/menu_bar', 'app/game_board', 'app/dialog_game_over'], 
-    function ($, React, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog) {
+define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app/info_bar', 'app/menu_bar', 'app/game_board', 
+    'app/dialog_game_over', 'app/history_dialog'], 
+    function ($, React, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog, HistoryDialog) {
 
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
     
@@ -12,6 +13,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
     const EVENT_HINT = 2;
     const EVENT_DISCARD = 3;
     const EVENT_PLAY = 4;
+    const EVENT_DECLARE_GAME_OVER = 5;
 
     var history = [];
 
@@ -19,6 +21,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
     const UI_EVENT_SHOW_TOAST = 2;
     const UI_EVENT_WAIT = 3;
     const UI_EVENT_SHOW_YOUR_TURN = 4;
+    const UI_EVENT_SHOW_GAME_OVER = 5;
 
     var GameRoom = React.createClass({displayName: "GameRoom",
         batchState: {},
@@ -30,6 +33,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 playersInGame: [],
                 lives: 0,
                 hints: 0,
+                cardsLeft: 0,
 
                 showDialog: false,
                 dialogTitle: "",
@@ -45,7 +49,11 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 toRun: [],
                 isIdle: true,
                 board: [undefined, undefined, undefined, undefined, undefined],
-                discards: [[], [], [], [], []]
+                discards: [[], [], [], [], []],
+
+                showHistory: false,
+                history: [],
+                isGameOver: false,
             };
         },
         getLives:function() {
@@ -62,7 +70,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
         },
         componentWillMount:function() {
             var s = this.props.socket;
-            s.on('getId', function(msg)  {
+            s.on('getSelf', function(msg)  {
                 var m = {playerInfo: {playerName: msg.playerName, playerId: msg.playerId}};
                 this.setState(m);
             }.bind(this));
@@ -76,13 +84,9 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
             }.bind(this));
             s.on('playerJoined', function(msg)  {
                 console.log(msg);
-                if (this.state.mode === MODE_PLAYING) {
-                    // TODO
-                } else {
-                    var ps = this.state.playersInGame;
-                    ps.push(msg);
-                    this.setState({playersInGame: ps});
-                }
+                var ps = this.state.playersInGame;
+                ps.push(msg);
+                this.setState({playersInGame: ps});
             }.bind(this));
             s.on('playerLeft', function(msg)  {
                 if (this.state.mode === MODE_PLAYING) {
@@ -111,6 +115,8 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     }
                 }
 
+                console.log(msg.deckSize);
+
                 this.setState({
                     mode: MODE_PLAYING, 
                     playerInfo: pi,
@@ -118,13 +124,14 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     playersInGame: players,
                     numPlayers: players.length,
                     hints: msg.hints,
-                    lives: msg.lives
+                    lives: msg.lives,
+                    cardsLeft: msg.deckSize
                 });
             }.bind(this));
             s.on('gameEvent', function(msg)  {
                 this.handleGameEvent(msg);
             }.bind(this));
-            s.emit('getId');
+            s.emit('getSelf');
             s.emit('getGameInfo');
         },
         getTurnIndex:function() {
@@ -182,6 +189,9 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
         getGameBoardRef:function() {
             return this.refs.gameBoard;
         },
+        getThisPlayerRef:function() {
+            return this.refs.thisPlayer;
+        },
         getPlayerWithId:function(playerId) {
             var players = this.state.playersInGame;
             var len = players.length;
@@ -211,13 +221,17 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
             }
         },
         handleGameEvent:function(gameEvent) {
+            var newHistory = this.state.history;
+            newHistory.push(gameEvent);
             switch (gameEvent.eventType) {
                 case EVENT_DRAW_HAND:
                     var p = this.getPlayerWithId(gameEvent.playerId);
                     p.hand = gameEvent.data;
 
                     this.setState({
-                        turnIndex: this.state.turnIndex + 1
+                        history: newHistory,
+                        turnIndex: this.state.turnIndex + 1,
+                        cardsLeft: Math.max(0, this.state.cardsLeft - gameEvent.data.length)
                     });
                     //this.checkIfMyTurn();
                     break;
@@ -234,6 +248,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     history.push(gameEvent);
 
                     this.setState({
+                        history: newHistory,
                         turnIndex: this.state.turnIndex + 1,
                         hints: this.state.hints - 1
                     });
@@ -256,7 +271,9 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     history.push(gameEvent);
 
                     this.setState({
-                        turnIndex: this.state.turnIndex + 1
+                        history: newHistory,
+                        turnIndex: this.state.turnIndex + 1,
+                        cardsLeft: Math.max(0, this.state.cardsLeft - 1)
                     });
                     this.checkIfMyTurn();
                     break;
@@ -271,9 +288,14 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     history.push(gameEvent);
 
                     this.setState({
-                        turnIndex: this.state.turnIndex + 1
+                        history: newHistory,
+                        turnIndex: this.state.turnIndex + 1,
+                        cardsLeft: Math.max(0, this.state.cardsLeft - 1)
                     });
                     this.checkIfMyTurn();
+                    break;
+                case EVENT_DECLARE_GAME_OVER:
+                    this.showGameOverDialog();
                     break;
                 default:
                     console.log(gameEvent);
@@ -355,8 +377,8 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 }
             }
 
-            if (this.state.lives === 0 && this.state.mode === MODE_PLAYING && !this.state.showGameOverDialog) {
-                this.setState({showGameOverDialog: true, time: this.refs.infoBar.getTime()});
+            if (this.state.lives === 0 && this.state.mode === MODE_PLAYING && !this.state.isGameOver) {
+                this.showGameOverDialog();
             }
         },
         isMyTurn:function() {
@@ -401,6 +423,16 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 }
             }.bind(this));
         },
+        closeAll:function() {
+            var filteredPlayers = this.state.playersInGame;
+            $.each(filteredPlayers, function(index, val)  {
+                var ref = this.refs["player" + val.playerId];
+                if (ref !== undefined) {
+                    ref.close();
+                }
+            }.bind(this));
+            this.refs.thisPlayer.close();
+        },
         showTimedDialog:function(title, message, interval) {
             this.pushRunnable({eventType: UI_EVENT_SHOW_DIALOG, title: title, message: message, interval: interval});
         },
@@ -412,6 +444,10 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
         },
         showYourTurn:function() {
             this.pushRunnable({eventType: UI_EVENT_SHOW_YOUR_TURN});
+        },
+        showGameOverDialog:function() {
+            this.setState({isGameOver: true});
+            this.pushRunnable({eventType: UI_EVENT_SHOW_GAME_OVER});
         },
         pushRunnable:function(runnable) {
             var toRun = this.state.toRun;
@@ -484,7 +520,10 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                         setTimeout(function()  {
                             this.setState({showYourTurn: false});
                             this.runNext();
-                        }.bind(this), 1400);
+                        }.bind(this), 1200);
+                        break;
+                    case UI_EVENT_SHOW_GAME_OVER:
+                        this.setState({showGameOverDialog: true, time: this.refs.infoBar.getTime()});
                         break;
                 }
                 if (nextState === undefined) {nextState = {};}
@@ -495,11 +534,21 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 this.setState({isIdle: true});
             }
         },
+        onBgClick:function(e) {
+            this.closeAll();
+        },
+        onHistoryClick:function(e) {
+            this.setState({showHistory: true});
+        },
+        onHistoryDialogDoneClick:function(e) {
+            this.setState({showHistory: false});
+        },
         render:function() {
             var thisPlayer = this.state.playerInfo;
             var topInterface = [];
             var bottomInterface = [];
             var toastView;
+            var specialView;
             var dialogViews = [];
 
             switch (this.state.mode) {
@@ -608,6 +657,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     topInterface.push(
                         React.createElement(MenuBar, {
                             ref: "menuBar", 
+                            onHistoryClick: this.onHistoryClick, 
                             manager: this})
                     );
 
@@ -615,16 +665,17 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                         React.createElement(InfoBar, {
                             ref: "infoBar", 
                             hints: this.state.hints, 
-                            lives: this.state.lives})
+                            lives: this.state.lives, 
+                            cardsLeft: this.state.cardsLeft})
                     );
 
                     break;
             }
 
             if (this.state.showDialog) {
-                toastView = (
-                    React.createElement("div", {className: "toast-container"}, 
-                        React.createElement("div", {className: "toast"}, 
+                dialogViews = (
+                    React.createElement("div", {className: "dialog-container"}, 
+                        React.createElement("div", {className: "timed-dialog"}, 
                             React.createElement("h1", null, this.state.dialogTitle), 
                             React.createElement("p", null, this.state.dialogMessage)
                         )
@@ -633,7 +684,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
             }
 
             if (this.state.showYourTurn) {
-                toastView = (
+                specialView = (
                     React.createElement("div", {className: "special-text-container"}, 
                         React.createElement("div", {className: "left"}, "YOUR"), 
                         React.createElement("div", {className: "right"}, "TURN")
@@ -651,6 +702,30 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 );
             }
 
+            if (this.state.showHistory) {
+                dialogViews.push(
+                    React.createElement("div", {className: "dialog-container"}, 
+                        React.createElement(HistoryDialog, {
+                            playerInfo: this.state.playerInfo, 
+                            history: this.state.history, 
+                            onDoneClick: this.onHistoryDialogDoneClick, 
+                            manager: this})
+                    )
+                );
+            }
+
+            if (this.state.showToast) {
+                console.log("showing toast");
+                toastView = (
+                    React.createElement("div", {key: "toast", className: "toast-inner-container"}, 
+                        React.createElement("div", {className: "toast"}, 
+                        this.state.toastMessage
+                        )
+                    )
+                );
+            }
+
+            // onClick={this.onBgClick}
             return (
                 React.createElement("div", {className: "game-room"}, 
                     React.createElement("div", {className: "top-content"}, 
@@ -665,8 +740,15 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                             handleSpecialCommand: this.handleSpecialCommand}), 
                         bottomInterface
                     ), 
-                    toastView, 
-                    dialogViews
+                    specialView, 
+                    React.createElement("div", {className: "toast-container"}, 
+                        React.createElement(ReactCSSTransitionGroup, {transitionName: "drop", transitionEnterTimeout: 300, transitionLeaveTimeout: 300}, 
+                            toastView
+                        )
+                    ), 
+                    React.createElement(ReactCSSTransitionGroup, {transitionName: "fade", transitionEnterTimeout: 250, transitionLeaveTimeout: 250}, 
+                        dialogViews
+                    )
                 )
             );
         }

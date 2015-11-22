@@ -1,4 +1,28 @@
 
+.title {
+    display: flex;
+    align-items: center;
+}
+
+.arrow-down {
+    width: 0; 
+    height: 0; 
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    
+    border-top: 5px solid #fff;
+}
+
+.show-menu-button {
+    @include transition(all .3s ease);
+    padding: 10px;
+    cursor: pointer;
+}
+
+.show-menu-button:hover {
+    background-color: $color-theme-light;
+}
+
 .gone {
     display: none !important;
 }
@@ -11,11 +35,13 @@
 
 .invisible {
     opacity: 0;
+    z-index: -1;
 }
 
 .player-container {
     display: flex;
     flex-direction: column;
+    position: relative;
     @include transition(all .3s ease);
 
     @include keyframes(anim-draw) {
@@ -24,6 +50,27 @@
         }
         100% {
             opacity: 1;
+        }
+    }
+
+    .menu {
+        background-color: $color-theme-second;
+        display: flex;
+        flex-direction: column;
+        @include box-shadow(0px, 5px, 16px, rgba(0,0,0,0.5));
+        position: absolute;
+        @include transition(all .3s ease);
+        border-radius: 3px;
+
+        .menu-option {
+            padding: 14px;
+            text-decoration: none;
+            color: $theme-font-color;
+            @include transition(all .3s ease);
+        }
+
+        .menu-option:hover {
+            background-color: lighten($color-theme-second, 10%);
         }
     }
 
@@ -127,6 +174,63 @@
         .card-in-hand {
             @include transition(all 0.3s ease);
             margin-left: -7vw;
+
+            .hint-decor {
+                position: absolute;
+                color: #fff;
+                background-color: $color-theme-second;
+                padding-left: 1vw;
+                padding-right: 1vw;
+                padding-top: 1.5vw;
+                padding-bottom: 0.5vw;
+                bottom: -2vw;
+                margin-left: 0.5vw;
+
+                border-radius: 0.5vw;
+                @include box-shadow(0px, 5px, 16px, rgba(0,0,0,0.5));
+            }
+
+            .no-number {
+                color: rgba(0, 0, 0, 0);
+            }
+
+            .black-text {
+                color: #000;
+            }
+
+            .card-blue {
+                background-color: $card-blue;
+            }
+            .card-green {
+                background-color: $card-green;
+            }
+            .card-red {
+                background-color: $card-red;
+            }
+            .card-white {
+                background-color: $card-white;
+            }
+            .card-yellow {
+                background-color: $card-yellow;
+            }
         }
     }
+}
+
+.hint-view-transition-enter {
+    @include transform(translateY(-2vw));
+}
+
+.hint-view-transition-enter.hint-view-transition-enter-active {
+    @include transform(none);
+    @include transition(all .3s ease);
+}
+
+.hint-view-transition-leave {
+    @include transform(none);
+}
+
+.hint-view-transition-leave.hint-view-transition-leave-active {
+    @include transform(translateY(-2vw));
+    @include transition(all .3s ease);
 }

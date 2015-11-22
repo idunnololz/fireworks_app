@@ -79,6 +79,10 @@ define(['jquery', 'React'], function ($, React) {
             return (
                 <div className="info-bar">
                     <div className="centered-container" ref="lifeCount">
+                        <span>{this.props.cardsLeft}</span>
+                        <span className="deck"></span>
+                    </div>
+                    <div className="space centered-container" ref="lifeCount">
                         <span>{this.props.lives}</span>
                         <span className="lives"></span>
                     </div>

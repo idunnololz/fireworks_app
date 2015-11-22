@@ -51,7 +51,7 @@ define(['jquery', 'React'], function ($, React) {
             var score = 0;
             $.each(board, (index, val) => {
                 if (val != undefined) {
-                    score += CardUtils.getCardNumber(val.cardType) + 1;
+                    score += CardUtils.getCardNumber(val.cardType);
                 }
             });
 

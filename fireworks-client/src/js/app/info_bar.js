@@ -79,6 +79,10 @@ define(['jquery', 'React'], function ($, React) {
             return (
                 React.createElement("div", {className: "info-bar"}, 
                     React.createElement("div", {className: "centered-container", ref: "lifeCount"}, 
+                        React.createElement("span", null, this.props.cardsLeft), 
+                        React.createElement("span", {className: "deck"})
+                    ), 
+                    React.createElement("div", {className: "space centered-container", ref: "lifeCount"}, 
                         React.createElement("span", null, this.props.lives), 
                         React.createElement("span", {className: "lives"})
                     ), 

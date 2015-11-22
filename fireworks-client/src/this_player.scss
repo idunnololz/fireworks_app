@@ -27,14 +27,42 @@
     }
 }
 
+@mixin strong-pulse($name, $color) {
+    .#{$name} {
+        -webkit-animation: #{$name}-animation 1s infinite alternate;
+        -moz-animation: #{$name}-animation 1s infinite alternate;
+        -animation: #{$name}-animation 1s infinite alternate;
+    }
+
+    @-webkit-keyframes #{$name}-animation {
+        from { @include box-shadow(0px, 0px, 16px, rgba($color, 0.5)); }
+        to { @include box-shadow(0px, 0px, 16px, $color); }
+    }
+    @-moz-keyframes #{$name}-animation {
+        from { @include box-shadow(0px, 0px, 16px, rgba($color, 0.5)); }
+        to { @include box-shadow(0px, 0px, 16px, $color); }
+    }
+    @keyframes #{$name}-animation {
+        from { @include box-shadow(0px, 0px, 16px, rgba($color, 0.5)); }
+        to { @include box-shadow(0px, 0px, 16px, $color); }
+    }
+}
+
 @include pulse(blue-pulse, $card-blue);
 @include pulse(green-pulse, $card-green);
 @include pulse(red-pulse, $card-red);
 @include pulse(white-pulse, $card-white);
 @include pulse(yellow-pulse, $card-yellow);
 
+@include strong-pulse(strong-blue-pulse, $card-blue);
+@include strong-pulse(strong-green-pulse, $card-green);
+@include strong-pulse(strong-red-pulse, $card-red);
+@include strong-pulse(strong-white-pulse, $card-white);
+@include strong-pulse(strong-yellow-pulse, $card-yellow);
+
 .hand-container {
     margin-left: 10vw;
+    @include transition(all 0.3s ease);
 
     @include keyframes(anim-draw) {
         0% {  
@@ -42,6 +70,15 @@
         }
         100% {
             transform: translateY(0);
+        }
+    }
+
+    @include keyframes(be-gone) {
+        0% {  
+            width: 20vw;
+        }
+        100% {
+            width: 0vw;
         }
     }
 
@@ -53,8 +90,21 @@
         @include transform(translateX(-20vw / 2));
     }
 
+    .right-half-shift {
+        @include transform(translateX(5vw));
+    }
+
+    .left-half-shift {
+        @include transform(translateX(-5vw));
+    }
+
     span {
         display: inline-block;
+    }
+
+    .animate-gone {
+        width: 0vw;
+        @include animation('be-gone 0.3s ease');
     }
 
     img {
@@ -78,6 +128,8 @@
         z-index: 1;
 
         display: inline-block;
+
+        position: relative;
 
         .card {
             @include transition(all 0.3s ease);
@@ -124,11 +176,12 @@
 
     .hint-decor {
         position: absolute;
-        top: -3vh;
+        top: 2vh;
         left: 5vh;
         z-index: 10;
         font-size: 4vw;
         opacity: 0.25;
+        color: white;
     }
 
     .menu-container {

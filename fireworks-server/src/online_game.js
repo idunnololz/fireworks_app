@@ -6,8 +6,11 @@ const TAG = "OnlineGame";
 const STATE_OK = 1;
 const STATE_NEED_PLAYERS = 2;
 
+const STATUS_WAITING = 1;
+const STATUS_PLAYING = 2;
+
 export default class OnlineGame extends Game {
-    constructor(gameId, log = false) {
+    constructor(gameId, name, log = false) {
         super();
         this.log = log;
         this.players = {};
@@ -17,10 +20,31 @@ export default class OnlineGame extends Game {
         this.state = STATE_OK;
         this.cardCounter = 0;
         this.cardMap = new Map();
+        this.gameName = name;
+
+        this.status = STATUS_WAITING;
 
         this.spectators = [];
 
         this.history = [];
+
+        this.playerCapacity = 5;
+    }
+
+    getStatus() {
+        return this.status;
+    }
+
+    getPlayerCapacity() {
+        return this.playerCapacity;
+    }
+
+    getName() {
+        return this.gameName;
+    }
+
+    getPlayers() {
+        return this.playersArr;
     }
 
     addPlayer(player) {
@@ -86,6 +110,8 @@ export default class OnlineGame extends Game {
 
     startGame() {
         super.startGame();
+
+        this.status = STATUS_PLAYING;
 
         var len = this.playersArr.length;
         for (var i = 0; i < len; i++) {

@@ -1,4 +1,6 @@
 define(['jquery', 'React'], function ($, React) {
+    var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
+
     const HINT_COLOR = 1;
     const HINT_NUMBER = 2;
     var Player = React.createClass({
@@ -13,6 +15,11 @@ define(['jquery', 'React'], function ($, React) {
 
                 specialText: null,
                 showSpecialText: false,
+
+                showMenu: false,
+
+                hinted: {}, // hinted is a mapping from cardId to what is known about the card: {123:{color:3,number:undefined}}
+                showHinted: false,
             };
         },
         componentDidUpdate(prevProps, prevState) {
@@ -24,7 +31,9 @@ define(['jquery', 'React'], function ($, React) {
                 var prevLastCard = oldHand[oldHand.length - 1];
                 var newLastCard = newHand[newHand.length - 1];
 
-                if (prevLastCard.cardId !== this.state.lastCardId) {
+                if (prevLastCard === null) {
+
+                } else if (prevLastCard.cardId !== this.state.lastCardId) {
                     // we just drew a card... animate the last card...
                     var $card = $(React.findDOMNode(this.refs["card" + (newHand.length - 1)]));
                     $card.addClass('card-draw');
@@ -156,6 +165,27 @@ define(['jquery', 'React'], function ($, React) {
             var hand = thisPlayer.hand;
             var isColorHint = CardUtils.isColorHint(hintInfo.hintType);
 
+            {
+                // update the hinted...
+                var hinted = this.state.hinted;
+                $.each(hintInfo.affectedCards, (index, val) => {
+                    var cardInfo;
+                    if (hinted[val] === undefined) {
+                        cardInfo = {color: undefined, number: undefined};
+                    } else {
+                        cardInfo = hinted[val];
+                    }
+
+                    if (isColorHint) {
+                        cardInfo.color = CardUtils.getHintColor(hintInfo.hintType);
+                    } else {
+                        cardInfo.number = CardUtils.getHintNumber(hintInfo.hintType);
+                    }
+
+                    hinted[val] = cardInfo;
+                });
+            }
+
             var hintedIndices = $.map(hintInfo.affectedCards, (val) => {
                 return this.getIndexForCardId(val);
             });
@@ -163,7 +193,8 @@ define(['jquery', 'React'], function ($, React) {
                 hintedCards: hintedIndices, 
                 activeHint: hintInfo, 
                 specialText: `${thisPlayer.playerName} was hinted ${CardUtils.getHint(hintInfo.hintType)}(s)`,
-                showSpecialText: true
+                showSpecialText: true,
+                hinted: hinted
             });
             this.props.manager.wait(5000);
 
@@ -179,6 +210,13 @@ define(['jquery', 'React'], function ($, React) {
             manager.wait(900);
 
             manager.preloadResource(manager.getCardRes(cardPlayed), () => {
+                // clean up hinted...
+                var hinted = this.state.hinted;
+                if (hinted[cardPlayed.cardId] !== undefined) {
+                    delete hinted[cardPlayed.cardId];
+                }
+                this.setState({hinted: hinted});
+
                 var idx;
                 $.each(hand, (index, val) => {
                     if (val.cardId === cardPlayed.cardId) {
@@ -264,6 +302,28 @@ define(['jquery', 'React'], function ($, React) {
                 }, 300);
             });
         },
+        onShowMenuClick(e) {
+            // center menu under our arrow...
+            var $dropBtn = $(e.target);
+            var $menu = $(".menu");
+
+            var x = $dropBtn.outerWidth() / 2 + $dropBtn.position().left - ($menu.outerWidth() / 2);
+            var y = $dropBtn.outerHeight() + $dropBtn.position().top;
+
+            $menu.css({top: y, left: x});
+
+            this.setState({showMenu: true});
+        },
+        onMenuCancelClick() {
+            this.setState({showMenu: false});
+        },
+        onMenuShowHintedClick() {
+            this.setState({showMenu:false, showHinted: true});
+
+            setTimeout(() => {
+                this.setState({showHinted: false});
+            }, 5000);
+        },
         render() {
             var open = this.state.isOpen;
             var playerInfo = this.props.playerInfo;
@@ -301,11 +361,67 @@ define(['jquery', 'React'], function ($, React) {
             }
 
             if (playerInfo.hand !== undefined) {
+                var isShowHinted = this.state.showHinted;
+                var hinted = this.state.hinted;
+
                 cardViews = $.map(playerInfo.hand, (val, index) => {
+                    if (val === null) {
+                        return null;
+                    }
+
                     var selected = selectedCards.indexOf(index) > -1;
                     var isHinted = this.state.hintedCards.indexOf(index) !== -1;
+                    var hintView;
+
+                    // logic for displaying hinted cards
+                    if (isShowHinted && hinted[val.cardId] !== undefined) {
+                        var whatWeKnow = hinted[val.cardId];
+                        var colorClass;
+                        var numberHint = "a";
+                        var numberClass = " no-number";
+                        var isWhite = false;
+                        console.log(whatWeKnow);
+                        if (whatWeKnow.color !== undefined) {
+                            switch (CardUtils.getHintColor(whatWeKnow.color)) {
+                                case CardUtils.Color.BLUE:
+                                    colorClass += " card-blue";
+                                    break;
+                                case CardUtils.Color.GREEN:
+                                    colorClass += " card-green";
+                                    break;
+                                case CardUtils.Color.RED:
+                                    colorClass += " card-red";
+                                    break;
+                                case CardUtils.Color.WHITE:
+                                    colorClass += " card-white";
+                                    isWhite = true; // white text doesn't work well on a white background...
+                                    break;
+                                case CardUtils.Color.YELLOW:
+                                    colorClass += " card-yellow";
+                                    break;
+                            }
+                        }
+                        if (whatWeKnow.number !== undefined) {
+                            numberHint = whatWeKnow.number;
+                            numberClass = "";
+
+                            if (isWhite) {
+                                colorClass += "  black-text";
+                            }
+                        }
+                        
+                        hintView = (
+                            <div className={"hint-decor " + colorClass + numberClass} key="hintView">
+                                {numberHint}
+                            </div>
+                        );
+                    }
+
                     return (
                         <span className={"card-in-hand"} ref={"card" + index} key={val.cardId}>
+                            <ReactCSSTransitionGroup transitionName="hint-view-transition" transitionEnterTimeout={300} transitionLeaveTimeout={300} >
+                                {hintView}
+                            </ReactCSSTransitionGroup>
                             <img 
                                 className={(selected ? "active-card" : "") + (isHinted ? appendClass : "")}
                                 src={"res/cards/" + CardUtils.getResourceNameForCard(val.cardType)}
@@ -325,14 +441,24 @@ define(['jquery', 'React'], function ($, React) {
             if (showSpecialText) {
                 playerTitle = (
                     <div style={{position: 'relative'}}>
-                        <h1 className={titleClass + " invisible"}>{playerInfo.playerName}</h1>
+                        <div className="title invisible">
+                            <h1 className={titleClass}>{playerInfo.playerName}</h1>
+                            <div className="show-menu-button" onClick={this.onShowMenuClick}>
+                                <div className="arrow-down"></div>
+                            </div>
+                        </div>
                         <h1 className={"special " + titleClass}>{specialText}</h1>
                     </div>
                 );
             } else {
                 playerTitle = (
                     <div style={{position: 'relative'}}>
-                        <h1 className={titleClass}>{playerInfo.playerName}</h1>
+                        <div className="title">
+                            <h1 className={titleClass}>{playerInfo.playerName}</h1>
+                            <div className="show-menu-button" onClick={this.onShowMenuClick}>
+                                <div className="arrow-down"></div>
+                            </div>
+                        </div>
                         <h1 className={"special " + titleClass + " invisible"}>{specialText}</h1>
                     </div>
                 );
@@ -352,6 +478,10 @@ define(['jquery', 'React'], function ($, React) {
                             <div className="horizontal-spacer"></div>
                             <a href="javascript:;" onClick={this.onHintClick}>Hint</a>
                         </div>
+                    </div>
+                    <div className={"menu" + (this.state.showMenu ? "" : " invisible")}>
+                        <a href="javascript:;" className="menu-option" onClick={this.onMenuShowHintedClick}>Show hinted</a>
+                        <a href="javascript:;" className="menu-option" onClick={this.onMenuCancelClick}>Cancel</a>
                     </div>
                 </div>
             );

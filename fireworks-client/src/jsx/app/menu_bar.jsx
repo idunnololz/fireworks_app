@@ -15,6 +15,10 @@ define(['jquery', 'React'], function ($, React) {
             var manager = this.props.manager;
             manager.getGameBoardRef().showDiscards();
         },
+        onShowMyHintedClick(e) {
+            var manager = this.props.manager;
+            manager.getThisPlayerRef().showHinted();
+        },
         render() {
             return (
                 <div className="menu-bar-container">
@@ -22,10 +26,10 @@ define(['jquery', 'React'], function ($, React) {
                         <a className="item" href="javascript:;" ref="delete" onClick={this.onShowDiscardsClick}>
                             <img src="res/ic_delete.png"></img>
                         </a>
-                        <a className="item" href="javascript:;" ref="history">
+                        <a className="item" href="javascript:;" ref="history" onClick={this.props.onHistoryClick}>
                             <img src="res/ic_history.png"></img>
                         </a>
-                        <a className="item" href="javascript:;" ref="info">
+                        <a className="item" href="javascript:;" ref="info" onClick={this.onShowMyHintedClick}>
                             <img src="res/ic_info.png"></img>
                         </a>
                     </div>

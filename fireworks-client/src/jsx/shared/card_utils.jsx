@@ -241,6 +241,7 @@
         var len = cards.length;
         for (var i = 0; i < len; i++) {
             var c = cards[i];
+            if (c === null) continue;
             if ((c.cardType & mask) != 0) {
                 results.push(i);
             }
@@ -262,7 +263,7 @@
     }
 
     exports.getCardNumber = (cardType) => {
-        return (32 - numberOfLeadingZeros(cardType)) % 5;
+        return (((32 - numberOfLeadingZeros(cardType)) - 1) % 5) + 1;
     }
 
     exports.getAllCardsWithNumber = (number, cards) => {
@@ -270,10 +271,15 @@
         var len = cards.length;
         for (var i = 0; i < len; i++) {
             var c = cards[i];
+            if (c === null) continue;
             if (exports.getCardNumber(c.cardType) === number) {
                 results.push(i);
             }
         }
         return results;
+    }
+
+    exports.getAllCardResources = () => {
+        return a;
     }
 })(typeof exports === 'undefined' ? this['CardUtils']={} : exports)

@@ -15,6 +15,10 @@ define(['jquery', 'React'], function ($, React) {
             var manager = this.props.manager;
             manager.getGameBoardRef().showDiscards();
         },
+        onShowMyHintedClick:function(e) {
+            var manager = this.props.manager;
+            manager.getThisPlayerRef().showHinted();
+        },
         render:function() {
             return (
                 React.createElement("div", {className: "menu-bar-container"}, 
@@ -22,10 +26,10 @@ define(['jquery', 'React'], function ($, React) {
                         React.createElement("a", {className: "item", href: "javascript:;", ref: "delete", onClick: this.onShowDiscardsClick}, 
                             React.createElement("img", {src: "res/ic_delete.png"})
                         ), 
-                        React.createElement("a", {className: "item", href: "javascript:;", ref: "history"}, 
+                        React.createElement("a", {className: "item", href: "javascript:;", ref: "history", onClick: this.props.onHistoryClick}, 
                             React.createElement("img", {src: "res/ic_history.png"})
                         ), 
-                        React.createElement("a", {className: "item", href: "javascript:;", ref: "info"}, 
+                        React.createElement("a", {className: "item", href: "javascript:;", ref: "info", onClick: this.onShowMyHintedClick}, 
                             React.createElement("img", {src: "res/ic_info.png"})
                         )
                     )

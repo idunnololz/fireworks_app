@@ -3,6 +3,7 @@ $color-theme-light: #393967;
 $color-theme-lighter: #4e4f78;
 $color-theme-darker: #11112b;
 $color-theme-dark: #141534;
+$color-theme-dark-light: #1f1f4d;
 
 $theme-body-style: 'Roboto', sans-serif;
 $theme-condensed-style: 'Roboto Condensed', sans-serif;
@@ -18,3 +19,19 @@ $color-soft-red: #D93838;
 $color-soft-green: #249608;
 
 $color-theme-second: #131313;
+$color-divider: #1b1b43;
+
+a.theme-button {
+    @include transition(all .3s ease);
+    display: inline-block;
+    padding: 0.7vw 2vw 0.7vw 2vw;
+    align-self: flex-end;
+    background-color: $color-theme-dark;
+    @include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.5));
+    text-decoration: none;
+    color: $theme-font-color;
+}
+
+a.theme-button:hover {
+    background-color: $color-theme-darker;
+}

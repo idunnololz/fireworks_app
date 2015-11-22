@@ -9,10 +9,23 @@ define(['jquery', 'React'], function ($, React) {
                 hintedCards: [],
                 activeHint: undefined,
 
-                flipCard: undefined
+                flipCard: undefined,
+                hinted: {}, // hinted is a mapping from cardId to what is known about the card: {123:{color:3,number:undefined}}
+                showHinted: false,
             };
         },
         componentWillMount() {
+        },
+        showHinted() {
+            if ($.isEmptyObject(this.state.hinted)) {
+                this.props.manager.showToast("You've no information about your cards", 3000 );
+                return;
+            }
+            this.setState({showHinted: true});
+
+            setTimeout(() => {
+                this.setState({showHinted: false});
+            }, 5000);
         },
         onCardClickHandler(e) {
             if (!this.props.manager.isMyTurn()) return;
@@ -57,7 +70,7 @@ define(['jquery', 'React'], function ($, React) {
                 var prevLastCard = oldHand[oldHand.length - 1];
                 var newLastCard = newHand[newHand.length - 1];
 
-                if (prevLastCard.cardId !== this.state.lastCardId) {
+                if (prevLastCard !== null && prevLastCard.cardId !== this.state.lastCardId) {
                     // we just drew a card... animate the last card...
                     var $card = $(React.findDOMNode(this.refs["card" + (newHand.length - 1)]));
                     $card.addClass('card-draw');
@@ -72,10 +85,31 @@ define(['jquery', 'React'], function ($, React) {
             var hand = thisPlayer.hand;
             var isColorHint = CardUtils.isColorHint(hintInfo.hintType);
 
+            {
+                // update the hinted...
+                var hinted = this.state.hinted;
+                $.each(hintInfo.affectedCards, (index, val) => {
+                    var cardInfo;
+                    if (hinted[val] === undefined) {
+                        cardInfo = {color: undefined, number: undefined};
+                    } else {
+                        cardInfo = hinted[val];
+                    }
+
+                    if (isColorHint) {
+                        cardInfo.color = CardUtils.getHintColor(hintInfo.hintType);
+                    } else {
+                        cardInfo.number = CardUtils.getHintNumber(hintInfo.hintType);
+                    }
+
+                    hinted[val] = cardInfo;
+                });
+            }
+
             var hintedIndices = $.map(hintInfo.affectedCards, (val) => {
                 return this.getIndexForCardId(val);
             });
-            this.setState({hintedCards: hintedIndices, activeHint: hintInfo});
+            this.setState({hintedCards: hintedIndices, activeHint: hintInfo, hinted: hinted});
 
             if (isColorHint) {
                 this.props.manager.showTimedDialog("YOU HAVE BEEN HINTED", `These cards are ${CardUtils.getHint(hintInfo.hintType)}!`, 5000);
@@ -90,7 +124,43 @@ define(['jquery', 'React'], function ($, React) {
         animateDraw(removedIndex, newHand, callBack) {
             var idx = removedIndex;
             var manager = this.props.manager;
-            if (idx !== newHand.length - 1) {
+            console.log(newHand);
+
+            if (newHand[newHand.length - 1] === null) {
+                // we drew a 'null' card (aka deck empty)
+
+                var leftShift = [];
+                var rightShift = [];
+                for (var i = 0; i < idx; i++) {
+                    var $c = $(React.findDOMNode(this.refs["card" + i]));
+                    $c.addClass("right-half-shift");
+                    rightShift.push($c);
+                }
+                for (var i = idx + 1; i < newHand.length; i++) {
+                    var $c = $(React.findDOMNode(this.refs["card" + i]));
+                    $c.addClass("left-half-shift");
+                    leftShift.push($c);
+                }
+
+                setTimeout(() => {
+                    $.each(leftShift, (index, val) => {
+                        val.addClass('notransition');
+                        val.removeClass("left-half-shift");
+                        val[0].offsetHeight;
+                        val.removeClass('notransition');
+                    });
+                    $.each(rightShift, (index, val) => {
+                        val.addClass('notransition');
+                        val.removeClass("right-half-shift");
+                        val[0].offsetHeight;
+                        val.removeClass('notransition');
+                    });
+                    manager.onNewHand(this.props.playerInfo.playerId, newHand);
+                    if (callBack !== undefined) {
+                        callBack();
+                    }
+                }, 300);
+            } else if (idx !== newHand.length - 1) {
                 var affected = [];
                 for (var i = idx + 1; i < newHand.length; i++) {
                     var $c = $(React.findDOMNode(this.refs["card" + i]));
@@ -131,6 +201,7 @@ define(['jquery', 'React'], function ($, React) {
             $card.css("opacity", "0");
         },
         animatePlay(gameEvent) {
+            this.props.manager.wait(900);
             /*
             {
               "playerId": 4,
@@ -155,7 +226,13 @@ define(['jquery', 'React'], function ($, React) {
             var cardPlayed = gameEvent.played;
 
             manager.preloadResource(manager.getCardRes(cardPlayed), () => {
-                this.setState({flipCard: cardPlayed, lastCardId: hand[hand.length - 1].cardId});
+                // clean up hinted...
+                var hinted = this.state.hinted;
+                if (hinted[cardPlayed.cardId] !== undefined) {
+                    delete hinted[cardPlayed.cardId];
+                }
+                var lastCard = hand[hand.length - 1];
+                this.setState({flipCard: cardPlayed, lastCardId: lastCard === null ? -1 : lastCard.cardId, hinted: hinted});
 
                 setTimeout(() => {
                     var idx;
@@ -213,6 +290,8 @@ define(['jquery', 'React'], function ($, React) {
             });
         },
         animateDiscard(gameEvent) {
+            this.props.manager.wait(900);
+            
             var manager = this.props.manager;
             var hand = this.props.playerInfo.hand;
             var cardDisc = gameEvent.discarded;
@@ -260,7 +339,7 @@ define(['jquery', 'React'], function ($, React) {
             var playerInfo = this.props.playerInfo;
             var cardViews = [];
             var appendClass = "";
-            var hintDecor;
+            var targetedHintDecor;
 
             if (this.state.activeHint !== undefined) {
                 var isColorHint = CardUtils.isColorHint(this.state.activeHint.hintType);
@@ -285,7 +364,7 @@ define(['jquery', 'React'], function ($, React) {
                 } else {
                     var numberHint = CardUtils.getHintNumber(this.state.activeHint.hintType);
 
-                    hintDecor = (
+                    targetedHintDecor = (
                         <div className="hint-decor">
                             {numberHint}
                         </div>
@@ -295,8 +374,17 @@ define(['jquery', 'React'], function ($, React) {
 
             if (playerInfo.hand !== undefined) {
                 cardViews = $.map(playerInfo.hand, (val, index) => {
+                    if (val === null) {
+                        return null;
+                        // return (
+                        //     <span className="card-in-hand animate-gone" key="notHere">
+                        //     </span>
+                        // );
+                    }
                     var isActive = this.state.active === index;
                     var isHinted = this.state.hintedCards.indexOf(index) !== -1;
+                    var isShowHinted = this.state.showHinted;
+                    var hinted = this.state.hinted;
                     var menu = undefined;
             
                     if (isActive) {
@@ -314,10 +402,46 @@ define(['jquery', 'React'], function ($, React) {
                     }
 
                     var cardClass = "";
+                    var cardBackClass = "front" + (isHinted ? appendClass : "");
                     if (isHinted) {
                         cardClass = "active-card";
                     } else if (isActive) {
                         cardClass = "active-card";
+                    }
+
+                    var hintDecor = isHinted ? targetedHintDecor : undefined;
+
+                    if (isShowHinted && hinted[val.cardId] !== undefined) {
+                        var whatWeKnow = hinted[val.cardId];
+                        console.log(whatWeKnow);
+                        if (whatWeKnow.color !== undefined) {
+                            switch (CardUtils.getHintColor(whatWeKnow.color)) {
+                                case CardUtils.Color.BLUE:
+                                    cardBackClass += " strong-blue-pulse";
+                                    break;
+                                case CardUtils.Color.GREEN:
+                                    cardBackClass += " strong-green-pulse";
+                                    break;
+                                case CardUtils.Color.RED:
+                                    cardBackClass += " strong-red-pulse";
+                                    break;
+                                case CardUtils.Color.WHITE:
+                                    cardBackClass += " strong-white-pulse";
+                                    break;
+                                case CardUtils.Color.YELLOW:
+                                    cardBackClass += " strong-yellow-pulse";
+                                    break;
+                            }
+                        }
+                        if (whatWeKnow.number !== undefined) {
+                            var numberHint = whatWeKnow.number;
+
+                            hintDecor = (
+                                <div className="hint-decor">
+                                    {numberHint}
+                                </div>
+                            );
+                        }
                     }
 
                     var cardRes = "res/cards/card_back.png";
@@ -328,9 +452,8 @@ define(['jquery', 'React'], function ($, React) {
                     }
 
                     return (
-                        <span className={"card-in-hand"} key={val.cardId}>
+                        <span className="card-in-hand" key={val.cardId}>
                             {menu}
-                            {isHinted ? hintDecor : undefined}
                             <a 
                                 className={cardClass + " card-container" + (isActive || isHinted ? "" : " hoverable")}
                                 onClick={this.onCardClickHandler}
@@ -339,20 +462,21 @@ define(['jquery', 'React'], function ($, React) {
                                 ref={"card" + index}>
                                 <div className={"card" + (isAnimatingPlay ? " flip" : "")}>
                                     <img 
-                                        className={"front" + (isHinted ? appendClass : "")}
+                                        className={cardBackClass}
                                         src="res/cards/card_back.png"
                                         data-index={index}></img>
                                     <img 
                                         className="back"
                                         src={cardRes}></img>
                                 </div>
+                                {hintDecor}
                             </a>
                         </span>
                     );
                 });
             }
             return (
-                <div className="hand-container">
+                <div className="hand-container" ref="handContainer">
                     {cardViews}
                 </div>
             );

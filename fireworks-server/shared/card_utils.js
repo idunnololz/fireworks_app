@@ -262,7 +262,7 @@
     }
 
     exports.getCardNumber = (cardType) => {
-        return (32 - numberOfLeadingZeros(cardType)) % 5;
+        return (((32 - numberOfLeadingZeros(cardType)) - 1) % 5) + 1;
     }
 
     exports.getAllCardsWithNumber = (number, cards) => {

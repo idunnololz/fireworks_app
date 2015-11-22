@@ -7,6 +7,8 @@ export default class Deck {
     reset() {
         this.populate();
         this.shuffle();
+
+        this.deckSize = this.cards.length;
     }
 
     populate() {
@@ -60,7 +62,7 @@ export default class Deck {
             0x00400000,
             0x00800000,
             0x00800000,
-            0x01000000,
+            0x01000000,  
         ];
         for (var i = 0; i < arr.length; i++) {
             this.cards[i] = arr[i];
@@ -83,6 +85,10 @@ export default class Deck {
 
     length() {
         return this.cards.length;
+    }
+
+    getDeckSize() {
+        return this.deckSize;
     }
 
     isEmpty() {
