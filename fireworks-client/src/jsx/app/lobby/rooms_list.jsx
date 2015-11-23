@@ -1,10 +1,29 @@
-define(['jquery', 'React'], function ($, React) {
+define(['jquery', 'React', 'app/log'], function ($, React, Log) {
     var ReactTransitionGroup = React.addons.CSSTransitionGroup;
+
+    const STATUS_WAITING = 1;
+    const STATUS_PLAYING = 2;
+
+    const TAG = 'RoomsList';
 
     var RoomItem = React.createClass({
         render() {
             var styles = this.props.styles;
-            var room = this.props.room;        
+            var room = this.props.room;    
+
+            var status;
+
+            switch (room.status) {
+                case STATUS_WAITING:
+                    status = "Waiting";
+                    break;
+                case STATUS_PLAYING:
+                    status = "Playing";
+                    break;
+                default:
+                    status = "Unknown";
+                    break;
+            }    
 
             return (
                 <div className={"list-item selectable"} onClick={this.props.onClick}>
@@ -14,7 +33,7 @@ define(['jquery', 'React'], function ($, React) {
                     <div className="resizable-spacer"></div>
                     <div className="col" style={styles[2]}>{room.numPlayers + "/" + room.maxPlayers}</div>
                     <div className="resizable-spacer"></div>
-                    <div className="col" style={styles[3]}>{room.status}</div>
+                    <div className="col" style={styles[3]}>{status}</div>
                 </div>
             );
         }
@@ -51,7 +70,7 @@ define(['jquery', 'React'], function ($, React) {
                 var index = parseInt($this.attr('data-index'));
 
                 var tableWidth = $('.list-header').width();
-                var tableLeft = $('.sortable').eq(index).position().left;
+                var tableLeft = $('.sortable').eq(index).offset().left;
                 var draggableWidth = $this.outerWidth();
 
                 $(document).on('mouseup', function(e){
@@ -60,6 +79,7 @@ define(['jquery', 'React'], function ($, React) {
                 $(document).on('mousemove', function(e){
                     var mx = e.pageX - tableLeft;
                     var newRatio = mx / (tableWidth - draggableWidth * 3) * 100;
+                    Log.d(TAG, "e: %O, tl: %f mx: %f new ratio: %f", e, tableLeft, mx, newRatio);
                     if (newRatio < 5) {
                         newRatio = 5;
                     }

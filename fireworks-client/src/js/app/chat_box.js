@@ -1,5 +1,7 @@
-define(['jquery', 'React', 'libs/nano_scroller'], function ($, React) {
+define(['jquery', 'React', 'libs/nano_scroller', 'app/log'], function ($, React, nano, Log) {
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
+
+    const TAG = 'ChatBox';
 
     
         function Message(senderName, senderId, message) {"use strict";
@@ -36,7 +38,7 @@ define(['jquery', 'React', 'libs/nano_scroller'], function ($, React) {
             this.props.socket.on('sendMessage', function(msg)  {
                 var messages = this.state.messages;
                 messages.push(msg);
-                console.log(msg);
+                Log.d(TAG, 'sendMessage: %O', msg);
                 this.setState({'messages': messages});
             }.bind(this));
         },

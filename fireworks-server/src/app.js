@@ -267,6 +267,7 @@ io.on('connection', function(socket){
             eventType: EVENT_PLAY,
             data: msg,
             lives: game.getLives(),
+            hints: game.getHints(),
             draw: unknownCard,
             played: game.getCardWithId(msg.cardId),
             playable: playable

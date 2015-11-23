@@ -1,4 +1,4 @@
-define(['jquery', 'React'], function ($, React) {
+define(['jquery', 'React', 'app/log'], function ($, React, Log) {
     var ReactTransitionGroup = React.addons.CSSTransitionGroup;
 
     var SignInView = React.createClass({
@@ -13,10 +13,10 @@ define(['jquery', 'React'], function ($, React) {
                 this.setState({value: nextProps.playerInfo.playerName});
             }
         },
-        handleChange: function(event) {
+        handleChange(event) {
             this.setState({value: event.target.value});
         },
-        handleSignIn: function(e) {
+        handleSignIn(e) {
             var socket = this.props.socket;
             var handler = (msg) => {
                 if (msg) {
@@ -32,6 +32,10 @@ define(['jquery', 'React'], function ($, React) {
             socket.on('setName', handler);
             socket.emit('setName', {preferredName: this.state.value});
         },
+        onSignInSubmit(e) {
+            e.preventDefault();
+            this.handleSignIn(null);
+        },
         render() {
             var value = this.state.value;
             return (
@@ -43,7 +47,7 @@ define(['jquery', 'React'], function ($, React) {
                     </div>
                     <div className="vertical-divider"> </div>
                     <div className="right-side">
-                        <form className="sign-in-form">
+                        <form className="sign-in-form" onSubmit={this.onSignInSubmit}>
                             <p>
                                 Give yourself a name
                             </p>

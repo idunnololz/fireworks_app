@@ -131,6 +131,7 @@ export default class Game {
                 var next = CardUtils.getNextPlayable(card, i);
                 this.validPlays[i] = next;
                 if (next === 0) {
+                    this._gainHint(); // played a 5... gain a hint
                     this._checkForWin();
                 }
                 playable = true;

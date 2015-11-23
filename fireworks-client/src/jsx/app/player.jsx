@@ -226,6 +226,11 @@ define(['jquery', 'React'], function ($, React) {
 
                 var menuBar = manager.getMenuBarRef();
 
+                if (manager.getHints() !== gameEvent.hints) {
+                    manager.setHints(gameEvent.hints);
+                    manager.commitState();
+                }
+                    
                 if (manager.getLives() > gameEvent.lives) {
                     // animate the card going into the trash...
                     this.animateToTrash(idx);

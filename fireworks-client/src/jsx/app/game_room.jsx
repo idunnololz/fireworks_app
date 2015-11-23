@@ -1,8 +1,10 @@
-define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app/info_bar', 'app/menu_bar', 'app/game_board', 
+define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_player', 'app/info_bar', 'app/menu_bar', 'app/game_board', 
     'app/dialog_game_over', 'app/history_dialog'], 
-    function ($, React, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog, HistoryDialog) {
+    function ($, React, Log, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog, HistoryDialog) {
 
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
+
+    const TAG = "GameRoom";
     
     const MODE_LOADING = 1;
     const MODE_WAITING = 2;
@@ -71,11 +73,12 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
         componentWillMount() {
             var s = this.props.socket;
             s.on('getSelf', (msg) => {
+                Log.d(TAG, 'getSelf: %O', msg);
                 var m = {playerInfo: {playerName: msg.playerName, playerId: msg.playerId}};
                 this.setState(m);
             });
             s.on('getGameInfo', (msg) => {
-                console.log(msg);
+                Log.d(TAG, 'getGameInfo: %O', msg);
                 if (msg.gameStarted) {
                     this.setState({mode: MODE_SPECTATOR, playersInGame: msg.playersInGame});
                 } else {
@@ -83,7 +86,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                 }
             });
             s.on('playerJoined', (msg) => {
-                console.log(msg);
+                Log.d(TAG, 'playerJoined: %O', msg);
                 var ps = this.state.playersInGame;
                 ps.push(msg);
                 this.setState({playersInGame: ps});
@@ -106,6 +109,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
             s.on('gameStarted', (msg) => {
                 var pi = this.state.playerInfo;
                 var players = msg.players;
+                var playersInGame = []; // use to align items...
                 for (var i = 0; i < players.length; i++) {
                     var p = players[i];
 
@@ -113,15 +117,14 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     if (p.playerId === pi.playerId) {
                         pi = p;
                     }
+                    playersInGame[p.playerIndex] = p;
                 }
-
-                console.log(msg.deckSize);
 
                 this.setState({
                     mode: MODE_PLAYING, 
                     playerInfo: pi,
                     turnIndex: 0,
-                    playersInGame: players,
+                    playersInGame: playersInGame,
                     numPlayers: players.length,
                     hints: msg.hints,
                     lives: msg.lives,
@@ -298,7 +301,7 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
                     this.showGameOverDialog();
                     break;
                 default:
-                    console.log(gameEvent);
+                    Log.w(TAG, 'Event not supported: %O', gameEvent);
                     break;
             }
         },
@@ -715,7 +718,6 @@ define(['jquery', 'React', 'app/chat_box', 'app/player', 'app/this_player', 'app
             }
 
             if (this.state.showToast) {
-                console.log("showing toast");
                 toastView = (
                     <div key="toast" className="toast-inner-container">
                         <div className="toast">

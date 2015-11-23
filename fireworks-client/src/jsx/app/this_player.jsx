@@ -1,5 +1,7 @@
-define(['jquery', 'React'], function ($, React) {
+define(['jquery', 'React', 'app/log'], function ($, React, Log) {
     var ReactTransitionGroup = React.addons.CSSTransitionGroup;
+
+    const TAG = "ThisPlayer";
 
     var ThisPlayer = React.createClass({
         getInitialState() {
@@ -124,7 +126,7 @@ define(['jquery', 'React'], function ($, React) {
         animateDraw(removedIndex, newHand, callBack) {
             var idx = removedIndex;
             var manager = this.props.manager;
-            console.log(newHand);
+            Log.d(TAG, "newHand: %O", newHand);
 
             if (newHand[newHand.length - 1] === null) {
                 // we drew a 'null' card (aka deck empty)
@@ -243,6 +245,11 @@ define(['jquery', 'React'], function ($, React) {
                     });
 
                     var menuBar = manager.getMenuBarRef();
+
+                    if (manager.getHints() !== gameEvent.hints) {
+                        manager.setHints(gameEvent.hints);
+                        manager.commitState();
+                    }
 
                     if (manager.getLives() > gameEvent.lives) {
                         this.animateToTrash(idx);
@@ -413,7 +420,6 @@ define(['jquery', 'React'], function ($, React) {
 
                     if (isShowHinted && hinted[val.cardId] !== undefined) {
                         var whatWeKnow = hinted[val.cardId];
-                        console.log(whatWeKnow);
                         if (whatWeKnow.color !== undefined) {
                             switch (CardUtils.getHintColor(whatWeKnow.color)) {
                                 case CardUtils.Color.BLUE:

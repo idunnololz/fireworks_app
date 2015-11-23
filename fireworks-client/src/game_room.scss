@@ -91,9 +91,19 @@
             align-items: center;
 
             background-color: $color-theme-second;
-            @include box-shadow(0px, 0px, 1vh, rgba(0,0,0,0.5));
+            @include box-shadow(0px, 5px, 1vh, rgba(0,0,0,0.5));
             
             border-radius: 5px;
+
+            h1 {
+                font-weight: 700;
+                font-size: small;
+            }
+
+            p {    
+                font-size: x-large;
+                margin-top: 0.5vh;
+            }
         }
     }
 

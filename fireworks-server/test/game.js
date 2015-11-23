@@ -155,4 +155,34 @@ describe('Game', function() {
         game.play(1, 0x0010);
         assert(!game.isEndangered(0x0010));
     });
+
+    it('testHints: ensure that the hint counter increments and decrements correctly', () => {
+        var game = getTestGame();
+        assert.equal(game.getHints(), 8);
+
+        game.hint(0, 1, 0);
+        assert.equal(game.getHints(), 7);
+
+        game.hint(1, 1, 0);
+        assert.equal(game.getHints(), 6);
+
+        game.discard(2, 0x0001);
+        assert.equal(game.getHints(), 7);
+        game.discard(3, 0x0001);
+        assert.equal(game.getHints(), 8);
+        game.discard(4, 0x0001);
+        assert.equal(game.getHints(), 8);
+
+        // ensure that we get a hint back from playing a stack...
+        game.hint(0, 1, 0);
+        game.hint(1, 1, 0);
+        assert.equal(game.getHints(), 6);
+
+        game.play(2, 0x0001);
+        game.play(3, 0x0002);
+        game.play(4, 0x0004);
+        game.play(0, 0x0008);
+        game.play(1, 0x0010);
+        assert.equal(game.getHints(), 7);
+    });
 }); 

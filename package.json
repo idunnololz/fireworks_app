@@ -13,7 +13,7 @@
     "babel-core": "^5.8.23"
   },
   "scripts": {
-    "test": "mocha --opts mocha.opts",
+    "test": "cd fireworks-server && mocha --opts mocha.opts",
     "start": "node fireworks-server/index.js"
   },
   "license": "Apache-2.0",

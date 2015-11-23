@@ -1899,10 +1899,16 @@ th {
       justify-content: center;
       align-items: center;
       background-color: #131313;
-      -webkit-box-shadow: 0px 0px 1vh rgba(0, 0, 0, 0.5);
-      -moz-box-shadow: 0px 0px 1vh rgba(0, 0, 0, 0.5);
-      box-shadow: 0px 0px 1vh rgba(0, 0, 0, 0.5);
+      -webkit-box-shadow: 0px 5px 1vh rgba(0, 0, 0, 0.5);
+      -moz-box-shadow: 0px 5px 1vh rgba(0, 0, 0, 0.5);
+      box-shadow: 0px 5px 1vh rgba(0, 0, 0, 0.5);
       border-radius: 5px; }
+      .game-room .dialog-container .timed-dialog h1 {
+        font-weight: 700;
+        font-size: small; }
+      .game-room .dialog-container .timed-dialog p {
+        font-size: x-large;
+        margin-top: 0.5vh; }
   .game-room .toast-container {
     position: fixed;
     width: 100%;
