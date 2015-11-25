@@ -29,8 +29,8 @@ define(['jquery', 'React'], function ($, React) {
                         </select>
                     </div>
                     <div className="options-container">
-                        <a className="theme-button" href="javascript:;" onClick={this.props.onCancelClickHandler}>Cancel</a>
-                        <a className="theme-button" href="javascript:;" onClick={this.onNewGameClick}>Make room</a>
+                        <button className="theme-button" onClick={this.props.onCancelClickHandler}>Cancel</button>
+                        <button className="theme-button" onClick={this.onNewGameClick}>Make room</button>
                     </div>
                 </div>
             );

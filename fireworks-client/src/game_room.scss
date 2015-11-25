@@ -23,6 +23,67 @@
         transition: opacity 250ms ease;
     }
 
+    .menu-button {
+        position: absolute;
+
+        top: 3vh;
+        left: -1.5vw;
+
+        background: $color-theme-second;
+
+        border-radius: 5px;
+
+        @include box-shadow(0px, 0px, 32px, rgba(0,0,0,0.5));
+        @include transition(all .3s ease);
+
+        border: none;
+
+        .ic-menu {
+            background: url("/res/ic_menu_white.png") no-repeat;
+            background-size: cover;
+            width: 3vw;
+            height: 3vw;
+        }
+    }
+
+    .menu-button:focus { outline:none; }
+
+    .menu-button:hover {
+        left: 0;
+    }
+
+    .in-game-menu {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        background: $color-theme-second;
+        border-radius: 5px;
+
+        @include box-shadow(0px, 0px, 32px, rgba(0,0,0,0.5));
+        left: -6px;
+        top: 3vh;
+        padding-left: 6px;
+
+        button {
+            @include transition(all .3s ease);
+            display: inline-block;
+            padding: 0.7vw 2vw 0.7vw 2vw;
+            align-self: flex-end;
+            background-color: transparent;
+            text-decoration: none;
+            color: $theme-font-color;
+            border: none;
+
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        button:focus { outline:none; }
+    }
+
     .special-text-container {
         @include transition(all .3s ease);
         position: fixed;

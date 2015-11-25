@@ -25,8 +25,8 @@ define(['jquery', 'React'], function ($, React) {
                     React.createElement("h2", null, "Players"), 
                     React.createElement("div", {className: "players-list"}, playersView), 
                     React.createElement("div", {className: "options-container"}, 
-                        React.createElement("a", {className: "theme-button", href: "javascript:;", onClick: this.props.onCancelClickHandler}, "Cancel"), 
-                        React.createElement("a", {className: "theme-button", href: "javascript:;", onClick: this.onJoinGameClick}, "Join game")
+                        React.createElement("button", {className: "theme-button", onClick: this.props.onCancelClickHandler}, "Cancel"), 
+                        React.createElement("button", {className: "theme-button", onClick: this.onJoinGameClick}, "Join game")
                     )
                 )
             );

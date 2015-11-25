@@ -12,13 +12,13 @@ define(['jquery', 'React'], function ($, React) {
                 <div className="top-bar">
                     <div className="icon"></div>
                     <div className="vertical-divider"></div>
-                    <a className="menu-button" href="javascript:;" onClick={this.props.onNewGameClickHandler}>New Game</a>
+                    <button className="menu-button" onClick={this.props.onNewGameClickHandler}>New Game</button>
                     <div className="vertical-divider"></div>
-                    <a className="menu-button" href="javascript:;">How to Play</a>
+                    <button className="menu-button" onClick={this.props.onHowToPlayClickHandler}>How to Play</button>
                     <div className="vertical-divider"></div>
-                    <a className="menu-button" href="javascript:;">Options</a>
+                    <button className="menu-button">Options</button>
                     <div className="vertical-divider"></div>
-                    <a className="menu-button" href="javascript:;">About</a>
+                    <button className="menu-button">About</button>
                 </div>
             );
         }

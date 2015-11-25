@@ -12,13 +12,13 @@ define(['jquery', 'React'], function ($, React) {
                 React.createElement("div", {className: "top-bar"}, 
                     React.createElement("div", {className: "icon"}), 
                     React.createElement("div", {className: "vertical-divider"}), 
-                    React.createElement("a", {className: "menu-button", href: "javascript:;", onClick: this.props.onNewGameClickHandler}, "New Game"), 
+                    React.createElement("button", {className: "menu-button", onClick: this.props.onNewGameClickHandler}, "New Game"), 
                     React.createElement("div", {className: "vertical-divider"}), 
-                    React.createElement("a", {className: "menu-button", href: "javascript:;"}, "How to Play"), 
+                    React.createElement("button", {className: "menu-button", onClick: this.props.onHowToPlayClickHandler}, "How to Play"), 
                     React.createElement("div", {className: "vertical-divider"}), 
-                    React.createElement("a", {className: "menu-button", href: "javascript:;"}, "Options"), 
+                    React.createElement("button", {className: "menu-button"}, "Options"), 
                     React.createElement("div", {className: "vertical-divider"}), 
-                    React.createElement("a", {className: "menu-button", href: "javascript:;"}, "About")
+                    React.createElement("button", {className: "menu-button"}, "About")
                 )
             );
         }

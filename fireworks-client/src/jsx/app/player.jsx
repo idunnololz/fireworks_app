@@ -1,5 +1,7 @@
-define(['jquery', 'React'], function ($, React) {
+define(['jquery', 'React', 'app/log'], function ($, React, Log) {
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
+
+    const TAG = "Player";
 
     const HINT_COLOR = 1;
     const HINT_NUMBER = 2;
@@ -81,7 +83,14 @@ define(['jquery', 'React'], function ($, React) {
             return selected;
         },
         onHintClick(e) {
-            // send the hint then gtfo
+            var manager = this.props.manager;
+
+            if (manager.getHints() <= 0) {
+                manager.showToast("We can't give a hint because we have no more hint tokens!", 3000);
+                this.close();
+                return;
+            }
+
             // get the hintType (from CardUtils...not to be confused with this.state.hintType)
             var hintType = this.state.hintType;
             var card = this.props.playerInfo.hand[this.state.selectedSingle];
@@ -91,7 +100,7 @@ define(['jquery', 'React'], function ($, React) {
             } else {
                 hintType = CardUtils.numberToHint(CardUtils.getCardNumber(card.cardType));
             }
-            console.log("Sent hint with hint type: " + hintType);
+            Log.d(TAG, "Sent hint with hint type: " + hintType);
 
             var selectedCardIds = [];
             var hand = this.props.playerInfo.hand;
@@ -459,6 +468,19 @@ define(['jquery', 'React'], function ($, React) {
                 playerTitle = (
                     <div style={{position: 'relative'}}>
                         <div className="title">
+
+                            <div className={!isMyTurn ? "invisible" : "pyramid-gyro"}>
+                              <div className="pyramid-axis">
+                                
+                                <div className="pyramid-wall front"></div>
+                                <div className="pyramid-wall back"></div>
+                                <div className="pyramid-wall left"></div>
+                                <div className="pyramid-wall right"></div>
+                                
+                                <div className="bottom"></div>
+                              </div>
+                            </div>
+
                             <h1 className={titleClass}>{playerInfo.playerName}</h1>
                             <div className="show-menu-button" onClick={this.onShowMenuClick}>
                                 <div className="arrow-down"></div>

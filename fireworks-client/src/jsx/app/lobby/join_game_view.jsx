@@ -25,8 +25,8 @@ define(['jquery', 'React'], function ($, React) {
                     <h2>Players</h2>
                     <div className="players-list">{playersView}</div>
                     <div className="options-container">
-                        <a className="theme-button" href="javascript:;" onClick={this.props.onCancelClickHandler}>Cancel</a>
-                        <a className="theme-button" href="javascript:;" onClick={this.onJoinGameClick}>Join game</a>
+                        <button className="theme-button" onClick={this.props.onCancelClickHandler}>Cancel</button>
+                        <button className="theme-button" onClick={this.onJoinGameClick}>Join game</button>
                     </div>
                 </div>
             );

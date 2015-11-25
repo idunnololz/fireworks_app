@@ -29,8 +29,8 @@ define(['jquery', 'React'], function ($, React) {
                         )
                     ), 
                     React.createElement("div", {className: "options-container"}, 
-                        React.createElement("a", {className: "theme-button", href: "javascript:;", onClick: this.props.onCancelClickHandler}, "Cancel"), 
-                        React.createElement("a", {className: "theme-button", href: "javascript:;", onClick: this.onNewGameClick}, "Make room")
+                        React.createElement("button", {className: "theme-button", onClick: this.props.onCancelClickHandler}, "Cancel"), 
+                        React.createElement("button", {className: "theme-button", onClick: this.onNewGameClick}, "Make room")
                     )
                 )
             );

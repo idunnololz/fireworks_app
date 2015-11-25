@@ -1,5 +1,7 @@
-define(['jquery', 'React'], function ($, React) {
+define(['jquery', 'React', 'app/log'], function ($, React, Log) {
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
+
+    const TAG = "Player";
 
     const HINT_COLOR = 1;
     const HINT_NUMBER = 2;
@@ -81,7 +83,14 @@ define(['jquery', 'React'], function ($, React) {
             return selected;
         },
         onHintClick:function(e) {
-            // send the hint then gtfo
+            var manager = this.props.manager;
+
+            if (manager.getHints() <= 0) {
+                manager.showToast("We can't give a hint because we have no more hint tokens!", 3000);
+                this.close();
+                return;
+            }
+
             // get the hintType (from CardUtils...not to be confused with this.state.hintType)
             var hintType = this.state.hintType;
             var card = this.props.playerInfo.hand[this.state.selectedSingle];
@@ -91,7 +100,7 @@ define(['jquery', 'React'], function ($, React) {
             } else {
                 hintType = CardUtils.numberToHint(CardUtils.getCardNumber(card.cardType));
             }
-            console.log("Sent hint with hint type: " + hintType);
+            Log.d(TAG, "Sent hint with hint type: " + hintType);
 
             var selectedCardIds = [];
             var hand = this.props.playerInfo.hand;
@@ -459,6 +468,19 @@ define(['jquery', 'React'], function ($, React) {
                 playerTitle = (
                     React.createElement("div", {style: {position: 'relative'}}, 
                         React.createElement("div", {className: "title"}, 
+
+                            React.createElement("div", {className: !isMyTurn ? "invisible" : "pyramid-gyro"}, 
+                              React.createElement("div", {className: "pyramid-axis"}, 
+                                
+                                React.createElement("div", {className: "pyramid-wall front"}), 
+                                React.createElement("div", {className: "pyramid-wall back"}), 
+                                React.createElement("div", {className: "pyramid-wall left"}), 
+                                React.createElement("div", {className: "pyramid-wall right"}), 
+                                
+                                React.createElement("div", {className: "bottom"})
+                              )
+                            ), 
+
                             React.createElement("h1", {className: titleClass}, playerInfo.playerName), 
                             React.createElement("div", {className: "show-menu-button", onClick: this.onShowMenuClick}, 
                                 React.createElement("div", {className: "arrow-down"})

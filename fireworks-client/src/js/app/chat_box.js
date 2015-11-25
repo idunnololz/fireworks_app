@@ -1,7 +1,8 @@
-define(['jquery', 'React', 'libs/nano_scroller', 'app/log'], function ($, React, nano, Log) {
+define(['jquery', 'React', 'libs/nano_scroller', 'app/log', 'app/prefs'], function ($, React, nano, Log, Prefs) {
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
     const TAG = 'ChatBox';
+    const KEY_BG_ALPHA = 'chat_bg_alpha';
 
     
         function Message(senderName, senderId, message) {"use strict";
@@ -14,7 +15,8 @@ define(['jquery', 'React', 'libs/nano_scroller', 'app/log'], function ($, React,
     var ChatBox = React.createClass({displayName: "ChatBox",
         getInitialState:function() {
             return {
-                messages: []
+                messages: [],
+                baseAlpha: Prefs.get(KEY_BG_ALPHA, 0.5)
             };
         },
         handleSubmit:function(e) {
@@ -81,12 +83,12 @@ define(['jquery', 'React', 'libs/nano_scroller', 'app/log'], function ($, React,
 
             return (
                 React.createElement("form", {className: "chat-box", onSubmit: this.handleSubmit}, 
-                    React.createElement("div", {className: "message-content nano"}, 
+                    React.createElement("div", {className: "message-content nano", style: {background: 'rgba(0, 0, 0, ' + this.state.baseAlpha + ')'}}, 
                         React.createElement("div", {className: "nano-content message-container"}, 
                             msgViews
                         )
                     ), 
-                    React.createElement("input", {className: "message-box", ref: "msgbox"}
+                    React.createElement("input", {className: "message-box", ref: "msgbox", style: {background: 'rgba(0, 0, 0, ' + (this.state.baseAlpha * 0.8) + ')'}}
                     )
                 )
             );

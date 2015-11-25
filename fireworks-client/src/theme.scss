@@ -35,3 +35,45 @@ a.theme-button {
 a.theme-button:hover {
     background-color: $color-theme-darker;
 }
+
+button.theme-button {
+    @include transition(all .3s ease);
+    display: inline-block;
+    padding: 0.7vw 2vw 0.7vw 2vw;
+    align-self: flex-end;
+    background-color: $color-theme-dark;
+    @include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.5));
+    text-decoration: none;
+    color: $theme-font-color;
+    border: none;
+}
+
+button.theme-button:hover {
+    background-color: $color-theme-darker;
+}
+
+button.theme-button:focus { 
+    background-color: darken($color-theme-darker, 5%);
+    outline: none;
+}
+
+div.theme-dialog {
+    display: flex;
+    flex-direction: column;
+    background: $color-theme-second;
+    padding: 20px;
+
+    border-radius: 5px;
+
+    @include box-shadow(0px, 0px, 32px, rgba(0,0,0,0.5));
+}
+
+
+div.options-container {
+    margin-top: 3vh;
+    align-self: flex-end;
+    
+    button {
+        margin-left: 10px;
+    }
+}

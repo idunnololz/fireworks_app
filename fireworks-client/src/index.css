@@ -16,6 +16,45 @@ a.theme-button {
 a.theme-button:hover {
   background-color: #11112b; }
 
+button.theme-button {
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+  display: inline-block;
+  padding: 0.7vw 2vw 0.7vw 2vw;
+  align-self: flex-end;
+  background-color: #141534;
+  -webkit-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+  box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+  text-decoration: none;
+  color: #ddd;
+  border: none; }
+
+button.theme-button:hover {
+  background-color: #11112b; }
+
+button.theme-button:focus {
+  background-color: #0a0a19;
+  outline: none; }
+
+div.theme-dialog {
+  display: flex;
+  flex-direction: column;
+  background: #131313;
+  padding: 20px;
+  border-radius: 5px;
+  -webkit-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5); }
+
+div.options-container {
+  margin-top: 3vh;
+  align-self: flex-end; }
+  div.options-container button {
+    margin-left: 10px; }
+
 /*! normalize.css v3.0.0 | MIT License | git.io/normalize */
 /**
  * 1. Set default font family to sans-serif.
@@ -639,11 +678,58 @@ th {
   -o-transition: all 0.3s ease;
   transition: all 0.3s ease; }
 
+@-webkit-keyframes spin {
+  from {
+    -webkit-transform: rotateY(0deg); }
+  to {
+    -webkit-transform: rotateY(360deg); } }
+.pyramid-gyro {
+  position: absolute;
+  top: 25%;
+  left: 0px;
+  margin-left: -1.6vw;
+  -webkit-perspective: 1000px;
+  -webkit-perspective-origin: 50% 7.0vw;
+  -webkit-transform: rotate(90deg) scaleX(0.75); }
+  .pyramid-gyro .pyramid-axis {
+    position: relative;
+    width: 1.4vw;
+    -webkit-transform-style: preserve-3d;
+    -webkit-animation: spin 3s infinite linear; }
+  .pyramid-gyro .pyramid-wall {
+    position: absolute;
+    border: 0.7vw solid transparent; }
+  .pyramid-gyro .front {
+    bottom: -0.14vw;
+    border-bottom: 1.4vw solid rgba(218, 174, 91, 0.5);
+    -webkit-transform: translateZ(0.175vw) rotateX(30deg); }
+  .pyramid-gyro .back {
+    bottom: -0.14vw;
+    border-bottom: 1.4vw solid rgba(218, 174, 91, 0.5);
+    -webkit-transform: translateZ(-0.175vw) rotateY(180deg) rotateX(30deg); }
+  .pyramid-gyro .left {
+    bottom: -0.14vw;
+    left: 0.525vw;
+    border-bottom: 1.4vw solid rgba(218, 174, 91, 0.5);
+    -webkit-transform: rotateY(270deg) translateX(-0.7vw) rotateX(30deg);
+    -webkit-transform-origin: center left; }
+  .pyramid-gyro .right {
+    bottom: -0.28vw;
+    right: 1.05vw;
+    border-bottom: 1.4vw solid rgba(218, 174, 91, 0.5);
+    -webkit-transform: rotateY(-270deg) translateX(0.7vw) rotateX(30deg);
+    -webkit-transform-origin: top right; }
+  .pyramid-gyro .bottom {
+    width: 1.4vw;
+    height: 1.4vw;
+    background: rgba(218, 174, 91, 0.7);
+    -webkit-transform: rotateX(90deg) translateY(0.7vw);
+    -webkit-transform-origin: bottom center; }
+
 .chat-box {
   display: flex;
   flex-direction: column; }
   .chat-box .message-content {
-    background-color: rgba(0, 0, 0, 0.5);
     flex: 1 0 auto; }
   .chat-box .message-container {
     padding: 5px 5px 5px 5px; }
@@ -660,7 +746,6 @@ th {
       font-size: medium;
       color: #999; }
   .chat-box .message-box {
-    background-color: rgba(0, 0, 0, 0.4);
     flex-basis: 30px;
     border-style: none;
     font-size: small;
@@ -1359,7 +1444,11 @@ th {
       top: 0;
       left: 0;
       right: 0;
-      background-color: #131313; }
+      background-color: #131313;
+      border-radius: 5px;
+      -webkit-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+      -moz-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+      box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5); }
       .board .discards-container .discards .card {
         opacity: 0; }
       .board .discards-container .discards .card-slot {
@@ -1485,6 +1574,7 @@ th {
   flex-direction: column;
   background: #131313;
   padding: 20px;
+  border-radius: 5px;
   -webkit-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
   -moz-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
   box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5); }
@@ -1617,11 +1707,15 @@ th {
       color: #ddd;
       font-size: x-large;
       font-weight: 300;
-      padding-left: 20px;
-      padding-right: 20px;
-      line-height: 70px; }
+      padding: 0 20px 0 20px;
+      line-height: 70px;
+      border: none;
+      background: transparent; }
     .lobby-view .top-bar .menu-button:hover {
       background-color: #11112b; }
+    .lobby-view .top-bar .menu-button:focus {
+      background-color: #0a0a19;
+      outline: none; }
   .lobby-view .body {
     flex: 1 0 auto;
     display: flex;
@@ -1634,26 +1728,15 @@ th {
       flex-direction: column;
       max-width: 1000px;
       flex: 1 0 auto;
-      position: relative; }
+      position: relative;
+      z-index: 1; }
       .lobby-view .body .body-right .top-spacer {
         height: 5vh; }
     .lobby-view .body .overlay {
       position: absolute;
-      left: 0; }
-    .lobby-view .body .slide-right-enter {
-      transform: translateX(-100%);
-      opacity: 0.01; }
-    .lobby-view .body .slide-right-enter.slide-right-enter-active {
-      transform: none;
-      opacity: 1;
-      transition: all .3s ease; }
-    .lobby-view .body .slide-right-leave {
-      transform: none;
-      opacity: 1; }
-    .lobby-view .body .slide-right-leave.slide-right-leave-active {
-      transform: translateX(-100%);
-      opacity: 0.01;
-      transition: all .3s ease; }
+      left: 0;
+      width: 100%;
+      height: 100%; }
     .lobby-view .body .slide-up-enter {
       transform: translateY(100%);
       opacity: 0.01; }
@@ -1696,7 +1779,8 @@ th {
         background-color: #26265f;
         padding: 10px; }
   .lobby-view .new-game-view {
-    margin-top: 10px;
+    top: 0px;
+    margin-top: 2vh;
     background: #1f1f4d;
     -webkit-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
     -moz-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
@@ -1704,10 +1788,41 @@ th {
     max-width: 40vw;
     display: flex;
     flex-direction: column;
-    padding: 0px 20px 20px 20px; }
+    padding: 0px 20px 20px 20px;
+    position: absolute; }
     .lobby-view .new-game-view h1 {
       font-size: x-large;
       font-weight: 300; }
+  .lobby-view .how-to-play-view {
+    top: 0px;
+    bottom: 0px;
+    margin-top: 2vh;
+    margin-bottom: 2vh;
+    width: 100%;
+    background: #1f1f4d;
+    -webkit-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+    -moz-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+    box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+    max-width: 40vw;
+    display: flex;
+    flex-direction: column;
+    padding: 0px 20px 20px 20px;
+    position: absolute; }
+    .lobby-view .how-to-play-view h1 {
+      font-size: x-large;
+      font-weight: 300; }
+    .lobby-view .how-to-play-view h2 {
+      font-size: large;
+      font-weight: 700;
+      margin-bottom: 0px; }
+    .lobby-view .how-to-play-view h3 {
+      font-size: medium;
+      font-weight: 700;
+      margin-bottom: 0px; }
+    .lobby-view .how-to-play-view .instructions-container {
+      flex: 1 0 0; }
+    .lobby-view .how-to-play-view .instructions {
+      margin-right: 20px; }
   .lobby-view .options-container {
     margin-top: 3vh;
     align-self: flex-end; }
@@ -1812,6 +1927,24 @@ th {
     height: 80%;
     border-left: thick solid #1b1b43; }
 
+.slide-right-enter {
+  transform: translateX(-100%);
+  opacity: 0.01; }
+
+.slide-right-enter.slide-right-enter-active {
+  transform: none;
+  opacity: 1;
+  transition: all .3s ease; }
+
+.slide-right-leave {
+  transform: none;
+  opacity: 1; }
+
+.slide-right-leave.slide-right-leave-active {
+  transform: translateX(-100%);
+  opacity: 0.01;
+  transition: all .3s ease; }
+
 .game-room {
   width: 100%;
   height: 100%;
@@ -1828,6 +1961,58 @@ th {
   .game-room .fade-leave.fade-leave-active {
     opacity: 0.01;
     transition: opacity 250ms ease; }
+  .game-room .menu-button {
+    position: absolute;
+    top: 3vh;
+    left: -1.5vw;
+    background: #131313;
+    border-radius: 5px;
+    -webkit-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+    -moz-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+    border: none; }
+    .game-room .menu-button .ic-menu {
+      background: url("/res/ic_menu_white.png") no-repeat;
+      background-size: cover;
+      width: 3vw;
+      height: 3vw; }
+  .game-room .menu-button:focus {
+    outline: none; }
+  .game-room .menu-button:hover {
+    left: 0; }
+  .game-room .in-game-menu {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    background: #131313;
+    border-radius: 5px;
+    -webkit-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+    -moz-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+    left: -6px;
+    top: 3vh;
+    padding-left: 6px; }
+    .game-room .in-game-menu button {
+      -webkit-transition: all 0.3s ease;
+      -moz-transition: all 0.3s ease;
+      -o-transition: all 0.3s ease;
+      transition: all 0.3s ease;
+      display: inline-block;
+      padding: 0.7vw 2vw 0.7vw 2vw;
+      align-self: flex-end;
+      background-color: transparent;
+      text-decoration: none;
+      color: #ddd;
+      border: none;
+      width: 100%; }
+    .game-room .in-game-menu button:hover {
+      background-color: rgba(0, 0, 0, 0.5); }
+    .game-room .in-game-menu button:focus {
+      outline: none; }
   .game-room .special-text-container {
     -webkit-transition: all 0.3s ease;
     -moz-transition: all 0.3s ease;
@@ -1992,6 +2177,15 @@ th {
 html, body {
   height: 100%;
   overflow: hidden; }
+
+.ui-tooltip {
+  position: absolute;
+  background: #131313;
+  padding: 10px 16px 10px 16px;
+  -webkit-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+  border-radius: 5px; }
 
 @-webkit-keyframes special-text-animation-r {
   0% {

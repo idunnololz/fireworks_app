@@ -1,8 +1,13 @@
-define(['jquery', 'React'], function ($, React) {
+define(['jquery', 'React', 'libs/tooltip'], function ($, React, ToolTip) {
     var MenuBar = React.createClass({
         getInitialState() {
             return {
             };
+        },
+        componentDidMount() {
+            $('.menu-bar-container').tooltip({
+                position: {my: "right-10", at: "left"}
+            });
         },
         getPositionOf(refName) {
             return $(React.findDOMNode(this.refs[refName])).offset();
@@ -23,13 +28,13 @@ define(['jquery', 'React'], function ($, React) {
             return (
                 <div className="menu-bar-container">
                     <div className="menu-bar">
-                        <a className="item" href="javascript:;" ref="delete" onClick={this.onShowDiscardsClick}>
+                        <a className="item" href="javascript:;" ref="delete" onClick={this.onShowDiscardsClick} title="Discards">
                             <img src="res/ic_delete.png"></img>
                         </a>
-                        <a className="item" href="javascript:;" ref="history" onClick={this.props.onHistoryClick}>
+                        <a className="item" href="javascript:;" ref="history" onClick={this.props.onHistoryClick} title="History">
                             <img src="res/ic_history.png"></img>
                         </a>
-                        <a className="item" href="javascript:;" ref="info" onClick={this.onShowMyHintedClick}>
+                        <a className="item" href="javascript:;" ref="info" onClick={this.onShowMyHintedClick} title="Show hinted">
                             <img src="res/ic_info.png"></img>
                         </a>
                     </div>

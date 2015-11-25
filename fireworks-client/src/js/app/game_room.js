@@ -1,6 +1,6 @@
 define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_player', 'app/info_bar', 'app/menu_bar', 'app/game_board', 
-    'app/dialog_game_over', 'app/history_dialog'], 
-    function ($, React, Log, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog, HistoryDialog) {
+    'app/dialog_game_over', 'app/history_dialog', 'app/prefs', 'app/leave_game_dialog'], 
+    function ($, React, Log, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog, HistoryDialog, Prefs, LeaveGameDialog) {
 
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
@@ -56,6 +56,12 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 showHistory: false,
                 history: [],
                 isGameOver: false,
+
+                objectVersion: 1,
+
+                showMenu: false,
+
+                showLeaveGameDialog: false,
             };
         },
         getLives:function() {
@@ -370,6 +376,8 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             }
         },
         componentDidUpdate:function(prevProps, prevState) {
+            if (this.state.playerInfo === undefined) return; // we just joined the room...
+
             // check if it is our turn... if it is, figure out what we need to do...
             if (this.isMyTurn()) {
                 if (this.state.playerInfo.hand === undefined) {
@@ -396,9 +404,39 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
         handleSpecialCommand:function(msg) {
             var chat = this.refs.chatbox;
             chat.v(msg);
-            switch (msg) {
+            var args = msg.split(' ');
+
+            // cool things that can be done:
+            // change chatbox alpha:
+            // /setPref chat_bg_alpha <alpha_as_float>
+            // /remount                                     ; this will immediately apply the alpha changes...
+
+            switch (args[0]) {
                 case '/thisPlayer':
                     chat.v(JSON.stringify(this.state.playerInfo));
+                    break;
+                case '/setPref':
+                    Prefs.set(args[1], parseFloat(args[2]));
+                    break;
+                case '/getPref':
+                    chat.v(args[1] + ': ' + Prefs.get(args[1]));
+                    break;
+                case '/cookiesEnabled':
+                    chat.v(Prefs.isCookiesEnabled() ? 'Cookies are enabled.' : 'Cookies are not enabled.');
+                    break;
+                case '/rawCookies':
+                    chat.v('rawCookies: ' + document.cookie);
+                    break;
+                case '/deleteAllCookies':
+                    Prefs.deleteAllCookies();
+                    chat.v('All cookies removed.');
+                    break;
+                case '/remount':
+                    this.setState({objectVersion: this.state.objectVersion + 1});
+                    chat.v('Remount success.');
+                    break;
+                default:
+                    chat.v("Invalid command '" + args[0] + "'.");
                     break;
             }
         },
@@ -546,6 +584,26 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
         onHistoryDialogDoneClick:function(e) {
             this.setState({showHistory: false});
         },
+        onMenuClick:function(e) {
+            this.setState({showMenu: true});
+        },
+        onMenuCancelClick:function(e) {
+            this.setState({showMenu: false});
+        },
+        onLeaveGameClick:function(e) {
+            this.setState({showLeaveGameDialog: true});
+        },
+        onLeaveGameCancelClick:function(e) {
+            this.setState({showLeaveGameDialog: false});
+        },
+        onLeaveGameOkClick:function(e) {
+            var leaveGameHandler = function(msg)  {
+                this.props.onLeaveRoom();
+                this.props.socket.removeListener('leaveGame', this);
+            }.bind(this);
+            this.props.socket.on('leaveGame', leaveGameHandler);
+            this.props.socket.emit('leaveGame');
+        },
         render:function() {
             var thisPlayer = this.state.playerInfo;
             var topInterface = [];
@@ -553,6 +611,31 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             var toastView;
             var specialView;
             var dialogViews = [];
+
+            var menuButton = (
+                React.createElement("button", {className: "menu-button", onClick: this.onMenuClick, key: "menu-button"}, React.createElement("div", {className: "ic-menu"}))
+            );
+
+            if (this.state.showMenu) {
+                menuButton = (
+                    React.createElement("div", {className: "in-game-menu", key: "in-game-menu"}, 
+                        React.createElement("button", null, "How to play"), 
+                        React.createElement("button", null, "Options"), 
+                        React.createElement("button", {onClick: this.onLeaveGameClick}, "Leave game"), 
+                        React.createElement("button", {onClick: this.onMenuCancelClick}, "Cancel")
+                    )
+                );
+            }
+
+            if (this.state.showLeaveGameDialog) {
+                dialogViews.push(
+                    React.createElement("div", {className: "dialog-container"}, 
+                        React.createElement(LeaveGameDialog, {
+                            onOkClick: this.onLeaveGameOkClick, 
+                            onCancelClick: this.onLeaveGameCancelClick})
+                    )
+                );
+            }
 
             switch (this.state.mode) {
                 case MODE_LOADING:
@@ -721,13 +804,12 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 toastView = (
                     React.createElement("div", {key: "toast", className: "toast-inner-container"}, 
                         React.createElement("div", {className: "toast"}, 
-                        this.state.toastMessage
+                            this.state.toastMessage
                         )
                     )
                 );
             }
 
-            // onClick={this.onBgClick}
             return (
                 React.createElement("div", {className: "game-room"}, 
                     React.createElement("div", {className: "top-content"}, 
@@ -735,12 +817,16 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     ), 
                     React.createElement("div", {className: "bot-content"}, 
                         React.createElement(ChatBox, {
+                            key: this.state.objectVersion, 
                             ref: "chatbox", 
                             playerInfo: this.state.playerInfo, 
                             socket: this.props.socket, 
                             className: "chat-box", 
                             handleSpecialCommand: this.handleSpecialCommand}), 
                         bottomInterface
+                    ), 
+                    React.createElement(ReactCSSTransitionGroup, {transitionName: "slide-right", transitionEnterTimeout: 300, transitionLeaveTimeout: 300}, 
+                        menuButton
                     ), 
                     specialView, 
                     React.createElement("div", {className: "toast-container"}, 

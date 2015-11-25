@@ -1,6 +1,7 @@
-require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'libs/timeout_transition_group', 'app/sign_in_view', 'app/lobby/lobby_view'], 
-    function (Consts, $, React, io, GameRoom, TimeoutTransitionGroup, SignInView, LobbyView) {
-    
+require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'libs/timeout_transition_group', 'app/sign_in_view', 'app/lobby/lobby_view','app/prefs'], 
+    function (Consts, $, React, io, GameRoom, TimeoutTransitionGroup, SignInView, LobbyView, Prefs) {
+
+    Prefs.load();    
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
     const PAGE_JOIN_GAME = 1; /** Deprecated. Original Join Game page. */
@@ -39,11 +40,29 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                 where: PAGE_SIGN_IN
             };
         },
+        joinTestGame() {
+            // hack this sht so we can go into a room immediately...
+            var socket = this.props.socket;
+            socket.on('joinGame', (msg) => {
+                if (msg === true) {
+                    this.onJoinGame('tester');
+                } else {
+                    // must mean we couldn't join the game...
+                    socket.on('makeRoom', (msg) => {
+                        this.onJoinGame('tester');
+                    });
+                    socket.emit('makeRoom', {gameId: 1000, roomName: 'tester', enterRoom: true});
+                }
+            });
+            socket.emit('joinGame', {gameId: 1000});
+        },
         componentWillMount() {
             var s = this.props.socket;
             var handler = (msg) => {
                 var m = {playerInfo: {playerName: msg.playerName, playerId: msg.playerId}};
                 this.setState(m);
+
+                //this.joinTestGame();
                 s.removeListener('getSelf', handler);
             };
             s.on('getSelf', handler);
@@ -197,7 +216,9 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
             }
         },
         focus() {
-            this.refs.gameRoom.focus();
+            if (this.refs.gameRoom !== undefined) {
+                this.refs.gameRoom.focus();
+            }
         },
         setPlayerName(newName) {
             this.state.playerInfo.playerName = newName;
@@ -214,6 +235,9 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
         },
         onJoinGame(roomName) {
             this.onNewGame(roomName);
+        },
+        onLeaveRoom() {
+                this.setState({where: PAGE_LOBBY});
         },
         render() {
             var content;
@@ -235,7 +259,7 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                     );
                     break;
                 case PAGE_IN_ROOM:
-                    content = (<GameRoom ref="gameRoom" key={PAGE_IN_ROOM} socket={this.props.socket}/>);
+                    content = (<GameRoom ref="gameRoom" key={PAGE_IN_ROOM} socket={this.props.socket} onLeaveRoom={this.onLeaveRoom}/>);
                     break;
                 case PAGE_SIGN_IN:
                     content = (<SignInView ref="signInView" key={PAGE_SIGN_IN} socket={this.props.socket} playerInfo={this.state.playerInfo} 

@@ -125,19 +125,43 @@ io.on('connection', function(socket){
     });
 
     socket.on('makeRoom', (msg) => {
-        game = new Game(genRoomId(), msg.roomName);
+        var gameId;
+        if (msg.gameId !== undefined) {
+            // the user wants to make a room with a certain gameId (used mostly for testing...)
+            if (gameIdToGame.has(msg.gameId)) {
+                // nope... reject...
+                socket.emit('makeRoom', 'Room with given ID already exists');
+                return;
+            }
+            gameId = msg.gameId;
+        } else {
+            do {
+                gameId = genRoomId();
+            } while (gameIdToGame.has(gameId));
+        }
+
+        game = new Game(gameId, msg.roomName);
         gameIdToGame.set(game.getId(), game);
         socket.emit('makeRoom', {gameId: game.getId()});
 
         io.in(LOCATION_LOBBY).emit('roomsUpdate', {added: [gameToRoomInfo(game)]});
+
+        if (msg.enterRoom !== undefined && msg.enterRoom === true) {
+            joinGameHandler({gameId: gameId});
+        }
     });
 
-    socket.on('joinGame', (msg) => {
+    var joinGameHandler = (msg) => {
         var gameId = msg.gameId;
 
         game = gameIdToGame.get(gameId);
+        if (game === undefined) {
+            socket.emit('joinGame', 'No game with given ID exists.');
+            return;
+        }
         game.addPlayer(player);
 
+        socket.emit('joinGame', true);
         socket.join(game.getId());
         socket.broadcast.to(game.getId()).emit('playerJoined', {'playerId': playerId, playerName: player.getName()});
 
@@ -146,6 +170,35 @@ io.on('connection', function(socket){
         if (players >= 2 && players <= 5) {
             io.to(game.getId()).emit('numPlayers', game.getNumPlayers());
         }
+    };
+    socket.on('joinGame', joinGameHandler);
+
+    var leaveGameHandler = (msg) => {
+        if (game !== undefined) {
+            var host = game.getHost();
+            game.removePlayer(player.getId());
+            socket.broadcast.to(game.getId()).emit('playerLeft', {'playerId': playerId, playerName: player.getName()});
+            if (host !== game.getHost()) {
+                // host changed... try to notify the new host
+                var newHost = game.getHost();
+                if (newHost != undefined) {
+                    newHost.getSocket().emit('isHost', true);
+                    Log.d(TAG, "Host changed to player %s.", newHost.getId());
+                }
+            }
+
+            if (game.getRealNumPlayers() === 0) {
+                // everyone left the game... remove the game...
+                var gameId = game.getId();
+                Log.d(TAG, "All players left! Removing game " + gameId);
+                gameIdToGame.delete(gameId);
+                io.in(LOCATION_LOBBY).emit('roomsUpdate', {removed: [gameId]});
+            }
+        }
+    };
+    socket.on('leaveGame', (msg) => {
+        leaveGameHandler();
+        socket.emit('leaveGame');
     });
 
     socket.on('getSelf', (msg) => {
@@ -201,6 +254,7 @@ io.on('connection', function(socket){
     const EVENT_DISCARD = 3;
     const EVENT_PLAY = 4;
     const EVENT_DECLARE_GAME_OVER = 5;
+    const EVENT_ERROR = 1000;
 
     socket.on('deckSize', (msg) => {
         socket.emit('deckSize', game.getDeck().getDeckSize());
@@ -240,7 +294,12 @@ io.on('connection', function(socket){
          *  hintType: A hint enum. See CardUtils.getHint().
          *  affectedCards: An array of card ids of the cards affected by the hint.
          */
-        game.hint(playerId, msg.target, msg.hintType);
+        var res = game.hint(playerId, msg.target, msg.hintType);
+        if (typeof res === 'string' || res instanceof String) {
+            // error!
+            socket.emit('gameEvent', {eventType: EVENT_ERROR, msg: res});
+            return;
+        }
         var event = {
             playerId: playerId, 
             eventType: EVENT_HINT,
@@ -310,27 +369,7 @@ io.on('connection', function(socket){
         }
 
         // clean up after disconnected player...
-        if (game !== undefined) {
-            var host = game.getHost();
-            game.removePlayer(player.getId());
-            socket.broadcast.to(game.getId()).emit('playerLeft', {'playerId': playerId, playerName: player.getName()});
-            if (host !== game.getHost()) {
-                // host changed... try to notify the new host
-                var newHost = game.getHost();
-                if (newHost != undefined) {
-                    newHost.getSocket().emit('isHost', true);
-                    Log.d(TAG, "Host changed to player %s.", newHost.getId());
-                }
-            }
-
-            if (game.getRealNumPlayers() === 0) {
-                // everyone left the game... remove the game...
-                var gameId = game.getId();
-                Log.d(TAG, "All players left! Removing game " + gameId);
-                gameIdToGame.delete(gameId);
-                io.in(LOCATION_LOBBY).emit('roomsUpdate', {removed: [gameId]});
-            }
-        }
+        leaveGameHandler(null);
 
         names.delete(player.getName()); // free the name
         playerManager.removePlayer(player);

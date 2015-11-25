@@ -1,5 +1,5 @@
-define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lobby/new_game_view', 'app/lobby/join_game_view'], 
-    function ($, React, TopBar, RoomsList, NewGameView, JoinGameView) {
+define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lobby/new_game_view', 'app/lobby/join_game_view', 'app/lobby/how_to_play_view'], 
+    function ($, React, TopBar, RoomsList, NewGameView, JoinGameView, HowToPlayView) {
 
     var ReactTransitionGroup = React.addons.CSSTransitionGroup;
 
@@ -10,10 +10,14 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
                                     ]
     */
 
+    const NONE = 0;
+    const VIEW_NEW_GAME = 1;
+    const VIEW_HOW_TO_PLAY = 2;
+
     var LobbyView = React.createClass({
         getInitialState() {
             return {
-                showNewGame: false,
+                leftView: NONE,
                 rooms: [],
 
                 roomSelected: null,
@@ -50,10 +54,13 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
             });
         },
         onNewGameClick(e) {
-            this.setState({showNewGame: true});
+            this.setState({leftView: VIEW_NEW_GAME});
         },
         onNewGameCancelClick(e) {
-            this.setState({showNewGame: false});
+            this.setState({leftView: NONE});
+        },
+        onHowToPlayClick(e) {
+            this.setState({leftView: VIEW_HOW_TO_PLAY});
         },
         onNewGameMakeClick(roomName, roomType) {
             var socket = this.props.socket;
@@ -82,19 +89,31 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
             this.props.socket.emit('joinGame', {gameId: gameId});
             this.props.onJoinGame(roomName);
         },
+        onHowToPlayOkClick(e) {
+            this.setState({leftView: NONE});
+        },
         render() {
             var value = this.state.value;
-            var newGameView;
+            var leftView;
             var joinGameView;
 
-            if (this.state.showNewGame) {
-                newGameView = (
-                    <NewGameView 
-                        key="newGameView" 
-                        defaultRoomName={this.props.playerInfo.playerName + "'s dank room"}
-                        onCancelClickHandler={this.onNewGameCancelClick}
-                        onNewGameClickHandler={this.onNewGameMakeClick}/>
-                );
+            switch (this.state.leftView) {
+                case VIEW_NEW_GAME:
+                    leftView = (
+                        <NewGameView 
+                            key="newGameView" 
+                            defaultRoomName={this.props.playerInfo.playerName + "'s dank room"}
+                            onCancelClickHandler={this.onNewGameCancelClick}
+                            onNewGameClickHandler={this.onNewGameMakeClick}/>
+                    );
+                    break;
+                case VIEW_HOW_TO_PLAY:
+                    leftView = (
+                        <HowToPlayView 
+                            key="howToPlayView" 
+                            onOkClickHandler={this.onHowToPlayOkClick}/>
+                    );
+                    break;
             }
 
             if (this.state.roomSelected !== null) {
@@ -110,7 +129,9 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
             return (
                 <div className="lobby-view">
                     <div style={{display: 'flex', 'flex-direction': 'row'}}>
-                        <TopBar onNewGameClickHandler={this.onNewGameClick}/>
+                        <TopBar 
+                            onNewGameClickHandler={this.onNewGameClick}
+                            onHowToPlayClickHandler={this.onHowToPlayClick}/>
                     </div>
                     <div className="body">
                         <div className="body-left">
@@ -130,7 +151,7 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
 
                         <div className="overlay">
                             <ReactTransitionGroup transitionName="slide-right" transitionEnterTimeout={300} transitionLeaveTimeout={300}>
-                                {newGameView}
+                                {leftView}
                             </ReactTransitionGroup>
                         </div>
                     </div>

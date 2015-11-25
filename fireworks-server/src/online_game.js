@@ -129,7 +129,11 @@ export default class OnlineGame extends Game {
 
     hint(playerId, targetPlayerId, hint) {
         if (this.state === STATE_OK) {
-            return super.hint(this.players[playerId].getIndex(), this.players[targetPlayerId].getIndex(), hint);
+            try {
+                return super.hint(this.players[playerId].getIndex(), this.players[targetPlayerId].getIndex(), hint);
+            } catch (e) {
+                return e;
+            }
         } else {
             // handle issue...
         }
