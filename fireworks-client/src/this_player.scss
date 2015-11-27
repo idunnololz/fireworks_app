@@ -83,7 +83,7 @@
     }
 
     .card-draw {
-        @include animation('anim-draw 0.3s ease');
+        @include animation(anim-draw 0.3s ease);
     }
 
     .shift {
@@ -104,7 +104,7 @@
 
     .animate-gone {
         width: 0vw;
-        @include animation('be-gone 0.3s ease');
+        @include animation(be-gone 0.3s ease);
     }
 
     img {

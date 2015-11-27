@@ -12,9 +12,8 @@ a.theme-button {
   box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
   text-decoration: none;
   color: #ddd; }
-
-a.theme-button:hover {
-  background-color: #11112b; }
+  a.theme-button:hover {
+    background-color: #11112b; }
 
 button.theme-button {
   -webkit-transition: all 0.3s ease;
@@ -31,13 +30,11 @@ button.theme-button {
   text-decoration: none;
   color: #ddd;
   border: none; }
-
-button.theme-button:hover {
-  background-color: #11112b; }
-
-button.theme-button:focus {
-  background-color: #0a0a19;
-  outline: none; }
+  button.theme-button:hover {
+    background-color: #11112b; }
+  button.theme-button:focus {
+    background-color: #0a0a19;
+    outline: none; }
 
 div.theme-dialog {
   display: flex;
@@ -54,6 +51,82 @@ div.options-container {
   align-self: flex-end; }
   div.options-container button {
     margin-left: 10px; }
+
+input[type=range] {
+  -webkit-appearance: none;
+  margin: 15px 0;
+  width: 100%; }
+  input[type=range]:focus {
+    outline: none; }
+  input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 5px;
+    cursor: pointer;
+    animate: 0.2s;
+    box-shadow: 0px 0px 0px #222, 0px 0px 0px #2f2f2f;
+    background: #3c3c96;
+    border-radius: 0px;
+    border: 0px solid transparent; }
+  input[type=range]::-webkit-slider-thumb {
+    box-shadow: 2px 2px 2px #111, 0px 0px 2px #1e1e1e;
+    border: 0px solid transparent;
+    height: 30px;
+    width: 30px;
+    border-radius: 8px;
+    background: #393967;
+    cursor: pointer;
+    -webkit-appearance: none;
+    margin-top: -12.5px; }
+  input[type=range]:focus::-webkit-slider-runnable-track {
+    background: #4444a8; }
+  input[type=range]::-moz-range-track {
+    width: 100%;
+    height: 5px;
+    cursor: pointer;
+    animate: 0.2s;
+    box-shadow: 0px 0px 0px #222, 0px 0px 0px #2f2f2f;
+    background: #3c3c96;
+    border-radius: 0px;
+    border: 0px solid transparent; }
+  input[type=range]::-moz-range-thumb {
+    box-shadow: 2px 2px 2px #111, 0px 0px 2px #1e1e1e;
+    border: 0px solid transparent;
+    height: 30px;
+    width: 30px;
+    border-radius: 8px;
+    background: #393967;
+    cursor: pointer; }
+  input[type=range]::-ms-track {
+    width: 100%;
+    height: 5px;
+    cursor: pointer;
+    animate: 0.2s;
+    background: transparent;
+    border-color: transparent;
+    border-width: 30px 0;
+    color: transparent; }
+  input[type=range]::-ms-fill-lower {
+    background: #353584;
+    border: 0px solid transparent;
+    border-radius: 0px;
+    box-shadow: 0px 0px 0px #222, 0px 0px 0px #2f2f2f; }
+  input[type=range]::-ms-fill-upper {
+    background: #3c3c96;
+    border: 0px solid transparent;
+    border-radius: 0px;
+    box-shadow: 0px 0px 0px #222, 0px 0px 0px #2f2f2f; }
+  input[type=range]::-ms-thumb {
+    box-shadow: 2px 2px 2px #111, 0px 0px 2px #1e1e1e;
+    border: 0px solid transparent;
+    height: 30px;
+    width: 30px;
+    border-radius: 8px;
+    background: #393967;
+    cursor: pointer; }
+  input[type=range]:focus::-ms-fill-lower {
+    background: #3c3c96; }
+  input[type=range]:focus::-ms-fill-upper {
+    background: #4444a8; }
 
 /*! normalize.css v3.0.0 | MIT License | git.io/normalize */
 /**
@@ -419,6 +492,27 @@ th {
   -webkit-box-sizing: border-box;
   box-sizing: border-box; }
 
+input[type=range] {
+  -webkit-appearance: none;
+  /* Hides the slider so that custom slider can be made */
+  width: 100%;
+  /* Specific width is required for Firefox. */ }
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; }
+
+input[type=range]:focus {
+  outline: none;
+  /* Removes the blue border. You should probably do some kind of focus styling for accessibility reasons though. */ }
+
+input[type=range]::-ms-track {
+  width: 100%;
+  cursor: pointer;
+  background: transparent;
+  /* Hides the slider so custom styles can be added */
+  border-color: transparent;
+  color: transparent; }
+
 .title {
   display: flex;
   align-items: center; }
@@ -680,9 +774,59 @@ th {
 
 @-webkit-keyframes spin {
   from {
-    -webkit-transform: rotateY(0deg); }
+    -webkit-transform: rotateY(0deg);
+    -moz-transform: rotateY(0deg);
+    -ms-transform: rotateY(0deg);
+    transform: rotateY(0deg); }
   to {
-    -webkit-transform: rotateY(360deg); } }
+    -webkit-transform: rotateY(360deg);
+    -moz-transform: rotateY(360deg);
+    -ms-transform: rotateY(360deg);
+    transform: rotateY(360deg); } }
+@-moz-keyframes spin {
+  from {
+    -webkit-transform: rotateY(0deg);
+    -moz-transform: rotateY(0deg);
+    -ms-transform: rotateY(0deg);
+    transform: rotateY(0deg); }
+  to {
+    -webkit-transform: rotateY(360deg);
+    -moz-transform: rotateY(360deg);
+    -ms-transform: rotateY(360deg);
+    transform: rotateY(360deg); } }
+@-ms-keyframes spin {
+  from {
+    -webkit-transform: rotateY(0deg);
+    -moz-transform: rotateY(0deg);
+    -ms-transform: rotateY(0deg);
+    transform: rotateY(0deg); }
+  to {
+    -webkit-transform: rotateY(360deg);
+    -moz-transform: rotateY(360deg);
+    -ms-transform: rotateY(360deg);
+    transform: rotateY(360deg); } }
+@-o-keyframes spin {
+  from {
+    -webkit-transform: rotateY(0deg);
+    -moz-transform: rotateY(0deg);
+    -ms-transform: rotateY(0deg);
+    transform: rotateY(0deg); }
+  to {
+    -webkit-transform: rotateY(360deg);
+    -moz-transform: rotateY(360deg);
+    -ms-transform: rotateY(360deg);
+    transform: rotateY(360deg); } }
+@keyframes spin {
+  from {
+    -webkit-transform: rotateY(0deg);
+    -moz-transform: rotateY(0deg);
+    -ms-transform: rotateY(0deg);
+    transform: rotateY(0deg); }
+  to {
+    -webkit-transform: rotateY(360deg);
+    -moz-transform: rotateY(360deg);
+    -ms-transform: rotateY(360deg);
+    transform: rotateY(360deg); } }
 .pyramid-gyro {
   position: absolute;
   top: 25%;
@@ -690,41 +834,69 @@ th {
   margin-left: -1.6vw;
   -webkit-perspective: 1000px;
   -webkit-perspective-origin: 50% 7.0vw;
-  -webkit-transform: rotate(90deg) scaleX(0.75); }
+  perspective: 1000px;
+  perspective-origin: 50% 7.0vw;
+  -webkit-transform: rotate(90deg) scaleX(0.75);
+  -moz-transform: rotate(90deg) scaleX(0.75);
+  -ms-transform: rotate(90deg) scaleX(0.75);
+  transform: rotate(90deg) scaleX(0.75); }
   .pyramid-gyro .pyramid-axis {
     position: relative;
     width: 1.4vw;
     -webkit-transform-style: preserve-3d;
-    -webkit-animation: spin 3s infinite linear; }
+    transform-style: preserve-3d;
+    -webkit-animation: spin 3s infinite linear;
+    -moz-animation: spin 3s infinite linear;
+    -ms-animation: spin 3s infinite linear;
+    -o-animation: spin 3s infinite linear;
+    animation: spin 3s infinite linear; }
   .pyramid-gyro .pyramid-wall {
     position: absolute;
     border: 0.7vw solid transparent; }
   .pyramid-gyro .front {
     bottom: -0.14vw;
     border-bottom: 1.4vw solid rgba(218, 174, 91, 0.5);
-    -webkit-transform: translateZ(0.175vw) rotateX(30deg); }
+    -webkit-transform: translateZ(0.175vw) rotateX(30deg);
+    -moz-transform: translateZ(0.175vw) rotateX(30deg);
+    -ms-transform: translateZ(0.175vw) rotateX(30deg);
+    transform: translateZ(0.175vw) rotateX(30deg); }
   .pyramid-gyro .back {
     bottom: -0.14vw;
     border-bottom: 1.4vw solid rgba(218, 174, 91, 0.5);
-    -webkit-transform: translateZ(-0.175vw) rotateY(180deg) rotateX(30deg); }
+    -webkit-transform: translateZ(-0.175vw) rotateY(180deg) rotateX(30deg);
+    -moz-transform: translateZ(-0.175vw) rotateY(180deg) rotateX(30deg);
+    -ms-transform: translateZ(-0.175vw) rotateY(180deg) rotateX(30deg);
+    transform: translateZ(-0.175vw) rotateY(180deg) rotateX(30deg); }
   .pyramid-gyro .left {
     bottom: -0.14vw;
     left: 0.525vw;
     border-bottom: 1.4vw solid rgba(218, 174, 91, 0.5);
     -webkit-transform: rotateY(270deg) translateX(-0.7vw) rotateX(30deg);
-    -webkit-transform-origin: center left; }
+    -moz-transform: rotateY(270deg) translateX(-0.7vw) rotateX(30deg);
+    -ms-transform: rotateY(270deg) translateX(-0.7vw) rotateX(30deg);
+    transform: rotateY(270deg) translateX(-0.7vw) rotateX(30deg);
+    -webkit-transform-origin: center left;
+    transform-origin: center left; }
   .pyramid-gyro .right {
     bottom: -0.28vw;
     right: 1.05vw;
     border-bottom: 1.4vw solid rgba(218, 174, 91, 0.5);
     -webkit-transform: rotateY(-270deg) translateX(0.7vw) rotateX(30deg);
-    -webkit-transform-origin: top right; }
+    -moz-transform: rotateY(-270deg) translateX(0.7vw) rotateX(30deg);
+    -ms-transform: rotateY(-270deg) translateX(0.7vw) rotateX(30deg);
+    transform: rotateY(-270deg) translateX(0.7vw) rotateX(30deg);
+    -webkit-transform-origin: top right;
+    transform-origin: top right; }
   .pyramid-gyro .bottom {
     width: 1.4vw;
     height: 1.4vw;
     background: rgba(218, 174, 91, 0.7);
     -webkit-transform: rotateX(90deg) translateY(0.7vw);
-    -webkit-transform-origin: bottom center; }
+    -moz-transform: rotateX(90deg) translateY(0.7vw);
+    -ms-transform: rotateX(90deg) translateY(0.7vw);
+    transform: rotateX(90deg) translateY(0.7vw);
+    -webkit-transform-origin: bottom center;
+    transform-origin: bottom center; }
 
 .chat-box {
   display: flex;
@@ -1389,8 +1561,8 @@ th {
     .menu-bar .item img {
       max-width: 100%;
       max-height: 100%; }
-  .menu-bar .item:hover {
-    background-color: #11112b; }
+    .menu-bar .item:hover {
+      background-color: #11112b; }
 
 .full-window {
   width: 100%;
@@ -1711,11 +1883,11 @@ th {
       line-height: 70px;
       border: none;
       background: transparent; }
-    .lobby-view .top-bar .menu-button:hover {
-      background-color: #11112b; }
-    .lobby-view .top-bar .menu-button:focus {
-      background-color: #0a0a19;
-      outline: none; }
+      .lobby-view .top-bar .menu-button:hover {
+        background-color: #11112b; }
+      .lobby-view .top-bar .menu-button:focus {
+        background-color: #0a0a19;
+        outline: none; }
   .lobby-view .body {
     flex: 1 0 auto;
     display: flex;
@@ -1755,6 +1927,28 @@ th {
     position: absolute;
     bottom: 0px;
     width: 100%; }
+  .lobby-view .options-view {
+    top: 0px;
+    margin-top: 2vh;
+    background: #1f1f4d;
+    -webkit-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+    -moz-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+    box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+    max-width: 40vw;
+    display: flex;
+    flex-direction: column;
+    padding: 0px 20px 20px 20px;
+    position: absolute; }
+    .lobby-view .options-view h1 {
+      font-size: x-large;
+      font-weight: 300; }
+    .lobby-view .options-view h2 {
+      font-size: medium;
+      font-weight: 700; }
+    .lobby-view .options-view h3 {
+      font-size: medium;
+      font-weight: 400;
+      margin-top: 0px; }
   .lobby-view .join-game-view {
     background: #1f1f4d;
     -webkit-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
@@ -1823,6 +2017,30 @@ th {
       flex: 1 0 0; }
     .lobby-view .how-to-play-view .instructions {
       margin-right: 20px; }
+  .lobby-view .about-view {
+    top: 0px;
+    margin-top: 2vh;
+    margin-bottom: 2vh;
+    background: #1f1f4d;
+    -webkit-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+    -moz-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+    box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+    max-width: 40vw;
+    display: flex;
+    flex-direction: column;
+    padding: 0px 20px 20px 20px;
+    position: absolute; }
+    .lobby-view .about-view h1 {
+      font-size: x-large;
+      font-weight: 300; }
+    .lobby-view .about-view h2 {
+      font-size: large;
+      font-weight: 700;
+      margin-bottom: 0px; }
+    .lobby-view .about-view h3 {
+      font-size: medium;
+      font-weight: 700;
+      margin-bottom: 0px; }
   .lobby-view .options-container {
     margin-top: 3vh;
     align-self: flex-end; }
@@ -1887,8 +2105,8 @@ th {
       -moz-transition: background 0.3s ease;
       -o-transition: background 0.3s ease;
       transition: background 0.3s ease; }
-    .lobby-view .rooms-list .sortable:hover {
-      background: #141534; }
+      .lobby-view .rooms-list .sortable:hover {
+        background: #141534; }
     .lobby-view .rooms-list .resizable {
       width: 4px;
       background: #1b1b42;
@@ -1914,36 +2132,18 @@ th {
         overflow: hidden; }
     .lobby-view .rooms-list .col {
       padding: 10px; }
-    .lobby-view .rooms-list .selectable:hover {
-      background: #141534; }
     .lobby-view .rooms-list .selectable {
       -webkit-transition: background 0.3s ease;
       -moz-transition: background 0.3s ease;
       -o-transition: background 0.3s ease;
       transition: background 0.3s ease; }
+      .lobby-view .rooms-list .selectable:hover {
+        background: #141534; }
   .lobby-view .vertical-divider {
     margin-top: 10px;
     margin-bottom: 10px;
     height: 80%;
     border-left: thick solid #1b1b43; }
-
-.slide-right-enter {
-  transform: translateX(-100%);
-  opacity: 0.01; }
-
-.slide-right-enter.slide-right-enter-active {
-  transform: none;
-  opacity: 1;
-  transition: all .3s ease; }
-
-.slide-right-leave {
-  transform: none;
-  opacity: 1; }
-
-.slide-right-leave.slide-right-leave-active {
-  transform: translateX(-100%);
-  opacity: 0.01;
-  transition: all .3s ease; }
 
 .game-room {
   width: 100%;
@@ -2013,180 +2213,6 @@ th {
       background-color: rgba(0, 0, 0, 0.5); }
     .game-room .in-game-menu button:focus {
       outline: none; }
-  .game-room .special-text-container {
-    -webkit-transition: all 0.3s ease;
-    -moz-transition: all 0.3s ease;
-    -o-transition: all 0.3s ease;
-    transition: all 0.3s ease;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(0, 0, 0, 0.9);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    padding: 1vh;
-    opacity: 0;
-    -webkit-animation: fade-in-out 1.3s;
-    -moz-animation: fade-in-out 1.3s;
-    -ms-animation: fade-in-out 1.3s;
-    -o-animation: fade-in-out 1.3s;
-    animation: fade-in-out 1.3s; }
-    .game-room .special-text-container div {
-      font-family: "Roboto Condensed", sans-serif;
-      font-size: 5vh;
-      color: #fff; }
-    .game-room .special-text-container div.right {
-      opacity: 0;
-      -webkit-animation: special-text-animation-r 1.3s ease-in;
-      -moz-animation: special-text-animation-r 1.3s ease-in;
-      -ms-animation: special-text-animation-r 1.3s ease-in;
-      -o-animation: special-text-animation-r 1.3s ease-in;
-      animation: special-text-animation-r 1.3s ease-in; }
-    .game-room .special-text-container div.left {
-      opacity: 0;
-      -webkit-animation: special-text-animation-l 1.3s ease-in;
-      -moz-animation: special-text-animation-l 1.3s ease-in;
-      -ms-animation: special-text-animation-l 1.3s ease-in;
-      -o-animation: special-text-animation-l 1.3s ease-in;
-      animation: special-text-animation-l 1.3s ease-in; }
-  .game-room .dialog-container {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 10; }
-    .game-room .dialog-container a {
-      -webkit-transition: all 0.3s ease;
-      -moz-transition: all 0.3s ease;
-      -o-transition: all 0.3s ease;
-      transition: all 0.3s ease;
-      display: inline-block;
-      padding: 0.7vw 2vw 0.7vw 2vw;
-      align-self: flex-end;
-      background-color: #141534;
-      -webkit-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
-      -moz-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
-      box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
-      text-decoration: none;
-      color: #ddd; }
-    .game-room .dialog-container a:hover {
-      background-color: #11112b; }
-    .game-room .dialog-container .timed-dialog {
-      flex: 1 auto;
-      padding: 16px;
-      min-width: 24vw;
-      min-height: 24vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background-color: #131313;
-      -webkit-box-shadow: 0px 5px 1vh rgba(0, 0, 0, 0.5);
-      -moz-box-shadow: 0px 5px 1vh rgba(0, 0, 0, 0.5);
-      box-shadow: 0px 5px 1vh rgba(0, 0, 0, 0.5);
-      border-radius: 5px; }
-      .game-room .dialog-container .timed-dialog h1 {
-        font-weight: 700;
-        font-size: small; }
-      .game-room .dialog-container .timed-dialog p {
-        font-size: x-large;
-        margin-top: 0.5vh; }
-  .game-room .toast-container {
-    position: fixed;
-    width: 100%;
-    display: flex;
-    top: 0;
-    align-items: center;
-    justify-content: center; }
-    .game-room .toast-container .toast-inner-container {
-      padding-top: 4vh; }
-      .game-room .toast-container .toast-inner-container .toast {
-        background: #131313;
-        padding: 20px;
-        -webkit-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
-        -moz-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
-        box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
-        border-radius: 5px; }
-  .game-room .top-content {
-    flex: 2 0;
-    display: flex;
-    flex-direction: row; }
-    .game-room .top-content .left-side {
-      order: 1;
-      flex: 1 auto; }
-    .game-room .top-content .right-side {
-      order: 3;
-      flex: 1 auto; }
-    .game-room .top-content .main-side {
-      order: 2;
-      flex: 2 auto;
-      display: flex;
-      flex-direction: column; }
-      .game-room .top-content .main-side .top-side {
-        flex: 1 auto;
-        display: flex;
-        flex-direction: row; }
-    .game-room .top-content .player-holder {
-      flex: 1 auto;
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      align-items: flex-start; }
-  .game-room .bot-content {
-    flex: 1 0;
-    display: flex;
-    flex-direction: row; }
-    .game-room .bot-content .chat-box {
-      flex: 1 auto; }
-    .game-room .bot-content .bottom-spacer, .game-room .bot-content .my-cards {
-      flex: 3 auto; }
-    .game-room .bot-content .bottom-spacer2 {
-      flex: 2 auto; }
-    .game-room .bot-content .bottom-player-space {
-      flex: 3 0;
-      position: relative;
-      display: flex;
-      flex-direction: row;
-      justify-content: center; }
-    .game-room .bot-content .waiting-container {
-      flex: 1 0 auto;
-      position: relative; }
-      .game-room .bot-content .waiting-container .waiting-content {
-        margin-left: 20px;
-        margin-right: 20px;
-        max-width: 300px;
-        padding: 10px;
-        width: 100%;
-        height: 100%;
-        position: absolute;
-        background-color: #141534;
-        display: flex;
-        flex-direction: column; }
-        .game-room .bot-content .waiting-container .waiting-content a {
-          margin-top: 10px;
-          font-size: x-large; }
-        .game-room .bot-content .waiting-container .waiting-content h1 {
-          margin: 10px 0 0 0;
-          font-size: large; }
-        .game-room .bot-content .waiting-container .waiting-content p {
-          margin: 0; }
-
-html, body {
-  height: 100%;
-  overflow: hidden; }
-
-.ui-tooltip {
-  position: absolute;
-  background: #131313;
-  padding: 10px 16px 10px 16px;
-  -webkit-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
-  -moz-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
-  box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
-  border-radius: 5px; }
-
 @-webkit-keyframes special-text-animation-r {
   0% {
     opacity: 0;
@@ -2362,6 +2388,213 @@ html, body {
     opacity: 1; }
   100% {
     opacity: 0; } }
+  .game-room .special-text-container {
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 1vh;
+    opacity: 0;
+    -webkit-animation: fade-in-out 1.3s;
+    -moz-animation: fade-in-out 1.3s;
+    -ms-animation: fade-in-out 1.3s;
+    -o-animation: fade-in-out 1.3s;
+    animation: fade-in-out 1.3s; }
+    .game-room .special-text-container div {
+      font-family: "Roboto Condensed", sans-serif;
+      font-size: 5vh;
+      color: #fff; }
+    .game-room .special-text-container div.right {
+      opacity: 0;
+      -webkit-animation: special-text-animation-r 1.3s ease-in;
+      -moz-animation: special-text-animation-r 1.3s ease-in;
+      -ms-animation: special-text-animation-r 1.3s ease-in;
+      -o-animation: special-text-animation-r 1.3s ease-in;
+      animation: special-text-animation-r 1.3s ease-in; }
+    .game-room .special-text-container div.left {
+      opacity: 0;
+      -webkit-animation: special-text-animation-l 1.3s ease-in;
+      -moz-animation: special-text-animation-l 1.3s ease-in;
+      -ms-animation: special-text-animation-l 1.3s ease-in;
+      -o-animation: special-text-animation-l 1.3s ease-in;
+      animation: special-text-animation-l 1.3s ease-in; }
+  .game-room .dialog-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10; }
+    .game-room .dialog-container a {
+      -webkit-transition: all 0.3s ease;
+      -moz-transition: all 0.3s ease;
+      -o-transition: all 0.3s ease;
+      transition: all 0.3s ease;
+      display: inline-block;
+      padding: 0.7vw 2vw 0.7vw 2vw;
+      align-self: flex-end;
+      background-color: #141534;
+      -webkit-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+      -moz-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+      box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+      text-decoration: none;
+      color: #ddd; }
+    .game-room .dialog-container a:hover {
+      background-color: #11112b; }
+    .game-room .dialog-container .timed-dialog {
+      flex: 1 auto;
+      padding: 16px;
+      min-width: 24vw;
+      min-height: 24vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: #131313;
+      -webkit-box-shadow: 0px 5px 1vh rgba(0, 0, 0, 0.5);
+      -moz-box-shadow: 0px 5px 1vh rgba(0, 0, 0, 0.5);
+      box-shadow: 0px 5px 1vh rgba(0, 0, 0, 0.5);
+      border-radius: 5px; }
+      .game-room .dialog-container .timed-dialog h1 {
+        font-weight: 700;
+        font-size: small; }
+      .game-room .dialog-container .timed-dialog p {
+        font-size: x-large;
+        margin-top: 0.5vh; }
+  .game-room .toast-container {
+    position: fixed;
+    width: 100%;
+    display: flex;
+    top: 0;
+    align-items: center;
+    justify-content: center; }
+    .game-room .toast-container .toast-inner-container {
+      padding-top: 4vh; }
+      .game-room .toast-container .toast-inner-container .toast {
+        background: #131313;
+        padding: 20px;
+        -webkit-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+        -moz-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+        box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+        border-radius: 5px; }
+  .game-room .top-content {
+    flex: 2 0;
+    display: flex;
+    flex-direction: row; }
+    .game-room .top-content .left-side {
+      order: 1;
+      flex: 1 auto; }
+    .game-room .top-content .right-side {
+      order: 3;
+      flex: 1 auto; }
+    .game-room .top-content .main-side {
+      order: 2;
+      flex: 2 auto;
+      display: flex;
+      flex-direction: column; }
+      .game-room .top-content .main-side .top-side {
+        flex: 1 auto;
+        display: flex;
+        flex-direction: row; }
+    .game-room .top-content .player-holder {
+      flex: 1 auto;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: flex-start; }
+  .game-room .bot-content {
+    flex: 1 0;
+    display: flex;
+    flex-direction: row; }
+    .game-room .bot-content .chat-box {
+      flex: 1 auto; }
+    .game-room .bot-content .bottom-spacer, .game-room .bot-content .my-cards {
+      flex: 3 auto; }
+    .game-room .bot-content .bottom-spacer2 {
+      flex: 2 auto; }
+    .game-room .bot-content .bottom-player-space {
+      flex: 3 0;
+      position: relative;
+      display: flex;
+      flex-direction: row;
+      justify-content: center; }
+    .game-room .bot-content .waiting-container {
+      flex: 1 0 auto;
+      position: relative; }
+      .game-room .bot-content .waiting-container .waiting-content {
+        margin-left: 20px;
+        margin-right: 20px;
+        max-width: 300px;
+        padding: 10px;
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        background: #1f1f4d;
+        -webkit-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+        -moz-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+        box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5); }
+        .game-room .bot-content .waiting-container .waiting-content a {
+          margin-top: 10px;
+          font-size: x-large; }
+        .game-room .bot-content .waiting-container .waiting-content h1 {
+          margin: 0 0 0 0;
+          font-size: large; }
+        .game-room .bot-content .waiting-container .waiting-content p {
+          margin: 0; }
+  .game-room .how-to-play-view {
+    display: flex;
+    flex-direction: column;
+    background: #131313;
+    padding: 20px;
+    border-radius: 5px;
+    -webkit-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+    -moz-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+    width: 40vw;
+    height: 70vh; }
+    .game-room .how-to-play-view .nano > .nano-pane > .nano-slider {
+      background: #444; }
+    .game-room .how-to-play-view p {
+      margin-top: 0.5em; }
+    .game-room .how-to-play-view h1 {
+      font-size: x-large;
+      font-weight: 300; }
+    .game-room .how-to-play-view h2 {
+      font-size: large;
+      font-weight: 700;
+      margin-bottom: 0.5em; }
+    .game-room .how-to-play-view h3 {
+      font-size: medium;
+      font-weight: 700;
+      margin-bottom: 0px; }
+    .game-room .how-to-play-view .instructions-container {
+      flex: 1 0 0; }
+    .game-room .how-to-play-view .instructions {
+      margin-right: 20px; }
+
+html, body {
+  height: 100%;
+  overflow: hidden; }
+
+.ui-tooltip {
+  position: absolute;
+  background: #131313;
+  padding: 10px 16px 10px 16px;
+  -webkit-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0px 0px 32px rgba(0, 0, 0, 0.5);
+  border-radius: 5px; }
+
 .nano {
   position: relative;
   width: 100%;
@@ -2405,7 +2638,6 @@ html, body {
   border-radius: 5px; }
 
 .nano > .nano-pane > .nano-slider {
-  background: #444;
   background: rgba(0, 0, 0, 0.5);
   position: relative;
   margin: 0 1px;
@@ -2417,19 +2649,6 @@ html, body {
   visibility: visible\9;
   /* Target only IE7 and IE8 with this hack */
   opacity: 0.99; }
-
-a.button {
-  -webkit-transition: all 0.3s ease;
-  -moz-transition: all 0.3s ease;
-  -o-transition: all 0.3s ease;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  padding: 10px 20px 10px 20px;
-  text-align: center;
-  background-color: #393967; }
-
-a.button:hover {
-  background-color: #4e4f78; }
 
 .join-game {
   padding: 20px 30px 20px 30px;
@@ -2525,7 +2744,7 @@ a.button:hover {
 
 .fade-leave.fade-leave-active {
   opacity: 0.01;
-  transition: opacity .3s ease-in; }
+  transition: opacity .3s ease; }
 
 .drop-enter {
   transform: translateY(-100%); }
@@ -2540,5 +2759,23 @@ a.button:hover {
 .drop-leave.drop-leave-active {
   opacity: 0.01;
   transition: opacity .3s ease-in; }
+
+.slide-right-enter {
+  transform: translateX(-100%);
+  opacity: 0.01; }
+
+.slide-right-enter.slide-right-enter-active {
+  transform: none;
+  opacity: 1;
+  transition: all .3s ease; }
+
+.slide-right-leave {
+  transform: none;
+  opacity: 1; }
+
+.slide-right-leave.slide-right-leave-active {
+  transform: translateX(-100%);
+  opacity: 0.01;
+  transition: all .3s ease; }
 
 /*# sourceMappingURL=index.css.map */

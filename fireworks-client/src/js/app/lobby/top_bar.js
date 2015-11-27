@@ -16,9 +16,9 @@ define(['jquery', 'React'], function ($, React) {
                     React.createElement("div", {className: "vertical-divider"}), 
                     React.createElement("button", {className: "menu-button", onClick: this.props.onHowToPlayClickHandler}, "How to Play"), 
                     React.createElement("div", {className: "vertical-divider"}), 
-                    React.createElement("button", {className: "menu-button"}, "Options"), 
+                    React.createElement("button", {className: "menu-button", onClick: this.props.onOptionsClickHandler}, "Options"), 
                     React.createElement("div", {className: "vertical-divider"}), 
-                    React.createElement("button", {className: "menu-button"}, "About")
+                    React.createElement("button", {className: "menu-button", onClick: this.props.onAboutClickHandler}, "About")
                 )
             );
         }

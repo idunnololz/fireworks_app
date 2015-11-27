@@ -1,6 +1,6 @@
 define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_player', 'app/info_bar', 'app/menu_bar', 'app/game_board', 
-    'app/dialog_game_over', 'app/history_dialog', 'app/prefs', 'app/leave_game_dialog'], 
-    function ($, React, Log, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog, HistoryDialog, Prefs, LeaveGameDialog) {
+    'app/dialog_game_over', 'app/history_dialog', 'app/prefs', 'app/leave_game_dialog', 'app/lobby/how_to_play_view'], 
+    function ($, React, Log, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog, HistoryDialog, Prefs, LeaveGameDialog, HowToPlayView) {
 
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
@@ -62,6 +62,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 showMenu: false,
 
                 showLeaveGameDialog: false,
+                showHowToPlayDialog: false,
             };
         },
         getLives() {
@@ -591,6 +592,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             this.setState({showMenu: false});
         },
         onLeaveGameClick(e) {
+            this.setState({showMenu: false});
             this.setState({showLeaveGameDialog: true});
         },
         onLeaveGameCancelClick(e) {
@@ -603,6 +605,13 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             };
             this.props.socket.on('leaveGame', leaveGameHandler);
             this.props.socket.emit('leaveGame');
+        },
+        onHowToPlayClick(e) {
+            this.setState({showMenu: false});
+            this.setState({showHowToPlayDialog: true});
+        },
+        onHowToPlayOkClick(e) {
+            this.setState({showHowToPlayDialog: false});
         },
         render() {
             var thisPlayer = this.state.playerInfo;
@@ -619,7 +628,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             if (this.state.showMenu) {
                 menuButton = (
                     <div className="in-game-menu" key="in-game-menu">
-                        <button>How to play</button>
+                        <button onClick={this.onHowToPlayClick}>How to play</button>
                         <button>Options</button>
                         <button onClick={this.onLeaveGameClick}>Leave game</button>
                         <button onClick={this.onMenuCancelClick}>Cancel</button>
@@ -637,6 +646,15 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 );
             }
 
+            if (this.state.showHowToPlayDialog) {
+                dialogViews.push(
+                    <div className="dialog-container">
+                        <HowToPlayView 
+                            onOkClickHandler={this.onHowToPlayOkClick}/>
+                    </div>
+                );
+            }
+
             switch (this.state.mode) {
                 case MODE_LOADING:
                     bottomInterface.push(<div key="spacer" className="bottom-spacer"> </div>);
@@ -650,7 +668,11 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                             <div className="waiting-content">
                                 <div>{this.state.isHost ? "You are the host" : "Waiting on host"}</div>
                                 {this.state.isHost ? 
-                                    <a className="button" onClick={this.handleOnStartGameClick}>Start the Game</a> :
+                                    <button className="theme-button" onClick={this.handleOnStartGameClick}
+                                        style={{width:'100%', margin:'10px 0 10px 0'}}>
+                                        Start the Game
+                                    </button> 
+                                    :
                                     null
                                 }
                                 <h1>Players</h1>

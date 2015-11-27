@@ -1,40 +1,40 @@
 .chat-box {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 
-  .message-content {
-    flex: 1 0 auto;
-  }
-
-  .message-container {
-    padding: 5px 5px 5px 5px;
-
-    .sender {
-      font-weight: 700;
-      margin-right: 6px;
-      white-space: nowrap;
+    .message-content {
+        flex: 1 0 auto;
     }
 
-    p {
-      margin: 0;
-      word-wrap: break-word;
+    .message-container {
+        padding: 5px 5px 5px 5px;
+
+        .sender {
+            font-weight: 700;
+            margin-right: 6px;
+            white-space: nowrap;
+        }
+
+        p {
+            margin: 0;
+            word-wrap: break-word;
+        }
+
+        .v {
+            margin: 0;
+            word-wrap: break-word;
+            font-size: medium;
+            color: #999;
+        }
     }
 
-    .v {
-      margin: 0;
-      word-wrap: break-word;
-      font-size: medium;
-      color: #999;
+    .message-box {
+        flex-basis: 30px;
+
+        border-style: none;
+        font-size: small;
+        outline: none;
+        padding: 5px 5px 5px 5px;
+        border: none;
     }
-  }
-
-  .message-box {
-    flex-basis: 30px;
-
-    border-style: none;
-    font-size: small;
-    outline: none;
-    padding: 5px 5px 5px 5px;
-    border: none;
-  }
 }

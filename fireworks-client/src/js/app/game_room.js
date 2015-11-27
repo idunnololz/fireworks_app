@@ -1,6 +1,6 @@
 define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_player', 'app/info_bar', 'app/menu_bar', 'app/game_board', 
-    'app/dialog_game_over', 'app/history_dialog', 'app/prefs', 'app/leave_game_dialog'], 
-    function ($, React, Log, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog, HistoryDialog, Prefs, LeaveGameDialog) {
+    'app/dialog_game_over', 'app/history_dialog', 'app/prefs', 'app/leave_game_dialog', 'app/lobby/how_to_play_view'], 
+    function ($, React, Log, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog, HistoryDialog, Prefs, LeaveGameDialog, HowToPlayView) {
 
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
@@ -62,6 +62,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 showMenu: false,
 
                 showLeaveGameDialog: false,
+                showHowToPlayDialog: false,
             };
         },
         getLives:function() {
@@ -591,6 +592,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             this.setState({showMenu: false});
         },
         onLeaveGameClick:function(e) {
+            this.setState({showMenu: false});
             this.setState({showLeaveGameDialog: true});
         },
         onLeaveGameCancelClick:function(e) {
@@ -603,6 +605,13 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             }.bind(this);
             this.props.socket.on('leaveGame', leaveGameHandler);
             this.props.socket.emit('leaveGame');
+        },
+        onHowToPlayClick:function(e) {
+            this.setState({showMenu: false});
+            this.setState({showHowToPlayDialog: true});
+        },
+        onHowToPlayOkClick:function(e) {
+            this.setState({showHowToPlayDialog: false});
         },
         render:function() {
             var thisPlayer = this.state.playerInfo;
@@ -619,7 +628,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             if (this.state.showMenu) {
                 menuButton = (
                     React.createElement("div", {className: "in-game-menu", key: "in-game-menu"}, 
-                        React.createElement("button", null, "How to play"), 
+                        React.createElement("button", {onClick: this.onHowToPlayClick}, "How to play"), 
                         React.createElement("button", null, "Options"), 
                         React.createElement("button", {onClick: this.onLeaveGameClick}, "Leave game"), 
                         React.createElement("button", {onClick: this.onMenuCancelClick}, "Cancel")
@@ -637,6 +646,15 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 );
             }
 
+            if (this.state.showHowToPlayDialog) {
+                dialogViews.push(
+                    React.createElement("div", {className: "dialog-container"}, 
+                        React.createElement(HowToPlayView, {
+                            onOkClickHandler: this.onHowToPlayOkClick})
+                    )
+                );
+            }
+
             switch (this.state.mode) {
                 case MODE_LOADING:
                     bottomInterface.push(React.createElement("div", {key: "spacer", className: "bottom-spacer"}, " "));
@@ -650,7 +668,11 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                             React.createElement("div", {className: "waiting-content"}, 
                                 React.createElement("div", null, this.state.isHost ? "You are the host" : "Waiting on host"), 
                                 this.state.isHost ? 
-                                    React.createElement("a", {className: "button", onClick: this.handleOnStartGameClick}, "Start the Game") :
+                                    React.createElement("button", {className: "theme-button", onClick: this.handleOnStartGameClick, 
+                                        style: {width:'100%', margin:'10px 0 10px 0'}}, 
+                                        "Start the Game"
+                                    ) 
+                                    :
                                     null, 
                                 
                                 React.createElement("h1", null, "Players"), 

@@ -26,59 +26,6 @@ html, body {
     border-radius: 5px;
 }
 
-@include keyframes(special-text-animation-r) {
-    0% { 
-        opacity: 0; 
-        transform: translateX(-140px);
-    }
-    25% { 
-        opacity: 1; 
-        transform: translateX(-10px);
-    }
-    75% { 
-        opacity: 1; 
-        transform: translateX(10px);
-    }
-    100% {
-        opacity: 0;
-        transform: translateX(140px);
-    }
-}
-
-@include keyframes(special-text-animation-l) {
-    0% { 
-        opacity: 0; 
-        transform: translateX(140px);
-    }
-    25% { 
-        opacity: 1; 
-        transform: translateX(10px);
-    }
-    75% { 
-        opacity: 1; 
-        transform: translateX(-10px);
-    }
-    100% {
-        opacity: 0;
-        transform: translateX(-140px);
-    }
-}
-
-@include keyframes(fade-in-out) {
-    0% { 
-        opacity: 0; 
-    }
-    22% { 
-        opacity: 1; 
-    }
-    78% { 
-        opacity: 1; 
-    }
-    100% {
-        opacity: 0;
-    }
-}
-
 // Nano stuff
 .nano {
     position : relative;
@@ -122,7 +69,6 @@ html, body {
     border-radius         : 5px;
 }
 .nano > .nano-pane > .nano-slider {
-    background: #444;
     background: rgba(0,0,0,.5);
     position              : relative;
     margin                : 0 1px;
@@ -134,19 +80,7 @@ html, body {
     visibility : visible\9; /* Target only IE7 and IE8 with this hack */
     opacity    : 0.99;
 }
-// Nano stuff
-
-a.button{
-    @include transition(all .3s ease);
-    cursor: pointer;
-    padding: 10px 20px 10px 20px;
-    text-align: center;
-    background-color: $color-theme-light;
-}
-
-a.button:hover {
-    background-color: $color-theme-lighter;
-}
+// ^^^ Nano stuff ^^^
 
 .join-game {
     padding: 20px 30px 20px 30px;
@@ -267,8 +201,9 @@ a.button:hover {
 
 .fade-leave.fade-leave-active {
     opacity: 0.01;
-    transition: opacity .3s ease-in;
+    transition: opacity .3s ease;
 }
+
 
 .drop-enter {
     transform: translateY(-100%);
@@ -287,4 +222,29 @@ a.button:hover {
 .drop-leave.drop-leave-active {
     opacity: 0.01;
     transition: opacity .3s ease-in;
+}
+
+
+
+
+.slide-right-enter {
+    transform: translateX(-100%);
+    opacity: 0.01;
+}
+
+.slide-right-enter.slide-right-enter-active {
+    transform: none;
+    opacity: 1;
+    transition: all .3s ease;
+}
+
+.slide-right-leave {
+    transform: none;
+    opacity: 1;
+}
+
+.slide-right-leave.slide-right-leave-active {
+    transform: translateX(-100%);
+    opacity: 0.01;
+    transition: all .3s ease;
 }

@@ -38,15 +38,15 @@ $topBarHeight: 70px;
             border: none;
 
             background: transparent;
-        }
 
-        .menu-button:hover {
-            background-color: $color-theme-darker;
-        }
+            &:hover {
+                background-color: $color-theme-darker;
+            }
 
-        .menu-button:focus { 
-            background-color: darken($color-theme-darker, 5%);
-            outline: none;
+            &:focus { 
+                background-color: darken($color-theme-darker, 5%);
+                outline: none;
+            }
         }
     }
 
@@ -112,6 +112,41 @@ $topBarHeight: 70px;
         position: absolute;
         bottom: 0px;
         width: 100%;
+    }
+
+    .options-view {
+        top: 0px;
+        margin-top: 2vh;
+        background: $color-theme-dark-light;
+        @include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.5));
+
+        max-width: 40vw;
+        display: flex;
+        flex-direction: column;
+
+        padding: 0px 20px 20px 20px;
+
+        position: absolute;
+
+        h1 {
+            font-size: x-large;
+            font-weight: 300;
+        }
+        
+        h2 {
+            font-size: medium;
+            font-weight: 700;
+        }
+
+        h3 {
+            font-size: medium;
+            font-weight: 400;
+
+            margin-top: 0px;
+        }
+
+        p {
+        }
     }
 
     .join-game-view {
@@ -218,6 +253,41 @@ $topBarHeight: 70px;
         }
     }
 
+    .about-view {
+        top: 0px;
+        margin-top: 2vh;
+        margin-bottom: 2vh;
+        background: $color-theme-dark-light;
+        @include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.5));
+
+        max-width: 40vw;
+        display: flex;
+        flex-direction: column;
+
+        padding: 0px 20px 20px 20px; 
+        
+        position: absolute;
+
+        h1 {
+            font-size: x-large;
+            font-weight: 300;
+        }
+
+        h2 {
+            font-size: large;
+            font-weight: 700;
+
+            margin-bottom: 0px;
+        }
+
+        h3 {
+            font-size: medium;
+            font-weight: 700;
+
+            margin-bottom: 0px;   
+        }
+    }
+
     .options-container {
         margin-top: 3vh;
         align-self: flex-end;
@@ -295,10 +365,10 @@ $topBarHeight: 70px;
 
         .sortable {
             @include transition(background .3s ease);
-        }
 
-        .sortable:hover {
-            background: $color-theme-dark;
+            &:hover {
+                background: $color-theme-dark;
+            }
         }
 
         .resizable {
@@ -339,12 +409,12 @@ $topBarHeight: 70px;
             padding: 10px;
         }
 
-        .selectable:hover {
-            background: $color-theme-dark;
-        }
-
         .selectable {
             @include transition(background .3s ease);
+
+            &:hover {
+                background: $color-theme-dark;
+            }
         }
     }
 
@@ -354,28 +424,4 @@ $topBarHeight: 70px;
         height: 80%;
         border-left: thick solid $color-divider;
     }
-}
-
-
-
-.slide-right-enter {
-    transform: translateX(-100%);
-    opacity: 0.01;
-}
-
-.slide-right-enter.slide-right-enter-active {
-    transform: none;
-    opacity: 1;
-    transition: all .3s ease;
-}
-
-.slide-right-leave {
-    transform: none;
-    opacity: 1;
-}
-
-.slide-right-leave.slide-right-leave-active {
-    transform: translateX(-100%);
-    opacity: 0.01;
-    transition: all .3s ease;
 }

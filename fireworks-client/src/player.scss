@@ -75,7 +75,7 @@
     }
 
     .card-draw {
-        @include animation('anim-draw 0.3s ease');
+        @include animation(anim-draw 0.3s ease);
     }
 
     .turn-indicator {
@@ -245,9 +245,9 @@
 $pyramid-size: 0.07vw;
 $pyramid-color: #daae5b;//lighten($card-yellow, 10%);
 
-@-webkit-keyframes spin {
-  from { -webkit-transform: rotateY(0deg);}
-    to { -webkit-transform: rotateY(360deg);}
+@include keyframes(spin) {
+  from { @include transform(rotateY(0deg));}
+    to { @include transform(rotateY(360deg));}
 }
 
 .pyramid-gyro {
@@ -255,15 +255,22 @@ $pyramid-color: #daae5b;//lighten($card-yellow, 10%);
     top: 25%;
     left: 0px;
     margin-left: (-20 * $pyramid-size) - 0.2vw;
+
     -webkit-perspective: 1000px;
     -webkit-perspective-origin: 50% (100 * $pyramid-size);
-    -webkit-transform: rotate(90deg) scaleX(0.75);
+    perspective: 1000px;
+    perspective-origin: 50% (100 * $pyramid-size);
+
+    @include transform(rotate(90deg) scaleX(0.75));
 
     .pyramid-axis {
         position: relative;
         width: (20 * $pyramid-size);
+        
         -webkit-transform-style: preserve-3d;
-        -webkit-animation: spin 3s infinite linear;
+        transform-style: preserve-3d;
+
+        @include animation(spin 3s infinite linear);
     }
 
     .pyramid-wall {
@@ -274,32 +281,38 @@ $pyramid-color: #daae5b;//lighten($card-yellow, 10%);
     .front {
         bottom: (-2 * $pyramid-size);
         border-bottom: (20 * $pyramid-size) solid rgba($pyramid-color, .5);
-        -webkit-transform: translateZ((2.5 * $pyramid-size)) rotateX(30deg);
+        @include transform(translateZ((2.5 * $pyramid-size)) rotateX(30deg));
     }
     .back {
-      bottom: (-2 * $pyramid-size);
-      border-bottom: (20 * $pyramid-size) solid rgba($pyramid-color, .5);
-        -webkit-transform: translateZ((-2.5 * $pyramid-size)) rotateY(180deg) rotateX(30deg);
+        bottom: (-2 * $pyramid-size);
+        border-bottom: (20 * $pyramid-size) solid rgba($pyramid-color, .5);
+        @include transform(translateZ((-2.5 * $pyramid-size)) rotateY(180deg) rotateX(30deg));
     }
     .left {
-      bottom: (-2 * $pyramid-size);
-      left: (7.5 * $pyramid-size);
-      border-bottom: (20 * $pyramid-size) solid rgba($pyramid-color, .5);
-        -webkit-transform: rotateY(270deg) translateX((-10 * $pyramid-size)) rotateX(30deg);
+        bottom: (-2 * $pyramid-size);
+        left: (7.5 * $pyramid-size);
+        border-bottom: (20 * $pyramid-size) solid rgba($pyramid-color, .5);
+        @include transform(rotateY(270deg) translateX((-10 * $pyramid-size)) rotateX(30deg));
+
         -webkit-transform-origin: center left;
+        transform-origin: center left;
     }
     .right {
-      bottom: (-4 * $pyramid-size);
-      right: (15 * $pyramid-size);
-      border-bottom: (20 * $pyramid-size) solid rgba($pyramid-color, .5);
-      -webkit-transform: rotateY(-270deg) translateX((10 * $pyramid-size)) rotateX(30deg);
+        bottom: (-4 * $pyramid-size);
+        right: (15 * $pyramid-size);
+        border-bottom: (20 * $pyramid-size) solid rgba($pyramid-color, .5);
+        @include transform(rotateY(-270deg) translateX((10 * $pyramid-size)) rotateX(30deg));
+
         -webkit-transform-origin: top right;
+        transform-origin: top right;
     }
     .bottom {
-      width: (20 * $pyramid-size);
-      height: (20 * $pyramid-size);
-      background: rgba($pyramid-color, .7);
-      -webkit-transform: rotateX(90deg) translateY((10 * $pyramid-size));
+        width: (20 * $pyramid-size);
+        height: (20 * $pyramid-size);
+        background: rgba($pyramid-color, .7);
+        @include transform(rotateX(90deg) translateY((10 * $pyramid-size)));
+
         -webkit-transform-origin: bottom center;
+        transform-origin: bottom center;
     }
 }

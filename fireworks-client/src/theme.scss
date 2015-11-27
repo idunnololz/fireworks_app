@@ -22,58 +22,175 @@ $color-theme-second: #131313;
 $color-divider: #1b1b43;
 
 a.theme-button {
-    @include transition(all .3s ease);
-    display: inline-block;
-    padding: 0.7vw 2vw 0.7vw 2vw;
-    align-self: flex-end;
-    background-color: $color-theme-dark;
-    @include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.5));
-    text-decoration: none;
-    color: $theme-font-color;
-}
+	@include transition(all .3s ease);
+	display: inline-block;
+	padding: 0.7vw 2vw 0.7vw 2vw;
+	align-self: flex-end;
+	background-color: $color-theme-dark;
+	@include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.5));
+	text-decoration: none;
+	color: $theme-font-color;
 
-a.theme-button:hover {
-    background-color: $color-theme-darker;
+    &:hover {
+        background-color: $color-theme-darker;
+    }
 }
 
 button.theme-button {
-    @include transition(all .3s ease);
-    display: inline-block;
-    padding: 0.7vw 2vw 0.7vw 2vw;
-    align-self: flex-end;
-    background-color: $color-theme-dark;
-    @include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.5));
-    text-decoration: none;
-    color: $theme-font-color;
-    border: none;
-}
+	@include transition(all .3s ease);
+	display: inline-block;
+	padding: 0.7vw 2vw 0.7vw 2vw;
+	align-self: flex-end;
+	background-color: $color-theme-dark;
+	@include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.5));
+	text-decoration: none;
+	color: $theme-font-color;
+	border: none;
 
-button.theme-button:hover {
-    background-color: $color-theme-darker;
-}
+	&:hover {
+		background-color: $color-theme-darker;
+	}
 
-button.theme-button:focus { 
-    background-color: darken($color-theme-darker, 5%);
-    outline: none;
+	&:focus { 
+		background-color: darken($color-theme-darker, 5%);
+		outline: none;
+	}
 }
 
 div.theme-dialog {
-    display: flex;
-    flex-direction: column;
-    background: $color-theme-second;
-    padding: 20px;
+	display: flex;
+	flex-direction: column;
+	background: $color-theme-second;
+	padding: 20px;
 
-    border-radius: 5px;
+	border-radius: 5px;
 
-    @include box-shadow(0px, 0px, 32px, rgba(0,0,0,0.5));
+	@include box-shadow(0px, 0px, 32px, rgba(0,0,0,0.5));
 }
 
 
 div.options-container {
-    margin-top: 3vh;
-    align-self: flex-end;
-    
-    button {
-        margin-left: 10px;
-    }
+	margin-top: 3vh;
+	align-self: flex-end;
+	
+	button {
+		margin-left: 10px;
+	}
+}
+
+
+// range input...
+
+
+$track-color: lighten($color-theme-dark-light, 20%);
+$thumb-color: $color-theme-light;
+
+$thumb-radius: 8px;
+$thumb-height: 30px;
+$thumb-width: 30px;
+$thumb-shadow-size: 2px;
+$thumb-shadow-blur: 2px;
+$thumb-shadow-color: #111;
+$thumb-border-width: 0px;
+$thumb-border-color: transparent;
+
+$track-width: 100%;
+$track-height: 5px;
+$track-shadow-size: 0px;
+$track-shadow-blur: 0px;
+$track-shadow-color: #222;
+$track-border-width: 0px;
+$track-border-color: transparent;
+
+$track-radius: 0px;
+$contrast: 5%;
+
+@mixin shadow($shadow-size,$shadow-blur,$shadow-color) {
+	box-shadow: $shadow-size $shadow-size $shadow-blur $shadow-color, 0px 0px $shadow-size lighten($shadow-color,5%);
+}
+
+@mixin track() {
+	width: $track-width;
+	height: $track-height;
+	cursor: pointer;
+	animate: 0.2s;
+}
+
+@mixin thumb() {
+	@include shadow($thumb-shadow-size,$thumb-shadow-blur,$thumb-shadow-color);
+	border: $thumb-border-width solid $thumb-border-color;
+	height: $thumb-height;
+	width: $thumb-width;
+	border-radius: $thumb-radius;
+	background: $thumb-color;
+	cursor: pointer;
+}
+
+input[type=range] {
+	-webkit-appearance: none;
+	margin: $thumb-height/2 0;
+	width: $track-width;
+
+	&:focus {
+		outline: none;
+	}
+
+	&::-webkit-slider-runnable-track {
+		@include track();
+		@include shadow($track-shadow-size,$track-shadow-blur,$track-shadow-color);
+		background: $track-color;
+		border-radius: $track-radius;
+		border: $track-border-width solid $track-border-color;
+	}
+	
+	&::-webkit-slider-thumb {
+		@include thumb();
+		-webkit-appearance: none;
+		margin-top: ((-$track-border-width * 2 + $track-height) / 2) - ($thumb-height / 2);
+	}
+
+	&:focus::-webkit-slider-runnable-track {
+		background: lighten($track-color, $contrast);
+	}
+
+	&::-moz-range-track {
+		@include track();
+		@include shadow($track-shadow-size,$track-shadow-blur,$track-shadow-color);
+		background: $track-color;
+		border-radius: $track-radius;
+		 border: $track-border-width solid $track-border-color;
+	}
+	&::-moz-range-thumb {
+		@include thumb();
+	}
+
+	&::-ms-track {
+		@include track(); 
+		background: transparent;
+		border-color: transparent;
+		border-width: $thumb-width 0;
+		color: transparent;
+	}
+
+	&::-ms-fill-lower {
+		background: darken($track-color, $contrast);
+		border: $track-border-width solid $track-border-color;
+		border-radius: $track-radius*2;
+		@include shadow($track-shadow-size,$track-shadow-blur,$track-shadow-color);
+	}
+	&::-ms-fill-upper {
+		background: $track-color;
+		border: $track-border-width solid $track-border-color;
+		border-radius: $track-radius*2;
+		@include shadow($track-shadow-size,$track-shadow-blur,$track-shadow-color);
+	}
+	&::-ms-thumb {
+		@include thumb();
+	}
+	&:focus::-ms-fill-lower {
+		background: $track-color;
+	}
+	&:focus::-ms-fill-upper {
+		background: lighten($track-color, $contrast);
+	}
 }

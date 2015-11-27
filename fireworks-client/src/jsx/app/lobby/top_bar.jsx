@@ -16,9 +16,9 @@ define(['jquery', 'React'], function ($, React) {
                     <div className="vertical-divider"></div>
                     <button className="menu-button" onClick={this.props.onHowToPlayClickHandler}>How to Play</button>
                     <div className="vertical-divider"></div>
-                    <button className="menu-button">Options</button>
+                    <button className="menu-button" onClick={this.props.onOptionsClickHandler}>Options</button>
                     <div className="vertical-divider"></div>
-                    <button className="menu-button">About</button>
+                    <button className="menu-button" onClick={this.props.onAboutClickHandler}>About</button>
                 </div>
             );
         }

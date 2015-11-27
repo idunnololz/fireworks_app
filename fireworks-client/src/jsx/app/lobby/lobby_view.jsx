@@ -1,5 +1,6 @@
-define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lobby/new_game_view', 'app/lobby/join_game_view', 'app/lobby/how_to_play_view'], 
-    function ($, React, TopBar, RoomsList, NewGameView, JoinGameView, HowToPlayView) {
+define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lobby/new_game_view', 'app/lobby/join_game_view', 'app/lobby/how_to_play_view',
+    'app/lobby/about_view', 'app/options_view'], 
+    function ($, React, TopBar, RoomsList, NewGameView, JoinGameView, HowToPlayView, AboutView, OptionsView) {
 
     var ReactTransitionGroup = React.addons.CSSTransitionGroup;
 
@@ -13,6 +14,8 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
     const NONE = 0;
     const VIEW_NEW_GAME = 1;
     const VIEW_HOW_TO_PLAY = 2;
+    const VIEW_ABOUT = 3;
+    const VIEW_OPTIONS = 4;
 
     var LobbyView = React.createClass({
         getInitialState() {
@@ -92,6 +95,18 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
         onHowToPlayOkClick(e) {
             this.setState({leftView: NONE});
         },
+        onAboutClick(e) {
+            this.setState({leftView: VIEW_ABOUT});
+        },
+        onAboutOkClick(e) {
+            this.setState({leftView: NONE});
+        },
+        onOptionsClick(e) {
+            this.setState({leftView: VIEW_OPTIONS});
+        },
+        onOptionsCancelClick(e) {
+            this.setState({leftView: NONE});
+        },
         render() {
             var value = this.state.value;
             var leftView;
@@ -114,6 +129,21 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
                             onOkClickHandler={this.onHowToPlayOkClick}/>
                     );
                     break;
+                case VIEW_ABOUT:
+                    leftView = (
+                        <AboutView
+                            key="aboutView" 
+                            onOkClickHandler={this.onAboutOkClick}/>
+                    );
+                    break;
+                case VIEW_OPTIONS:
+                    leftView = (
+                        <OptionsView
+                            key="optionsView"
+                            onCancelClickHandler={this.onOptionsCancelClick}
+                            onOkClickHandler={this.onOptionsCancelClick}/>
+                    );
+                    break;
             }
 
             if (this.state.roomSelected !== null) {
@@ -131,7 +161,9 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
                     <div style={{display: 'flex', 'flex-direction': 'row'}}>
                         <TopBar 
                             onNewGameClickHandler={this.onNewGameClick}
-                            onHowToPlayClickHandler={this.onHowToPlayClick}/>
+                            onHowToPlayClickHandler={this.onHowToPlayClick}
+                            onOptionsClickHandler={this.onOptionsClick}
+                            onAboutClickHandler={this.onAboutClick}/>
                     </div>
                     <div className="body">
                         <div className="body-left">
