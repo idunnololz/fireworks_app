@@ -26,6 +26,21 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
         }
     };
 
+    if (Consts.PROD) {
+        // heroku keep alive
+        setInterval(function() {
+            $.get("https://murmuring-mountain-5923.herokuapp.com/ping/", function(data) {
+                console.log("result: " + data);
+            });
+        }, 300000); // every 5 minutes (300000)
+    } else {
+        setInterval(function() {
+            $.get("http://localhost:3000/ping/", function(data) {
+                console.log("result: " + data);
+            });
+        }, 3000); // every 5 minutes (300000)
+    }
+
     var GameUi = React.createClass({
         getInitialState() {
             return {
@@ -54,7 +69,10 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                 var m = {playerInfo: {playerName: msg.playerName, playerId: msg.playerId}};
                 this.setState(m);
 
-                //this.joinTestGame();
+                // TEST LINE
+                this.joinTestGame();
+                // TEST LINE
+
                 s.removeListener('getSelf', handler);
             };
             s.on('getSelf', handler);

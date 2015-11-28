@@ -40,8 +40,8 @@ define(['jquery', 'React'], function ($, React) {
             }
             return formattedTime;
         },
-        onPlayAgainClick() {
-            
+        onOkClick() {
+            this.props.onOkClickHandler();
         },
         render() {
             var board = this.props.board;
@@ -86,7 +86,7 @@ define(['jquery', 'React'], function ($, React) {
                             <h3>{time}</h3>
                         </div>
                     </div>
-                    <a href="javascript:;" onClick={this.onPlayAgainClick}>Play again</a>
+                    <a href="javascript:;" onClick={this.onOkClick}>Ok</a>
                 </div>
             );
         }

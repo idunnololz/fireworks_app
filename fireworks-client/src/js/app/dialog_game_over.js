@@ -40,8 +40,8 @@ define(['jquery', 'React'], function ($, React) {
             }
             return formattedTime;
         },
-        onPlayAgainClick:function() {
-            
+        onOkClick:function() {
+            this.props.onOkClickHandler();
         },
         render:function() {
             var board = this.props.board;
@@ -86,7 +86,7 @@ define(['jquery', 'React'], function ($, React) {
                             React.createElement("h3", null, time)
                         )
                     ), 
-                    React.createElement("a", {href: "javascript:;", onClick: this.onPlayAgainClick}, "Play again")
+                    React.createElement("a", {href: "javascript:;", onClick: this.onOkClick}, "Ok")
                 )
             );
         }

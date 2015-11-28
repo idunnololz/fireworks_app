@@ -446,7 +446,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
         },
         onPlayerOpen(playerInfo) {
             // called when a player is expanded (player is trying to give a hint)
-            var filteredPlayers = this.state.playersInGame.filter((x) => {return x.playerId !== playerInfo.playerId});
+            var filteredPlayers = this.state.playersInGame.filter((x) => {return x.playerId !== this.state.playerInfo.playerId});
             $.each(filteredPlayers, (index, val) => {
                 var ref = this.refs["player" + val.playerId];
                 if (ref !== undefined) {
@@ -612,6 +612,29 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
         },
         onHowToPlayOkClick(e) {
             this.setState({showHowToPlayDialog: false});
+        },
+        onGameOverOkClick(e) {
+            this.onLeaveGameOkClick(e);
+        },
+        showAllHinted() {
+            var filteredPlayers = this.state.playersInGame.filter((x) => {return x.playerId !== this.state.playerInfo.playerId});
+            $.each(filteredPlayers, (index, val) => {
+                var ref = this.refs["player" + val.playerId];
+                if (ref !== undefined) {
+                    ref.showHinted();
+                }
+            });
+            this.getThisPlayerRef().showHinted();
+        },
+        hideAllHinted() {
+            var filteredPlayers = this.state.playersInGame.filter((x) => {return x.playerId !== this.state.playerInfo.playerId});
+            $.each(filteredPlayers, (index, val) => {
+                var ref = this.refs["player" + val.playerId];
+                if (ref !== undefined) {
+                    ref.hideHinted();
+                }
+            });
+            this.getThisPlayerRef().hideHinted();
         },
         render() {
             var thisPlayer = this.state.playerInfo;
@@ -805,7 +828,8 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     <div className="dialog-container">
                         <GameOverDialog
                             board={this.state.board}
-                            totalTime={this.state.time}/>
+                            totalTime={this.state.time}
+                            onOkClickHandler={this.onGameOverOkClick}/>
                     </div>
                 );
             }

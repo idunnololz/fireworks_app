@@ -20,6 +20,9 @@
         min-height: 48px;
 
         width: 3vw;
+        height: 3vw;
+
+        position: relative;
 
         img {
             max-width: 100%;
@@ -29,5 +32,17 @@
         &:hover {
             background-color: $color-theme-darker;
         }
+    }
+
+    .show-hints {
+        width: 100%;
+        height: 100%;
+        background: url('res/ic_info.png');
+        background-size: cover;
+    }
+
+    .hide-hints {
+        background: url('res/ic_hide_hints.png');
+        background-size: cover;
     }
 }

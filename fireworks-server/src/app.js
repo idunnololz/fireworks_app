@@ -30,6 +30,15 @@ io.set( 'origins', '*idunnololz.com*:*' );
 
 const LOCATION_LOBBY = -1;
 
+express().get("/ping/", function(request, response){
+    // do something with id
+    // send a response to user based on id
+    var obj = {result: "Ping success."};
+
+    response.writeHead(200, {"Content-Type": "application/json"});
+    response.write(JSON.stringify(obj));
+});
+
 /*
 
 The protocol:

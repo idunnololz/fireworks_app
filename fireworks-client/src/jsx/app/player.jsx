@@ -331,12 +331,11 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
         onMenuCancelClick() {
             this.setState({showMenu: false});
         },
-        onMenuShowHintedClick() {
+        showHinted() {
             this.setState({showMenu:false, showHinted: true});
-
-            setTimeout(() => {
-                this.setState({showHinted: false});
-            }, 5000);
+        },
+        hideHinted() {
+            this.setState({showHinted: false});
         },
         render() {
             var open = this.state.isOpen;
@@ -344,7 +343,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             var selectedCards = this.state.selected;
             var hintColor = this.state.hintType === HINT_COLOR;
             var cardViews = [];
-            var appendClass = " active-card";
+            var appendClass = "";
             var isHintActive = this.state.activeHint !== undefined;
 
             var isMyTurn = this.props.manager.getTurnIndex() === playerInfo.playerIndex;
@@ -432,12 +431,12 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     }
 
                     return (
-                        <span className={"card-in-hand"} ref={"card" + index} key={val.cardId}>
+                        <span className={"card-in-hand" + (selected || isHinted ? " active-card" : "")} ref={"card" + index} key={val.cardId}>
                             <ReactCSSTransitionGroup transitionName="hint-view-transition" transitionEnterTimeout={300} transitionLeaveTimeout={300} >
                                 {hintView}
                             </ReactCSSTransitionGroup>
                             <img 
-                                className={(selected ? "active-card" : "") + (isHinted ? appendClass : "")}
+                                className={isHinted ? appendClass : ""}
                                 src={"res/cards/" + CardUtils.getResourceNameForCard(val.cardType)}
                                 onMouseOver={this.onMouseOverCardHandler}
                                 onMouseLeave={this.onMouseLeaveCardHandler}
@@ -507,7 +506,6 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                         </div>
                     </div>
                     <div className={"menu" + (this.state.showMenu ? "" : " invisible")}>
-                        <a href="javascript:;" className="menu-option" onClick={this.onMenuShowHintedClick}>Show hinted</a>
                         <a href="javascript:;" className="menu-option" onClick={this.onMenuCancelClick}>Cancel</a>
                     </div>
                 </div>

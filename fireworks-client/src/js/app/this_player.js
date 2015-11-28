@@ -19,15 +19,10 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
         componentWillMount:function() {
         },
         showHinted:function() {
-            if ($.isEmptyObject(this.state.hinted)) {
-                this.props.manager.showToast("You've no information about your cards", 3000 );
-                return;
-            }
             this.setState({showHinted: true});
-
-            setTimeout(function()  {
-                this.setState({showHinted: false});
-            }.bind(this), 5000);
+        },
+        hideHinted:function() {
+            this.setState({showHinted: false});
         },
         onCardClickHandler:function(e) {
             if (!this.props.manager.isMyTurn()) return;

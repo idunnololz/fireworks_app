@@ -1,13 +1,27 @@
 define(['jquery', 'React', 'libs/tooltip'], function ($, React, ToolTip) {
+
+    var animating = false;
+
     var MenuBar = React.createClass({
         getInitialState() {
             return {
             };
         },
         componentDidMount() {
-            $('.menu-bar-container').tooltip({
-                position: {my: "right-10", at: "left"}
-            });
+            var $menuBarContainer = $('.menu-bar-container');
+            if (!$menuBarContainer.tooltip('instance')) {
+                $menuBarContainer.tooltip({
+                    position: {my: "right-10", at: "left"}
+                });
+
+                // $(this.refs.info.getDOMNode()).tooltip({
+                //     position: {my: "right-10", at: "left"},
+                //     content: "Show hinted"
+                // });
+            }
+
+            var img = new Image();
+            img.src = 'res/ic_hide_hints.png';
         },
         getPositionOf(refName) {
             return $(React.findDOMNode(this.refs[refName])).offset();
@@ -21,8 +35,37 @@ define(['jquery', 'React', 'libs/tooltip'], function ($, React, ToolTip) {
             manager.getGameBoardRef().showDiscards();
         },
         onShowMyHintedClick(e) {
+            if (animating) return;
+
+            var ic = $(this.refs.infoImg.getDOMNode());
+            var icContainer = $(this.refs.info.getDOMNode());
+            var remove = ic.hasClass('hide-hints');
+
+            animating = true;
+
+            var completeHandler = () => {
+                if (remove) {
+                    ic.removeClass('hide-hints');
+                    //icContainer.tooltip("option", "content", "Show hinted");
+                } else {
+                    ic.addClass('hide-hints');
+                    //icContainer.tooltip("option", "content", "Hide hinted");
+                }
+                TweenLite.to(ic, 0.15, {rotationY:'+=90'});
+                TweenLite.to(ic, 0.15, {scale: 1, delay: 0.15, onComplete: () => {
+                    animating = false;
+                }});
+            };
+            TweenLite.to(ic, 0.15, {scale: 1.2});
+            TweenLite.to(ic, 0.15, {rotationY:'+=90', onComplete: completeHandler, delay: 0.15});
+
             var manager = this.props.manager;
-            manager.getThisPlayerRef().showHinted();
+
+            if (remove) {
+                manager.hideAllHinted();
+            } else {
+                manager.showAllHinted();
+            }
         },
         render() {
             return (
@@ -34,8 +77,8 @@ define(['jquery', 'React', 'libs/tooltip'], function ($, React, ToolTip) {
                         <a className="item" href="javascript:;" ref="history" onClick={this.props.onHistoryClick} title="History">
                             <img src="res/ic_history.png"></img>
                         </a>
-                        <a className="item" href="javascript:;" ref="info" onClick={this.onShowMyHintedClick} title="Show hinted">
-                            <img src="res/ic_info.png"></img>
+                        <a className="item" href="javascript:;" ref="info" onClick={this.onShowMyHintedClick} title="Toggle hints">
+                            <div className="show-hints" ref="infoImg"></div>
                         </a>
                     </div>
                 </div>

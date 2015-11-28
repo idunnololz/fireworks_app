@@ -446,7 +446,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
         },
         onPlayerOpen:function(playerInfo) {
             // called when a player is expanded (player is trying to give a hint)
-            var filteredPlayers = this.state.playersInGame.filter(function(x)  {return x.playerId !== playerInfo.playerId});
+            var filteredPlayers = this.state.playersInGame.filter(function(x)  {return x.playerId !== this.state.playerInfo.playerId}.bind(this));
             $.each(filteredPlayers, function(index, val)  {
                 var ref = this.refs["player" + val.playerId];
                 if (ref !== undefined) {
@@ -612,6 +612,29 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
         },
         onHowToPlayOkClick:function(e) {
             this.setState({showHowToPlayDialog: false});
+        },
+        onGameOverOkClick:function(e) {
+            this.onLeaveGameOkClick(e);
+        },
+        showAllHinted:function() {
+            var filteredPlayers = this.state.playersInGame.filter(function(x)  {return x.playerId !== this.state.playerInfo.playerId}.bind(this));
+            $.each(filteredPlayers, function(index, val)  {
+                var ref = this.refs["player" + val.playerId];
+                if (ref !== undefined) {
+                    ref.showHinted();
+                }
+            }.bind(this));
+            this.getThisPlayerRef().showHinted();
+        },
+        hideAllHinted:function() {
+            var filteredPlayers = this.state.playersInGame.filter(function(x)  {return x.playerId !== this.state.playerInfo.playerId}.bind(this));
+            $.each(filteredPlayers, function(index, val)  {
+                var ref = this.refs["player" + val.playerId];
+                if (ref !== undefined) {
+                    ref.hideHinted();
+                }
+            }.bind(this));
+            this.getThisPlayerRef().hideHinted();
         },
         render:function() {
             var thisPlayer = this.state.playerInfo;
@@ -805,7 +828,8 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     React.createElement("div", {className: "dialog-container"}, 
                         React.createElement(GameOverDialog, {
                             board: this.state.board, 
-                            totalTime: this.state.time})
+                            totalTime: this.state.time, 
+                            onOkClickHandler: this.onGameOverOkClick})
                     )
                 );
             }
