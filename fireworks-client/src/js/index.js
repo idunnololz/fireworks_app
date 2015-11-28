@@ -29,7 +29,7 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
     if (Consts.PROD) {
         // heroku keep alive
         setInterval(function() {
-            $.get("https://murmuring-mountain-5923.herokuapp.com/ping/", function(data) {
+            $.get("https://murmuring-mountain-5923.herokuapp.com/", function(data) {
                 console.log("result: " + data);
             });
         }, 300000); // every 5 minutes (300000)
@@ -70,7 +70,7 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                 this.setState(m);
 
                 // TEST LINE
-                this.joinTestGame();
+                //this.joinTestGame();
                 // TEST LINE
 
                 s.removeListener('getSelf', handler);
