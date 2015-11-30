@@ -1,6 +1,6 @@
 define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lobby/new_game_view', 'app/lobby/join_game_view', 'app/lobby/how_to_play_view',
-    'app/lobby/about_view', 'app/options_view'], 
-    function ($, React, TopBar, RoomsList, NewGameView, JoinGameView, HowToPlayView, AboutView, OptionsView) {
+    'app/lobby/about_view', 'app/options_view', 'app/log'], 
+    function ($, React, TopBar, RoomsList, NewGameView, JoinGameView, HowToPlayView, AboutView, OptionsView, Log) {
 
     var ReactTransitionGroup = React.addons.CSSTransitionGroup;
 
@@ -10,6 +10,8 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
                                     {gameId: 1, gameName: "Wtf gtfo...", numPlayers: 5, maxPlayers: 5, observers: 2, status: 1}
                                     ]
     */
+
+    const TAG = 'LobbyView';
 
     const NONE = 0;
     const VIEW_NEW_GAME = 1;
@@ -67,13 +69,13 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
         },
         onNewGameMakeClick:function(roomName, roomType) {
             var socket = this.props.socket;
-            var handler = function(msg)  {
-                socket.removeListener('makeRoom', handler);
+            socket.once('makeRoom', function(msg)  {
+                socket.once('joinGame', function(msg)  {
+                    Log.d(TAG, "Got message: %O", msg);
+                    this.props.onNewGame(roomName);
+                }.bind(this));
                 socket.emit('joinGame', {gameId: msg.gameId});
-
-                this.props.onNewGame(roomName);
-            }.bind(this);
-            socket.on('makeRoom', handler);
+            }.bind(this));
             socket.emit('makeRoom', {roomName: roomName});
         },
         onRoomSelected:function(gameId) {

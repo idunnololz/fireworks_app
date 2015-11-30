@@ -9,6 +9,10 @@ define(['jquery', 'React'], function ($, React) {
         },
         componentDidMount:function() {
             setInterval(this.updateTime, 1000);
+
+            $('.info-bar').tooltip({
+                position: {at: "center", my: 'center bottom-20'},
+            });
         },
         componentDidUpdate:function(prevProps, prevState) {
             if (prevProps.lives > this.props.lives) {
@@ -80,14 +84,14 @@ define(['jquery', 'React'], function ($, React) {
                 React.createElement("div", {className: "info-bar"}, 
                     React.createElement("div", {className: "centered-container", ref: "lifeCount"}, 
                         React.createElement("span", null, this.props.cardsLeft), 
-                        React.createElement("span", {className: "deck"})
+                        React.createElement("span", {className: "deck", title: "Cards left"})
                     ), 
                     React.createElement("div", {className: "space centered-container", ref: "lifeCount"}, 
                         React.createElement("span", null, this.props.lives), 
-                        React.createElement("span", {className: "lives"})
+                        React.createElement("span", {className: "lives", title: "Lives"})
                     ), 
                     React.createElement("span", {className: "space"}, this.props.hints), 
-                    React.createElement("span", {className: "hints", ref: "hintCount"}), 
+                    React.createElement("span", {className: "hints", ref: "hintCount", title: "Hints"}), 
                     React.createElement("span", {style: {marginLeft:"4px"}}, formattedTime)
                 )
             );

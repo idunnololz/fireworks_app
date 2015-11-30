@@ -14,6 +14,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                 flipCard: undefined,
                 hinted: {}, // hinted is a mapping from cardId to what is known about the card: {123:{color:3,number:undefined}}
                 showHinted: false,
+                revealHand: false,
             };
         },
         componentWillMount() {
@@ -25,7 +26,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             this.setState({showHinted: false});
         },
         onCardClickHandler(e) {
-            if (!this.props.manager.isMyTurn()) return;
+            if (!this.props.manager.isMyTurn() || this.props.manager.isGameOver()) return;
             
             var $card = $(e.target);
             var index = parseInt($card.attr("data-index"));
@@ -50,6 +51,9 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
         },
         close() {
             this.setState({active: -1});
+        },
+        revealHand() {
+            this.setState({revealHand: true});
         },
         componentDidUpdate(prevProps, prevState) {
             var menuDom = React.findDOMNode(this.refs.menu);
@@ -198,7 +202,6 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             $card.css("opacity", "0");
         },
         animatePlay(gameEvent) {
-            this.props.manager.wait(900);
             /*
             {
               "playerId": 4,
@@ -221,6 +224,12 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             var manager = this.props.manager;
             var hand = this.props.playerInfo.hand;
             var cardPlayed = gameEvent.played;
+
+            if (!gameEvent.playable) {
+                manager.wait(3900);
+            } else {
+                manager.wait(900);
+            }
 
             manager.preloadResource(manager.getCardRes(cardPlayed), () => {
                 // clean up hinted...
@@ -246,21 +255,54 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                         manager.commitState();
                     }
 
-                    if (manager.getLives() > gameEvent.lives) {
-                        this.animateToTrash(idx);
+                    if (!gameEvent.playable) {
+                        // Animate the card going to the center.
+                        // Then animate a flashing no sign.
+                        // Finally animate the card going to the trash.
+                        var gameBoard = manager.getGameBoardRef();
+                        var refName = gameBoard.getRefNameForCard(cardPlayed);
+                        var finalPos = gameBoard.getPositionOf(refName);
+                        var finalSize = gameBoard.getSizeOf(refName);
 
-                        // trigger a lives update...
-                        manager.setLives(gameEvent.lives);
+                        var $card = $(React.findDOMNode(this.refs["card" + idx]));
+                        var $noSign = $(React.findDOMNode(this.refs["no-sign" + idx]));
+                        var startPos = $card.offset();
+                        var scale = finalSize.width / $card.innerWidth();
+                        var deltaX = finalPos.left - startPos.left - (($card.innerWidth() - finalSize.width) / 2);
+                        var deltaY = finalPos.top - startPos.top - (($card.innerHeight() - finalSize.height) / 2);
 
-                        // after this, animate the draw
-                        var newHand = this.props.playerInfo.hand.filter((x) => { return x.cardId !== cardPlayed.cardId});
-                        newHand.push(gameEvent.draw);
-                        setTimeout(() => {
-                            this.animateDraw(idx, newHand, () => {
-                                manager.addToDiscards(cardPlayed);
-                                manager.commitState();
-                            });
-                        }, 300);
+                        {
+                            // we need to precalculate the destination location (which is where the garbage icon is)
+                            // because GSAP animates from the ORIGINAL location, not the intermediate location
+                            var menuBar = this.props.manager.getMenuBarRef();
+                            var finalPos = menuBar.getPositionOf("delete");
+                            var finalSize = menuBar.getSizeOf("delete");
+
+                            var s2 = finalSize.width / $card.innerWidth();
+                            var d1 = finalPos.left - startPos.left - (($card.innerWidth() - finalSize.width) / 2);
+                            var d2 = finalPos.top - startPos.top - (($card.innerHeight() - finalSize.height) / 2);
+                        }
+
+                        TweenLite.lagSmoothing(0);
+                        TweenMax.lagSmoothing(0);
+                        TweenLite.to($card, 0.3, {x: deltaX, y: deltaY, scale: scale, ease: Power0.easeNone});
+                        TweenMax.to($noSign, 0.3, {delay: 0.8, yoyo:true, repeat:4, autoAlpha: 1, onComplete: () => {
+                            // trigger a lives update...
+                            manager.setLives(gameEvent.lives);
+
+                            TweenLite.to($noSign, 0.3, {autoAlpha: 0});
+                            TweenLite.to($card, 0.3, {x: d1, y: d2, scale: s2, autoAlpha: 0});
+
+                            // after this, animate the draw
+                            var newHand = this.props.playerInfo.hand.filter((x) => { return x.cardId !== cardPlayed.cardId});
+                            newHand.push(gameEvent.draw);
+                            setTimeout(() => {
+                                this.animateDraw(idx, newHand, () => {
+                                    manager.addToDiscards(cardPlayed);
+                                    manager.commitState();
+                                });
+                            }, 300);
+                        }});
                     } else {
                         // animate the card going to the center...
                         var gameBoard = manager.getGameBoardRef();
@@ -342,6 +384,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             var cardViews = [];
             var appendClass = "";
             var targetedHintDecor;
+            var revealHand = this.state.revealHand;
 
             if (this.state.activeHint !== undefined) {
                 var isColorHint = CardUtils.isColorHint(this.state.activeHint.hintType);
@@ -450,6 +493,8 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     var isAnimatingPlay = toFlip !== undefined && toFlip.cardId === val.cardId;
                     if (isAnimatingPlay) {
                         cardRes = "res/cards/" + CardUtils.getResourceNameForCard(toFlip.cardType);
+                    } else if (revealHand) {
+                        cardRes = "res/cards/" + CardUtils.getResourceNameForCard(val.cardType);
                     }
 
                     return (
@@ -461,7 +506,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                                 data-index={index}
                                 href="javascript:;"
                                 ref={"card" + index}>
-                                <div className={"card" + (isAnimatingPlay ? " flip" : "")}>
+                                <div className={"card" + (isAnimatingPlay || revealHand ? " flip" : "")}>
                                     <img 
                                         className={cardBackClass}
                                         src="res/cards/card_back.png"
@@ -470,6 +515,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                                         className="back"
                                         src={cardRes}></img>
                                 </div>
+                                <div ref={"no-sign" + index} className="invisible no-sign"> </div>
                                 {hintDecor}
                             </a>
                         </span>

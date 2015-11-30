@@ -9,6 +9,9 @@ const STATE_NEED_PLAYERS = 2;
 const STATUS_WAITING = 1;
 const STATUS_PLAYING = 2;
 
+const VOTE_DURATION = 60 * 1000; // 60 seconds
+const TIME_BETWEEN_VOTES = 60 * 1000; // 60 seconds
+
 export default class OnlineGame extends Game {
     constructor(gameId, name, log = false) {
         super();
@@ -29,6 +32,70 @@ export default class OnlineGame extends Game {
         this.history = [];
 
         this.playerCapacity = 5;
+
+        this.tag = undefined;
+
+        // vars for the surrender feature
+        this._isVoting = false;
+        this.votes = [];
+        this.voteExpiryTime = 0;
+        this.nextVoteTime = 0;
+        this.votesFor = 0;
+        this.voteSuccess = false;
+    }
+
+    isVoting() {
+        if ((new Date).getTime() > this.voteExpiryTime) this._isVoting = false;
+        return this._isVoting;
+    }
+
+    getVotes() {
+        return this.votes;
+    }
+
+    vote(v /* 0 for no, 1 for yes*/) {
+        if (!this.isVoting()) {
+            var curTime = (new Date).getTime();
+            // if this is the first vote do check if vote can be started, then do setup work...
+            if (curTime < this.nextVoteTime) {
+                // nope...
+                return false;
+            }
+            this._isVoting = true;
+            this.votes = [];
+            this.voteExpiryTime = curTime + VOTE_DURATION;
+            this.nextVoteTime = this.voteExpiryTime + TIME_BETWEEN_VOTES;
+            this.votesFor = 0;
+        }
+        this.votes.push(v);
+        this.votesFor += v;
+
+        if (this.votes.length >= this.getRealNumPlayers()) {
+            if (this.getVoteResult() === 1) {
+                // game over!
+                this.voteSuccess = true;
+            }
+            this._isVoting = false; // everyone has voted
+        }
+
+        return true;
+    }
+
+    // Return 0 for still waiting. 1 for yes. -1 for no.
+    getVoteResult() {
+        if (this.voteSuccess) return 1;
+        if (!this.isVoting()) {
+            return 0;
+        }
+        return this.votesFor / this.getRealNumPlayers() < 0.7 ? 0 : 1;
+    }
+
+    setTag(tag) {
+        this.tag = tag;
+    }
+
+    getTag(tag) {
+        return this.tag;
     }
 
     getStatus() {

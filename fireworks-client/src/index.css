@@ -740,6 +740,20 @@ input[type=range]::-ms-track {
         background-color: #ffffff; }
       .player-container .card-container .card-in-hand .card-yellow {
         background-color: #dad722; }
+  .player-container .no-sign {
+    background-image: url("res/ic_no_sign.svg");
+    background-size: cover;
+    /* height: 100%; */
+    height: 20vw;
+    width: 20vw;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-left: -10vw;
+    margin-top: -10vw;
+    z-index: 1; }
+  .player-container .invisible {
+    visibility: hidden; }
 
 .hint-view-transition-enter {
   -webkit-transform: translateY(-2vw);
@@ -1446,6 +1460,20 @@ input[type=range]::-ms-track {
         color: #ddd; }
       .hand-container .menu-container ul.menu a:hover {
         background-color: #393967; }
+  .hand-container .no-sign {
+    background-image: url("res/ic_no_sign.svg");
+    background-size: cover;
+    /* height: 100%; */
+    height: 40vw;
+    width: 40vw;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-left: -20vw;
+    margin-top: -20vw;
+    z-index: 1; }
+  .hand-container .invisible {
+    visibility: hidden; }
   .hand-container .fade-in-appear {
     opacity: 0.01;
     transition: opacity .3s ease-in; }
@@ -2592,6 +2620,45 @@ input[type=range]::-ms-track {
       flex: 1 0 0; }
     .game-room .how-to-play-view .instructions {
       margin-right: 20px; }
+
+.surrender-vote-view {
+  position: absolute;
+  margin-top: 0;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  background: #1f1f4d;
+  -webkit-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+  box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+  width: 400px;
+  margin-right: 50px; }
+  .surrender-vote-view p {
+    margin-top: 0;
+    align-self: center;
+    font-size: large; }
+  .surrender-vote-view .votes-container {
+    background: #393967;
+    height: 1vh;
+    display: flex;
+    flex-direction: row; }
+  .surrender-vote-view .vote-yes {
+    flex: 1 0 0;
+    background: #39a439; }
+  .surrender-vote-view .vote-no {
+    flex: 1 0 0;
+    background: #e42626; }
+  .surrender-vote-view .choice-hidden {
+    height: 0;
+    display: none; }
+  .surrender-vote-view .gone {
+    display: none; }
+  .surrender-vote-view .progress-bar {
+    width: 100%;
+    background-color: #4e4f78;
+    height: 3px;
+    margin-top: 5px; }
 
 html, body {
   height: 100%;

@@ -1,6 +1,7 @@
 define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_player', 'app/info_bar', 'app/menu_bar', 'app/game_board', 
-    'app/dialog_game_over', 'app/history_dialog', 'app/prefs', 'app/leave_game_dialog', 'app/lobby/how_to_play_view'], 
-    function ($, React, Log, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog, HistoryDialog, Prefs, LeaveGameDialog, HowToPlayView) {
+    'app/dialog_game_over', 'app/history_dialog', 'app/prefs', 'app/leave_game_dialog', 'app/lobby/how_to_play_view', 'app/surrender_vote_view'], 
+    function ($, React, Log, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog, HistoryDialog, Prefs, LeaveGameDialog, 
+        HowToPlayView, SurrenderVoteView) {
 
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
@@ -63,7 +64,14 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
 
                 showLeaveGameDialog: false,
                 showHowToPlayDialog: false,
+
+                showSurrenderVoteView: false,
+                _isPlayerWhoStartedVote: false,
+                surrenderPlayers: 0,
             };
+        },
+        isGameOver:function() {
+            return this.state.isGameOver;
         },
         getLives:function() {
             return this.state.lives;
@@ -76,6 +84,20 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
         },
         setHints:function(hints) {
             this.setState({hints: hints});
+        },
+        componentWillUnmount:function() {
+            Log.d(TAG, "componentWillUnmount");
+            var socket = this.props.socket;
+            socket.removeAllListeners('getSelf');
+            socket.removeAllListeners('getGameInfo');
+            socket.removeAllListeners('playerJoined');
+            socket.removeAllListeners('playerLeft');
+            socket.removeAllListeners('isHost');
+            socket.removeAllListeners('surrender');
+            socket.removeAllListeners('surrenderUpdate');
+            socket.removeAllListeners('gameStarted');
+            socket.removeAllListeners('sgetPlayerHands');
+            socket.removeAllListeners('gameEvent');
         },
         componentWillMount:function() {
             var s = this.props.socket;
@@ -113,6 +135,20 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 // for when the host changes...
                 this.setState({isHost: msg});
             }.bind(this));
+
+            s.on('surrender', function(msg)  {
+                if (msg.errorType !== undefined) {
+                    this.refs.chatbox.v('A surrender vote just recently concluded. Please wait a while before starting another vote.');
+                } else {
+                    this.refs.chatbox.v(this.getPlayerWithId(msg.playerId).playerName + ' has started a surrender vote.');
+                    this.setState({_isPlayerWhoStartedVote: (msg.playerId === this.state.playerInfo.playerId)});
+                }
+            }.bind(this));
+
+            s.on('surrenderUpdate', function(msg)  {
+                this.setState({surrenderVotes: msg.votes, surrenderPlayers: msg.numPlayers, showSurrenderVoteView: true});
+            }.bind(this));
+
             s.on('gameStarted', function(msg)  {
                 var pi = this.state.playerInfo;
                 var players = msg.players;
@@ -137,6 +173,18 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     lives: msg.lives,
                     cardsLeft: msg.deckSize
                 });
+            }.bind(this));
+            s.on('sgetPlayerHands', function(msg)  {
+                Log.d(TAG, "sgetPlayerHands");
+                var filteredPlayers = this.state.playersInGame.filter(function(x)  {return x.playerId !== this.state.playerInfo.playerId}.bind(this));
+                var obj = {};
+                $.each(filteredPlayers, function(index, val)  {
+                    obj[val.playerId] = {
+                        hand: val.hand
+                    };
+                });
+
+                s.emit('sgetPlayerHands', obj);
             }.bind(this));
             s.on('gameEvent', function(msg)  {
                 this.handleGameEvent(msg);
@@ -305,6 +353,11 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     this.checkIfMyTurn();
                     break;
                 case EVENT_DECLARE_GAME_OVER:
+                    var hand = gameEvent.data[this.state.playerInfo.playerId].hand;
+                    Log.d(TAG, "GG hand: %O", hand);
+                    this.state.playerInfo.hand = hand;
+                    this.setState();
+
                     this.showGameOverDialog();
                     break;
                 default:
@@ -413,6 +466,9 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             // /remount                                     ; this will immediately apply the alpha changes...
 
             switch (args[0]) {
+                case '/this':
+                    chat.v(JSON.stringify(this.state[args[1]]));
+                    break;
                 case '/thisPlayer':
                     chat.v(JSON.stringify(this.state.playerInfo));
                     break;
@@ -435,6 +491,9 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 case '/remount':
                     this.setState({objectVersion: this.state.objectVersion + 1});
                     chat.v('Remount success.');
+                    break;
+                case '/ff':
+                    this.props.socket.emit('surrender', {vote: 1});
                     break;
                 default:
                     chat.v("Invalid command '" + args[0] + "'.");
@@ -565,6 +624,8 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                         }.bind(this), 1200);
                         break;
                     case UI_EVENT_SHOW_GAME_OVER:
+                        // reveal the hand of this player
+                        this.getThisPlayerRef().revealHand();
                         this.setState({showGameOverDialog: true, time: this.refs.infoBar.getTime()});
                         break;
                 }
@@ -635,6 +696,20 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 }
             }.bind(this));
             this.getThisPlayerRef().hideHinted();
+        },
+        getSurrenderVoteStartPosition:function(size) {
+            var pos = this.getMenuBarRef().getPositionOf('info');
+
+            return {left: pos.left - size.width, top: pos.top};
+        },
+        onSurrenderVoteNoClick:function() {
+            this.props.socket.emit('surrender', {vote: 0});
+        },
+        onSurrenderVoteYesClick:function() {
+            this.props.socket.emit('surrender', {vote: 1});
+        },
+        onSurrenderVoteClose:function() {
+            this.setState({showSurrenderVoteView: false});
         },
         render:function() {
             var thisPlayer = this.state.playerInfo;
@@ -843,6 +918,20 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                             onDoneClick: this.onHistoryDialogDoneClick, 
                             manager: this})
                     )
+                );
+            }
+
+            if (this.state.showSurrenderVoteView) {
+                dialogViews.push(
+                    React.createElement(SurrenderVoteView, {
+                        onNoClickHandler: this.onSurrenderVoteNoClick, 
+                        onYesClickHandler: this.onSurrenderVoteYesClick, 
+                        getStartPosition: this.getSurrenderVoteStartPosition, 
+                        surrenderVotes: this.state.surrenderVotes, 
+                        surrenderPlayers: this.state.surrenderPlayers, 
+                        allowPlayerToVote: !this.state._isPlayerWhoStartedVote, 
+                        onClose: this.onSurrenderVoteClose}
+                        )
                 );
             }
 

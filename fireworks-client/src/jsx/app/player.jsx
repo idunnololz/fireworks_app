@@ -53,7 +53,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             $card.removeClass('hover-card');
         },
         onCardClickHandler(e) {
-            if (!this.props.manager.isMyTurn()) return;
+            if (!this.props.manager.isMyTurn() || this.props.manager.isGameOver()) return;
 
             var playerInfo = this.props.playerInfo;
             var $card = $(e.target);
@@ -216,7 +216,11 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             var hand = this.props.playerInfo.hand;
             var cardPlayed = gameEvent.played;
 
-            manager.wait(900);
+            if (gameEvent.playable) {
+                manager.wait(900);
+            } else {
+                manager.wait(3900);
+            }
 
             manager.preloadResource(manager.getCardRes(cardPlayed), () => {
                 // clean up hinted...
@@ -240,22 +244,55 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     manager.commitState();
                 }
                     
-                if (manager.getLives() > gameEvent.lives) {
-                    // animate the card going into the trash...
-                    this.animateToTrash(idx);
+                if (!gameEvent.playable) {
+                    // Animate the card going to the center.
+                    // Then animate a flashing no sign.
+                    // Finally animate the card going to the trash.
+                    var gameBoard = manager.getGameBoardRef();
+                    var refName = gameBoard.getRefNameForCard(cardPlayed);
+                    var finalPos = gameBoard.getPositionOf(refName);
+                    var finalSize = gameBoard.getSizeOf(refName);
 
-                    // trigger a lives update...
-                    manager.setLives(gameEvent.lives);
+                    var $card = $(React.findDOMNode(this.refs["card" + idx]));
+                    var $noSign = $(React.findDOMNode(this.refs["no-sign" + idx]));
+                    var startPos = $card.offset();
+                    var scale = finalSize.width / $card.innerWidth();
+                    var deltaX = finalPos.left - startPos.left - (($card.innerWidth() - finalSize.width) / 2);
+                    var deltaY = finalPos.top - startPos.top - (($card.innerHeight() - finalSize.height) / 2);
 
-                    // after this, animate the draw
-                    var newHand = this.props.playerInfo.hand.filter((x) => { return x.cardId !== cardPlayed.cardId});
-                    newHand.push(gameEvent.draw);
-                    setTimeout(() => {
-                        this.animateDraw(idx, newHand, () => {
-                            manager.addToDiscards(cardPlayed);
-                            manager.commitState();
-                        });
-                    }, 300);
+                    {
+                        // we need to precalculate the destination location (which is where the garbage icon is)
+                        // because GSAP animates from the ORIGINAL location, not the intermediate location
+                        var menuBar = this.props.manager.getMenuBarRef();
+                        var finalPos = menuBar.getPositionOf("delete");
+                        var finalSize = menuBar.getSizeOf("delete");
+
+                        var s2 = finalSize.width / $card.innerWidth();
+                        var d1 = finalPos.left - startPos.left - (($card.innerWidth() - finalSize.width) / 2);
+                        var d2 = finalPos.top - startPos.top - (($card.innerHeight() - finalSize.height) / 2);
+                    }
+
+                    TweenLite.lagSmoothing(0);
+                    TweenMax.lagSmoothing(0);
+                    TweenLite.set($card, {css:{zIndex:1}});
+                    TweenLite.to($card, 0.3, {x: deltaX, y: deltaY, scale: scale, ease: Power0.easeNone});
+                    TweenMax.to($noSign, 0.3, {delay: 0.8, yoyo:true, repeat:4, autoAlpha: 1, onComplete: () => {
+                        // trigger a lives update...
+                        manager.setLives(gameEvent.lives);
+
+                        TweenLite.to($noSign, 0.3, {autoAlpha: 0});
+                        TweenLite.to($card, 0.3, {x: d1, y: d2, scale: s2, autoAlpha: 0});
+
+                        // after this, animate the draw
+                        var newHand = this.props.playerInfo.hand.filter((x) => { return x.cardId !== cardPlayed.cardId});
+                        newHand.push(gameEvent.draw);
+                        setTimeout(() => {
+                            this.animateDraw(idx, newHand, () => {
+                                manager.addToDiscards(cardPlayed);
+                                manager.commitState();
+                            });
+                        }, 300);
+                    }});
                 } else {
                     // animate the card going to the center...
                     var gameBoard = manager.getGameBoardRef();
@@ -442,6 +479,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                                 onMouseLeave={this.onMouseLeaveCardHandler}
                                 onClick={this.onCardClickHandler}
                                 data-index={index}></img>
+                            <div ref={"no-sign" + index} className="invisible no-sign"> </div>
                         </span>
                     );
                 });

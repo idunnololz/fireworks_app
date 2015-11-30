@@ -97,6 +97,9 @@ They are of the form - emit('roomsUpdate', {added: [{new_rooms}], removed: [{del
 
 const TAG = "App";
 
+const ERROR_SURRENDER = 0x80000;
+const ERROR_SURRENDER_NOT_ENOUGH_TIME_SINCE_LAST_VOTE = 1;
+
 io.on('connection', function(socket){
     // new player has joined! Create a player id and obj for the player
     var playerId = genId();
@@ -183,6 +186,7 @@ io.on('connection', function(socket){
             socket.emit('joinGame', 'No game with given ID exists.');
             return;
         }
+        console.log("Player " + player.playerId + " joined game with name " + game.getName());
         game.addPlayer(player);
 
         socket.emit('joinGame', true);
@@ -246,6 +250,7 @@ io.on('connection', function(socket){
 
     // convenience function
     socket.on('getGameInfo', (msg) => {
+        console.log("Player getting gameInfo");
         socket.emit('getGameInfo', {
             isHost: game.getHost() !== undefined && game.getHost().getId() === player.getId(),
             playersInGame: getPlayersInGame(),
@@ -271,6 +276,43 @@ io.on('connection', function(socket){
 
     socket.on('getPlayerIndex', (msg) => {
         socket.emit('getPlayerIndex', game.getIndex(playerId))
+    });
+
+    socket.on('surrender', (msg) => {
+        // surrender logic is as follows:
+        // Flag to track if surrender vote is active on game
+        // On first surrender vote, the surrender timer is engaged and a vote is hosted
+        // The vote lasts for 60 seconds before concluding.
+        // If at anytime a > 70% vote is reached the vote is concluded and a surrender success message
+        // is sent to all clients.
+        // Otherwise the vote concludes and the surrender flag is switched off.
+        // A minimum of 60 seconds must have elapsed between votes.
+
+        var wasVoting = game.isVoting();
+        var result = game.vote(msg.vote);
+        if (!result) {
+            // can't vote yet...
+            socket.emit('surrender', {
+                errorType: ERROR_SURRENDER | ERROR_SURRENDER_NOT_ENOUGH_TIME_SINCE_LAST_VOTE
+            });
+            return;
+        }
+
+        if (!wasVoting) {
+            io.to(game.getId()).emit('surrender', {
+                playerId: playerId,
+                msg: 'Vote started!'
+            });
+        }
+
+        io.to(game.getId()).emit('surrenderUpdate', {
+            votes: game.getVotes(),
+            numPlayers: game.getRealNumPlayers()
+        });
+
+        if (game.getVoteResult() === 1) {
+            endGame();
+        }
     });
 
     const EVENT_DRAW_HAND = 1;
@@ -355,6 +397,9 @@ io.on('connection', function(socket){
             played: game.getCardWithId(msg.cardId),
             playable: playable
         };
+        if (game.getLives() === 0) {
+            event.draw = card;    
+        }
         socket.emit('gameEvent', event);
         event.draw = card;
         socket.broadcast.to(game.getId()).emit('gameEvent', event);
@@ -409,14 +454,56 @@ io.on('connection', function(socket){
         return game.getAllPlayersInGame();
     }
 
+    function extend(target) {
+        var sources = [].slice.call(arguments, 1);
+        sources.forEach(function (source) {
+            for (var prop in source) {
+                target[prop] = source[prop];
+            }
+        });
+        return target;
+    }
+
+    socket.on('sgetPlayerHands', (msg) => { 
+        var msgs = game.getTag();
+        if (msgs.length == 2) return;
+        msgs.push(msg);
+        if (msgs.length == 2) {
+            sendGameOver();
+        }
+        game.setTag(msgs);
+    });
+
+    function sendGameOver() {
+        var msgs = game.getTag();
+        var o = extend({}, msgs[0], msgs[1]);
+
+        var event = {
+            playerId: playerId, 
+            eventType: EVENT_DECLARE_GAME_OVER,
+            data: o
+        };
+        io.to(game.getId()).emit('gameEvent', event);
+        game.pushEvent(event);
+    }
+
+    function endGame() {
+        // ask two players for all other player's hands
+        game.getPlayers().map((p) => {
+            return {
+                playerId: p.getId(),
+                playerName: p.getName()
+            };
+        });
+
+        game.setTag([]);
+
+        io.to(game.getId()).emit('sgetPlayerHands');
+    }
+
     function checkGameOver() {
         if (game.isGameOver()) {
-            var event = {
-                playerId: playerId, 
-                eventType: EVENT_DECLARE_GAME_OVER,
-            };
-            io.to(game.getId()).emit('gameEvent', event);
-            game.pushEvent(event);
+            endGame();
         }
     }
 

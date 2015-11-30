@@ -9,6 +9,10 @@ define(['jquery', 'React'], function ($, React) {
         },
         componentDidMount() {
             setInterval(this.updateTime, 1000);
+
+            $('.info-bar').tooltip({
+                position: {at: "center", my: 'center bottom-20'},
+            });
         },
         componentDidUpdate(prevProps, prevState) {
             if (prevProps.lives > this.props.lives) {
@@ -80,14 +84,14 @@ define(['jquery', 'React'], function ($, React) {
                 <div className="info-bar">
                     <div className="centered-container" ref="lifeCount">
                         <span>{this.props.cardsLeft}</span>
-                        <span className="deck"></span>
+                        <span className="deck" title="Cards left"></span>
                     </div>
                     <div className="space centered-container" ref="lifeCount">
                         <span>{this.props.lives}</span>
-                        <span className="lives"></span>
+                        <span className="lives" title="Lives"></span>
                     </div>
                     <span className="space">{this.props.hints}</span>
-                    <span className="hints" ref="hintCount"></span>
+                    <span className="hints" ref="hintCount" title="Hints"></span>
                     <span style={{marginLeft:"4px"}}>{formattedTime}</span>
                 </div>
             );

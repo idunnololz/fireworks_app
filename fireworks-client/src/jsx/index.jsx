@@ -14,6 +14,7 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
     var endpoint;
     if (Consts.PROD) {
         endpoint = "https://murmuring-mountain-5923.herokuapp.com";
+        //endpoint = "http://185.28.22.25:3000";
     } else {
         endpoint = "http://localhost:3000";
     }
@@ -44,12 +45,12 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
         joinTestGame() {
             // hack this sht so we can go into a room immediately...
             var socket = this.props.socket;
-            socket.on('joinGame', (msg) => {
+            socket.once('joinGame', (msg) => {
                 if (msg === true) {
                     this.onJoinGame('tester');
                 } else {
                     // must mean we couldn't join the game...
-                    socket.on('makeRoom', (msg) => {
+                    socket.once('makeRoom', (msg) => {
                         this.onJoinGame('tester');
                     });
                     socket.emit('makeRoom', {gameId: 1000, roomName: 'tester', enterRoom: true});
@@ -59,17 +60,14 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
         },
         componentWillMount() {
             var s = this.props.socket;
-            var handler = (msg) => {
+            s.once('getSelf', (msg) => {
                 var m = {playerInfo: {playerName: msg.playerName, playerId: msg.playerId}};
                 this.setState(m);
 
                 // TEST LINE
-                //this.joinTestGame();
+                this.joinTestGame();
                 // TEST LINE
-
-                s.removeListener('getSelf', handler);
-            };
-            s.on('getSelf', handler);
+            });
             s.emit('getSelf');
         },
         onResourceLoaded() {
