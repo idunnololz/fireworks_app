@@ -65,7 +65,7 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                 this.setState(m);
 
                 // TEST LINE
-                this.joinTestGame();
+                //this.joinTestGame();
                 // TEST LINE
             });
             s.emit('getSelf');

@@ -109,18 +109,20 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             s.on('getGameInfo', function(msg)  {
                 Log.d(TAG, 'getGameInfo: %O', msg);
                 if (msg.gameStarted) {
-                    this.setState({mode: MODE_SPECTATOR, playersInGame: msg.playersInGame});
+                    this.setState({mode: MODE_SPECTATOR, playersInGame: this.sanatizePlayerList(msg.playersInGame)});
                 } else {
-                    this.setState({mode: MODE_WAITING, playersInGame: msg.playersInGame, isHost: msg.isHost});
+                    this.setState({mode: MODE_WAITING, playersInGame: this.sanatizePlayerList(msg.playersInGame), isHost: msg.isHost});
                 }
             }.bind(this));
             s.on('playerJoined', function(msg)  {
+                this.refs.chatbox.v("Player '" + msg.playerName + "' has joined the room.");
                 Log.d(TAG, 'playerJoined: %O', msg);
                 var ps = this.state.playersInGame;
                 ps.push(msg);
-                this.setState({playersInGame: ps});
+                this.setState({playersInGame: this.sanatizePlayerList(ps)});
             }.bind(this));
             s.on('playerLeft', function(msg)  {
+                this.refs.chatbox.v("Player '" + this.getPlayerWithId(msg.playerId).playerName + "' has left the room.");
                 if (this.state.mode === MODE_PLAYING) {
                     // TODO
                 } else {
@@ -128,9 +130,9 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     ps = ps.filter(function(val)  {
                         return val.playerId !== msg.playerId;
                     });
-                    this.setState({playersInGame: ps});
+                    this.setState({playersInGame: this.sanatizePlayerList(ps)});
                 }
-            }.bind(this));
+            }.bind(this));1
             s.on('isHost', function(msg)  {
                 // for when the host changes...
                 this.setState({isHost: msg});
@@ -191,6 +193,24 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             }.bind(this));
             s.emit('getSelf');
             s.emit('getGameInfo');
+        },
+        sanatizePlayerList:function(players) {
+            var good = true;
+            // check if list is in right order...
+            Log.d(TAG, "In: %O", players);
+            for (var i = 0; i < players.length; i++) {
+                var p = players[i];
+
+                if (p.playerIndex === undefined || p.playerIndex < 0) {
+                    break;
+                }
+                if (p.playerIndex !== i) {
+                    players[i] = players[p.playerIndex];
+                    players[p.playerIndex] = p;
+                }
+            }
+            Log.d(TAG, "Out: %O", players);
+            return players;
         },
         getTurnIndex:function() {
             return this.state.turnIndex % this.state.numPlayers;

@@ -13,7 +13,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
 
                 flipCard: undefined,
                 hinted: {}, // hinted is a mapping from cardId to what is known about the card: {123:{color:3,number:undefined}}
-                showHinted: false,
+                showHinted: true,
                 revealHand: false,
             };
         },

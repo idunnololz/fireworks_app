@@ -22,6 +22,8 @@ define(['jquery', 'React', 'libs/tooltip'], function ($, React, ToolTip) {
 
             var img = new Image();
             img.src = 'res/ic_hide_hints.png';
+            var img2 = new Image();
+            img2.src = 'res/ic_info.png';
         },
         getPositionOf:function(refName) {
             return $(React.findDOMNode(this.refs[refName])).offset();
@@ -78,7 +80,7 @@ define(['jquery', 'React', 'libs/tooltip'], function ($, React, ToolTip) {
                             React.createElement("img", {src: "res/ic_history.png"})
                         ), 
                         React.createElement("a", {className: "item", href: "javascript:;", ref: "info", onClick: this.onShowMyHintedClick, title: "Toggle hints"}, 
-                            React.createElement("div", {className: "show-hints", ref: "infoImg"})
+                            React.createElement("div", {className: "show-hints hide-hints", ref: "infoImg"})
                         )
                     )
                 )

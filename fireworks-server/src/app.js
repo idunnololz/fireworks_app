@@ -186,7 +186,7 @@ io.on('connection', function(socket){
             socket.emit('joinGame', 'No game with given ID exists.');
             return;
         }
-        console.log("Player " + player.playerId + " joined game with name " + game.getName());
+        console.log("PlayerId " + playerId + " joined game with name " + game.getName());
         game.addPlayer(player);
 
         socket.emit('joinGame', true);

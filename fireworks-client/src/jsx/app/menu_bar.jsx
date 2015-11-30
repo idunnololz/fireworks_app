@@ -22,6 +22,8 @@ define(['jquery', 'React', 'libs/tooltip'], function ($, React, ToolTip) {
 
             var img = new Image();
             img.src = 'res/ic_hide_hints.png';
+            var img2 = new Image();
+            img2.src = 'res/ic_info.png';
         },
         getPositionOf(refName) {
             return $(React.findDOMNode(this.refs[refName])).offset();
@@ -78,7 +80,7 @@ define(['jquery', 'React', 'libs/tooltip'], function ($, React, ToolTip) {
                             <img src="res/ic_history.png"></img>
                         </a>
                         <a className="item" href="javascript:;" ref="info" onClick={this.onShowMyHintedClick} title="Toggle hints">
-                            <div className="show-hints" ref="infoImg"></div>
+                            <div className="show-hints hide-hints" ref="infoImg"></div>
                         </a>
                     </div>
                 </div>

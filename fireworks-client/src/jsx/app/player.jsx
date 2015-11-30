@@ -21,7 +21,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                 showMenu: false,
 
                 hinted: {}, // hinted is a mapping from cardId to what is known about the card: {123:{color:3,number:undefined}}
-                showHinted: false,
+                showHinted: true,
             };
         },
         componentDidUpdate(prevProps, prevState) {
