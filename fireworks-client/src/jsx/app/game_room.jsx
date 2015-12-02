@@ -1,7 +1,8 @@
 define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_player', 'app/info_bar', 'app/menu_bar', 'app/game_board', 
-    'app/dialog_game_over', 'app/history_dialog', 'app/prefs', 'app/leave_game_dialog', 'app/lobby/how_to_play_view', 'app/surrender_vote_view'], 
+    'app/dialog_game_over', 'app/history_dialog', 'app/prefs', 'app/leave_game_dialog', 'app/lobby/how_to_play_view', 'app/surrender_vote_view',
+    'app/options_view'], 
     function ($, React, Log, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog, HistoryDialog, Prefs, LeaveGameDialog, 
-        HowToPlayView, SurrenderVoteView) {
+        HowToPlayView, SurrenderVoteView, OptionsView) {
 
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
@@ -26,9 +27,13 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
     const UI_EVENT_SHOW_YOUR_TURN = 4;
     const UI_EVENT_SHOW_GAME_OVER = 5;
 
+    const JOIN_REGULAR = 1;
+    const JOIN_SPECTATOR = 2;
+
     var GameRoom = React.createClass({
         batchState: {},
         getInitialState() {
+            Log.d(TAG, "state initialized");
             return {
                 playerInfo: undefined,
                 mode: MODE_LOADING,
@@ -64,6 +69,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
 
                 showLeaveGameDialog: false,
                 showHowToPlayDialog: false,
+                showOptionsDialog: false,
 
                 showSurrenderVoteView: false,
                 _isPlayerWhoStartedVote: false,
@@ -99,7 +105,14 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             socket.removeAllListeners('sgetPlayerHands');
             socket.removeAllListeners('gameEvent');
         },
+        setUpSpectatorMode() {
+            this.props.socket.once('getGameHistory', (msg) => {
+                Log.d(TAG, 'History: %O', msg.history);
+            });
+            this.props.socket.emit('getGameHistory');
+        },
         componentWillMount() {
+            this.batchState = {}; // reset the batch state or else a 'ghosting' effect will occur
             var s = this.props.socket;
             s.on('getSelf', (msg) => {
                 Log.d(TAG, 'getSelf: %O', msg);
@@ -110,16 +123,21 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 Log.d(TAG, 'getGameInfo: %O', msg);
                 if (msg.gameStarted) {
                     this.setState({mode: MODE_SPECTATOR, playersInGame: this.sanatizePlayerList(msg.playersInGame)});
+                    this.setUpSpectatorMode();
                 } else {
                     this.setState({mode: MODE_WAITING, playersInGame: this.sanatizePlayerList(msg.playersInGame), isHost: msg.isHost});
                 }
             });
             s.on('playerJoined', (msg) => {
-                this.refs.chatbox.v("Player '" + msg.playerName + "' has joined the room.");
                 Log.d(TAG, 'playerJoined: %O', msg);
-                var ps = this.state.playersInGame;
-                ps.push(msg);
-                this.setState({playersInGame: this.sanatizePlayerList(ps)});
+                if (msg.joinType === JOIN_SPECTATOR) {
+                    this.refs.chatbox.v("Player '" + msg.playerName + "' has joined the room as a spectator.");
+                } else if(msg.joinType === JOIN_REGULAR) {
+                    this.refs.chatbox.v("Player '" + msg.playerName + "' has joined the room.");
+                    var ps = this.state.playersInGame;
+                    ps.push(msg);
+                    this.setState({playersInGame: this.sanatizePlayerList(ps)});
+                }
             });
             s.on('playerLeft', (msg) => {
                 this.refs.chatbox.v("Player '" + this.getPlayerWithId(msg.playerId).playerName + "' has left the room.");
@@ -148,10 +166,15 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             });
 
             s.on('surrenderUpdate', (msg) => {
-                this.setState({surrenderVotes: msg.votes, surrenderPlayers: msg.numPlayers, showSurrenderVoteView: true});
+                if (msg.votes.length === msg.numPlayers) {
+                    this.setState({surrenderVotes: msg.votes, surrenderPlayers: msg.numPlayers});
+                } else {
+                    this.setState({surrenderVotes: msg.votes, surrenderPlayers: msg.numPlayers, showSurrenderVoteView: true});
+                }
             });
 
             s.on('gameStarted', (msg) => {
+                Log.d(TAG, 'gameStarted: %O', msg);
                 var pi = this.state.playerInfo;
                 var players = msg.players;
                 var playersInGame = []; // use to align items...
@@ -374,7 +397,6 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     break;
                 case EVENT_DECLARE_GAME_OVER:
                     var hand = gameEvent.data[this.state.playerInfo.playerId].hand;
-                    Log.d(TAG, "GG hand: %O", hand);
                     this.state.playerInfo.hand = hand;
                     this.setState();
 
@@ -473,6 +495,10 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             var players = this.state.playersInGame.length;
             if (players >= 2 && players <= 5) {
                 this.props.socket.emit('startGame');
+            } else if (players < 2) {
+                this.showToast("Too few players.", 3000);
+            } else if (players > 5) {
+                this.showToast("Too many players.", 3000);
             }
         },
         handleSpecialCommand(msg) {
@@ -694,6 +720,19 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
         onHowToPlayOkClick(e) {
             this.setState({showHowToPlayDialog: false});
         },
+        onOptionsClick(e) {
+            this.setState({showMenu: false});
+            this.setState({showOptionsDialog: true});
+        },
+        onOptionsCancelClick(e) {
+            this.setState({showOptionsDialog: false});
+        },
+        onOptionsOkClick(e) {
+            this.setState({showOptionsDialog: false});
+            // certain options may have changed...
+            // to start, reload the message box
+            this.refs.chatbox.refreshKeepingMessages();
+        },
         onGameOverOkClick(e) {
             this.onLeaveGameOkClick(e);
         },
@@ -747,7 +786,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 menuButton = (
                     <div className="in-game-menu" key="in-game-menu">
                         <button onClick={this.onHowToPlayClick}>How to play</button>
-                        <button>Options</button>
+                        <button onClick={this.onOptionsClick}>Options</button>
                         <button onClick={this.onLeaveGameClick}>Leave game</button>
                         <button onClick={this.onMenuCancelClick}>Cancel</button>
                     </div>
@@ -769,6 +808,16 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     <div className="dialog-container">
                         <HowToPlayView 
                             onOkClickHandler={this.onHowToPlayOkClick}/>
+                    </div>
+                );
+            }
+
+            if (this.state.showOptionsDialog) {
+                dialogViews.push(
+                    <div className="dialog-container">
+                        <OptionsView 
+                            onCancelClickHandler={this.onOptionsCancelClick}
+                            onOkClickHandler={this.onOptionsOkClick}/>
                     </div>
                 );
             }
@@ -852,7 +901,12 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
 
                     bottomInterface.push(
                         <div key="spacer" className="bottom-player-space">
-                            <ThisPlayer playerInfo={this.state.playerInfo} ref="thisPlayer" onOpen={this.onThisPlayerOpen} manager={this}/>
+                            <ThisPlayer 
+                                playerInfo={this.state.playerInfo} 
+                                ref="thisPlayer" 
+                                onOpen={this.onThisPlayerOpen} 
+                                manager={this} 
+                                isMyTurn={this.isMyTurn()}/>
                         </div>
                     );
 
@@ -944,6 +998,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             if (this.state.showSurrenderVoteView) {
                 dialogViews.push(
                     <SurrenderVoteView
+                        key="SurrenderVoteView"
                         onNoClickHandler={this.onSurrenderVoteNoClick}
                         onYesClickHandler={this.onSurrenderVoteYesClick}
                         getStartPosition={this.getSurrenderVoteStartPosition}

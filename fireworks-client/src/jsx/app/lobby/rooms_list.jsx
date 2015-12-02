@@ -34,6 +34,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     <div className="col" style={styles[2]}>{room.numPlayers + "/" + room.maxPlayers}</div>
                     <div className="resizable-spacer"></div>
                     <div className="col" style={styles[3]}>{status}</div>
+                    <button className="join-game-button" onClick={this.props.onJoinGameClick}>Join Game</button>
                 </div>
             );
         }
@@ -55,6 +56,9 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
         },
         onItemClick(gameId, e) {
             this.props.onRoomSelected(gameId);
+        },
+        onJoinGameClickHandler(gameId, e) {
+            this.props.onJoinGame(gameId);
         },
         handleResizable() {
             var $resizable = $('.resizable');
@@ -115,6 +119,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                         room={val}
                         index={i}
                         onClick={this.onItemClick.bind(this, val.gameId)}
+                        onJoinGameClick={this.onJoinGameClickHandler.bind(this, val.gameId)}
                         />
                 );
             }
@@ -130,6 +135,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                             <div className="sortable col" style={styles[2]}>Players</div>
                             <div className="resizable" data-index="2"></div>
                             <div className="sortable col" style={styles[3]}>Status</div>
+                            <button className="join-game-button" style={{opacity: 0}} disabled="true">Join Game</button>
                         </div>
                     </div>
                     <div className="list-body nano">

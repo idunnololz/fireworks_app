@@ -79,12 +79,11 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
             socket.emit('makeRoom', {roomName: roomName});
         },
         onRoomSelected(gameId) {
-            var handler = (msg) => {
-                this.setState({roomSelected: msg});
-                this.props.socket.removeListener('getRoomInfo', handler);
-            };
-
-            this.props.socket.on('getRoomInfo', handler);
+        },
+        onJoinGameClick(gameId) {
+            this.props.socket.once('getRoomInfo', (msg) => {
+                this.onJoinGame(msg.name, gameId);
+            });
             this.props.socket.emit('getRoomInfo', {gameId: gameId});
         },
         onJoinGameCancelClick(e) {
@@ -172,7 +171,7 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
                         </div>
                         <div className="body-right">
                             <div className="top-spacer"> </div>
-                            <RoomsList rooms={this.state.rooms} onRoomSelected={this.onRoomSelected}/>
+                            <RoomsList rooms={this.state.rooms} onRoomSelected={this.onRoomSelected} onJoinGame={this.onJoinGameClick}/>
                             
                             <ReactTransitionGroup 
                                 transitionName="slide-up" 

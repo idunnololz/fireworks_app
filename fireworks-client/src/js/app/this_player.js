@@ -26,7 +26,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             this.setState({showHinted: false});
         },
         onCardClickHandler:function(e) {
-            if (!this.props.manager.isMyTurn() || this.props.manager.isGameOver()) return;
+            if (!this.props.isMyTurn || this.props.manager.isGameOver()) return;
             
             var $card = $(e.target);
             var index = parseInt($card.attr("data-index"));
@@ -79,6 +79,17 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     this.setState({lastCardId: newLastCard.cardId});
                 }
             }
+
+            if (this.state.active !== -1) {
+                document.addEventListener('click', this.handleClickOutside, false);
+            }
+        },
+        handleClickOutside:function(e) {
+            if (this.getDOMNode().contains(e.target)) {
+                return;
+            }
+            document.removeEventListener('click', this.handleClickOutside, false);
+            this.setState({active: -1});
         },
         animateHint:function(hintInfo) {
             // translate cardId to indices
@@ -187,40 +198,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                 }
             }
         },
-        animateToTrash:function(cardIndex) {
-            var idx = cardIndex;
-            var menuBar = this.props.manager.getMenuBarRef();
-            // animate the card going into the trash...
-            var finalPos = menuBar.getPositionOf("delete");
-            var finalSize = menuBar.getSizeOf("delete");
-            var $card = $(React.findDOMNode(this.refs["card" + idx]));
-            var startPos = $card.offset();
-            var scale = finalSize.width / $card.innerWidth();
-            var deltaX = finalPos.left - startPos.left - (($card.innerWidth() - finalSize.width) / 2);
-            var deltaY = finalPos.top - startPos.top - (($card.innerHeight() - finalSize.height) / 2);
-            $card.css("transform", ("translateX(" + deltaX + "px) translateY(" + deltaY + "px) scale(" + scale + ")"));
-            $card.css("opacity", "0");
-        },
         animatePlay:function(gameEvent) {
-            /*
-            {
-              "playerId": 4,
-              "eventType": 4,
-              "data": {
-                "cardId": 5
-              },
-              "lives": 2,
-              "draw": {
-                "cardId": 10,
-                "cardType": 1048576
-              },
-              "played": {
-
-                "cardId": 5,
-                "cardType": 8192
-              }
-            }
-            */
             var manager = this.props.manager;
             var hand = this.props.playerInfo.hand;
             var cardPlayed = gameEvent.played;
@@ -265,6 +243,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                         var finalSize = gameBoard.getSizeOf(refName);
 
                         var $card = $(React.findDOMNode(this.refs["card" + idx]));
+                        var $gsap = $(React.findDOMNode(this.refs["gsap" + idx]));
                         var $noSign = $(React.findDOMNode(this.refs["no-sign" + idx]));
                         var startPos = $card.offset();
                         var scale = finalSize.width / $card.innerWidth();
@@ -285,13 +264,13 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
 
                         TweenLite.lagSmoothing(0);
                         TweenMax.lagSmoothing(0);
-                        TweenLite.to($card, 0.3, {x: deltaX, y: deltaY, scale: scale, ease: Power0.easeNone});
-                        TweenMax.to($noSign, 0.3, {delay: 0.8, yoyo:true, repeat:4, autoAlpha: 1, onComplete: function()  {
+                        TweenLite.to($gsap, 0.3, {x: deltaX, y: deltaY, scale: scale});
+                        TweenMax.to($noSign, 0.3, {delay: 0.4, yoyo:true, repeat:4, autoAlpha: 1, onComplete: function()  {
                             // trigger a lives update...
                             manager.setLives(gameEvent.lives);
 
                             TweenLite.to($noSign, 0.3, {autoAlpha: 0});
-                            TweenLite.to($card, 0.3, {x: d1, y: d2, scale: s2, autoAlpha: 0});
+                            TweenLite.to($gsap, 0.3, {x: d1, y: d2, scale: s2, autoAlpha: 0});
 
                             // after this, animate the draw
                             var newHand = this.props.playerInfo.hand.filter(function(x)  { return x.cardId !== cardPlayed.cardId});
@@ -312,19 +291,18 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
 
                         var $card = $(React.findDOMNode(this.refs["card" + idx]));
                         var startPos = $card.offset();
+
                         var scale = finalSize.width / $card.innerWidth();
                         var deltaX = finalPos.left - startPos.left - (($card.innerWidth() - finalSize.width) / 2);
                         var deltaY = finalPos.top - startPos.top - (($card.innerHeight() - finalSize.height) / 2);
                         $card.css("transform", ("translateX(" + deltaX + "px) translateY(" + deltaY + "px) scale(" + scale + ")"));
-                        //$card.css("opacity", "0");
                         var newHand = this.props.playerInfo.hand.filter(function(x)  { return x.cardId !== cardPlayed.cardId});
                         newHand.push(gameEvent.draw);
 
+                        TweenLite.to($card, 0.3, {autoAlpha: 0, delay: 0.2});
+
                         setTimeout(function()  {
                             manager.updateBoard(cardPlayed);
-                            manager.preloadResource(manager.getSmallCardRes(cardPlayed), function()  {
-                                $card.css("opacity", "0");
-                            });
                             this.animateDraw(idx, newHand, function()  {
                                 manager.commitState();
                             });
@@ -344,6 +322,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                 this.setState({flipCard: cardDisc, lastCardId: hand[hand.length - 1].cardId});
 
                 setTimeout(function()  {
+                    // this is post flip
                     var idx;
 
                     $.each(hand, function(index, val)  {
@@ -352,19 +331,41 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                         }
                     });
 
-                    this.animateToTrash(idx);
+                    var menuBar = this.props.manager.getMenuBarRef();
+                    // animate the card going into the trash...
+                    var finalPos = menuBar.getPositionOf("delete");
+                    var finalSize = menuBar.getSizeOf("delete");
+                    var $card = $(React.findDOMNode(this.refs["gsap" + idx]));
+                    var $delete = $(React.findDOMNode(this.refs["delete" + idx]));
+                    var startPos = $card.offset();
+                    var finalScale = finalSize.width / $card.innerWidth();
+                    var finalX = finalPos.left - startPos.left - (($card.innerWidth() - finalSize.width) / 2);
+                    var finalY = finalPos.top - startPos.top - (($card.innerHeight() - finalSize.height) / 2);
+
+                    var midX = Math.floor(window.innerWidth/2) - $card.innerWidth()/2 - startPos.left;
+                    var midY = Math.floor(window.innerHeight/2) - $card.innerHeight()/2 - startPos.top;
 
                     // trigger a hints update...
                     manager.setHints(gameEvent.hints);
 
-                    var newHand = this.props.playerInfo.hand.filter(function(x)  { return x.cardId !== cardDisc.cardId});
-                    newHand.push(gameEvent.draw);
-                    setTimeout(function()  {
+                    // three step animation after flip, first animate to center of screen...
+                    // then slowly animate it going toward trash (with trash icon glowing on card)
+                    // finally animate the card to the trash
+                    TweenLite.lagSmoothing(0);
+                    TweenMax.lagSmoothing(0);
+
+                    TweenLite.to($card, 0.3, {x: midX, y: midY});
+                    var stepScale = finalScale / 5;
+                    TweenLite.to($card, 40, {x: finalX, y: finalY, scale: stepScale, delay: 0.3});
+                    TweenMax.to($delete, 0.3, {delay: 0.4, yoyo:true, repeat:5, autoAlpha: 0.9});
+                    TweenLite.to($card, 0.3, {x: finalX, y: finalY, scale: finalScale, delay: 2.3, autoAlpha: 0, onComplete: function()  {
+                        var newHand = this.props.playerInfo.hand.filter(function(x)  { return x.cardId !== cardDisc.cardId});
+                        newHand.push(gameEvent.draw);
                         this.animateDraw(idx, newHand, function()  {
                             manager.addToDiscards(cardDisc);
                             manager.commitState();
                         });
-                    }.bind(this), 300);
+                    }.bind(this)});
                 }.bind(this), 300);
             }.bind(this));
         },
@@ -385,6 +386,17 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             var appendClass = "";
             var targetedHintDecor;
             var revealHand = this.state.revealHand;
+
+            var turnIndicator;
+
+            if (this.props.isMyTurn && this.state.active === -1) {
+                turnIndicator = (
+                    React.createElement("div", {className: "my-turn-indicator-container"}, 
+                        React.createElement("p", null, "Your turn"), 
+                        React.createElement("div", {className: "arrow-down"})
+                    )
+                );
+            }
 
             if (this.state.activeHint !== undefined) {
                 var isColorHint = CardUtils.isColorHint(this.state.activeHint.hintType);
@@ -434,8 +446,9 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             
                     if (isActive) {
                         menu = (
-                            React.createElement(ReactTransitionGroup, {transitionName: "fade-in", transitionAppear: true}, 
-                                React.createElement("div", {className: "menu-container", style: {top: -this.state.menuHeight}, ref: "menuContainer"}, 
+                            React.createElement(ReactTransitionGroup, {transitionName: "fade-in", transitionAppear: true, 
+                                transitionEnterTimeout: 300, transitionLeaveTimeout: 300}, 
+                                React.createElement("div", {className: "menu-container", style: {top: -this.state.menuHeight}, ref: "menuContainer", onClick: this.onCancelClick}, 
                                     React.createElement("ul", {className: "menu", ref: "menu"}, 
                                         React.createElement("li", null, React.createElement("a", {href: "javascript:;", onClick: this.onCancelClick}, "Cancel")), 
                                         React.createElement("li", null, React.createElement("a", {href: "javascript:;", onClick: this.onDiscardClick}, "Discard")), 
@@ -500,23 +513,26 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     return (
                         React.createElement("span", {className: "card-in-hand", key: val.cardId}, 
                             menu, 
-                            React.createElement("a", {
-                                className: cardClass + " card-container" + (isActive || isHinted ? "" : " hoverable"), 
-                                onClick: this.onCardClickHandler, 
-                                "data-index": index, 
-                                href: "javascript:;", 
-                                ref: "card" + index}, 
-                                React.createElement("div", {className: "card" + (isAnimatingPlay || revealHand ? " flip" : "")}, 
-                                    React.createElement("img", {
-                                        className: cardBackClass, 
-                                        src: "res/cards/card_back.png", 
-                                        "data-index": index}), 
-                                    React.createElement("img", {
-                                        className: "back", 
-                                        src: cardRes})
-                                ), 
-                                React.createElement("div", {ref: "no-sign" + index, className: "invisible no-sign"}, " "), 
-                                hintDecor
+                            React.createElement("div", {className: "gsap-container", ref: "gsap" + index}, 
+                                React.createElement("a", {
+                                    className: cardClass + " card-container" + (isActive || isHinted ? "" : " hoverable"), 
+                                    onClick: this.onCardClickHandler, 
+                                    "data-index": index, 
+                                    href: "javascript:;", 
+                                    ref: "card" + index}, 
+                                    React.createElement("div", {className: "card" + (isAnimatingPlay || revealHand ? " flip" : "")}, 
+                                        React.createElement("img", {
+                                            className: cardBackClass, 
+                                            src: "res/cards/card_back.png", 
+                                            "data-index": index}), 
+                                        React.createElement("img", {
+                                            className: "back", 
+                                            src: cardRes})
+                                    ), 
+                                    React.createElement("div", {ref: "no-sign" + index, className: "invisible no-sign"}, " "), 
+                                    React.createElement("div", {ref: "delete" + index, className: "invisible delete"}, " "), 
+                                    hintDecor
+                                )
                             )
                         )
                     );
@@ -524,6 +540,15 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             }
             return (
                 React.createElement("div", {className: "hand-container", ref: "handContainer"}, 
+                    React.createElement(ReactTransitionGroup, {
+                        transitionName: "fade", 
+                        transitionAppear: true, 
+                        transitionEnterTimeout: 300, 
+                        transitionLeaveTimeout: 300}, 
+
+                        turnIndicator
+
+                    ), 
                     cardViews
                 )
             );

@@ -16,6 +16,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
         componentWillMount:function() {
             var pos = this.props.getStartPosition({width: 450, height: 200});
             this.setState({px: pos.left, py: pos.top, enableVote: this.props.allowPlayerToVote});
+            Log.d(TAG, "Mounted.");
         },
         componentDidMount:function() {
             TweenLite.lagSmoothing(0);

@@ -187,11 +187,11 @@ io.on('connection', function(socket){
             return;
         }
         console.log("PlayerId " + playerId + " joined game with name " + game.getName());
-        game.addPlayer(player);
+        var joinType = game.addPlayer(player);
 
         socket.emit('joinGame', true);
         socket.join(game.getId());
-        socket.broadcast.to(game.getId()).emit('playerJoined', {'playerId': playerId, playerName: player.getName()});
+        socket.broadcast.to(game.getId()).emit('playerJoined', {'playerId': playerId, playerName: player.getName(), joinType: joinType});
 
         // check if we can start the game
         var players = game.getNumPlayers();
@@ -428,6 +428,10 @@ io.on('connection', function(socket){
         game.pushEvent(event);
 
         checkGameOver();
+    });
+
+    socket.on('getGameHistory', () => {
+        socket.emit('getGameHistory', {history: game.getHistoryForPlayer(player)});
     });
 
     socket.on('disconnect', () => {

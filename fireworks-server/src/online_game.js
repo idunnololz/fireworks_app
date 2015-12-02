@@ -44,6 +44,15 @@ export default class OnlineGame extends Game {
         this.voteSuccess = false;
     }
 
+    isSpectator(player) {
+        var s = this.spectators;
+        var id = player.getId();
+        for (var i = 0; i < s.length; i++) {
+            if (s[i].getId() === id) return true;
+        }
+        return false;
+    }
+
     isVoting() {
         if ((new Date).getTime() > this.voteExpiryTime) this._isVoting = false;
         return this._isVoting;
@@ -114,10 +123,13 @@ export default class OnlineGame extends Game {
         return this.playersArr;
     }
 
+    // 1 = regular join
+    // 2 = spectator
     addPlayer(player) {
         if (this.isGameStarted()) {
             this.spectators.push(player);
             Log.d(TAG, "Added spectator with id " + player.getId());
+            return 2;
         } else {
             super.addPlayer();
             var id = player.getId();
@@ -130,6 +142,7 @@ export default class OnlineGame extends Game {
             }
 
             this.playersArr.push(player);
+            return 1;
         }
     }
 
@@ -261,5 +274,16 @@ export default class OnlineGame extends Game {
 
     pushEvent(event) {
         this.history.push(event);
+    }
+
+    getHistoryForPlayer(player) {
+        if (this.isSpectator(player)) {
+            return this.history;
+        } else {
+            // we need to censor the player's draws
+
+            // TODO
+            return [];
+        }
     }
 }

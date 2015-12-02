@@ -43,6 +43,16 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     this.setState({lastCardId: newLastCard.cardId});
                 }
             }
+
+            if (this.state.isOpen) {
+                document.addEventListener('click', this.handleClickOutside, false);
+            }
+        },
+        handleClickOutside(e) {
+            if (this.getDOMNode().contains(e.target)) {
+                return;
+            }
+            this.close();
         },
         onMouseOverCardHandler(e) {
             var $card = $(e.target);
@@ -154,20 +164,6 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                 }
             }
         },
-        animateToTrash(cardIndex) {
-            var idx = cardIndex;
-            var menuBar = this.props.manager.getMenuBarRef();
-            // animate the card going into the trash...
-            var finalPos = menuBar.getPositionOf("delete");
-            var finalSize = menuBar.getSizeOf("delete");
-            var $card = $(React.findDOMNode(this.refs["card" + idx]));
-            var startPos = $card.offset();
-            var scale = finalSize.width / $card.innerWidth();
-            var deltaX = finalPos.left - startPos.left - (($card.innerWidth() - finalSize.width) / 2);
-            var deltaY = finalPos.top - startPos.top - (($card.innerHeight() - finalSize.height) / 2);
-            $card.css("transform", `translateX(${deltaX}px) translateY(${deltaY}px) scale(${scale})`);
-            $card.css("opacity", "0");
-        },
         animateHint(hintInfo) {
             // translate cardId to indices
             var thisPlayer = this.props.playerInfo;
@@ -254,6 +250,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     var finalSize = gameBoard.getSizeOf(refName);
 
                     var $card = $(React.findDOMNode(this.refs["card" + idx]));
+                    var $gsap = $(React.findDOMNode(this.refs["gsap" + idx]));
                     var $noSign = $(React.findDOMNode(this.refs["no-sign" + idx]));
                     var startPos = $card.offset();
                     var scale = finalSize.width / $card.innerWidth();
@@ -275,13 +272,13 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     TweenLite.lagSmoothing(0);
                     TweenMax.lagSmoothing(0);
                     TweenLite.set($card, {css:{zIndex:1}});
-                    TweenLite.to($card, 0.3, {x: deltaX, y: deltaY, scale: scale, ease: Power0.easeNone});
-                    TweenMax.to($noSign, 0.3, {delay: 0.8, yoyo:true, repeat:4, autoAlpha: 1, onComplete: () => {
+                    TweenLite.to($gsap, 0.3, {x: deltaX, y: deltaY, scale: scale});
+                    TweenMax.to($noSign, 0.3, {delay: 0.3, yoyo:true, repeat:4, autoAlpha: 1, onComplete: () => {
                         // trigger a lives update...
                         manager.setLives(gameEvent.lives);
 
                         TweenLite.to($noSign, 0.3, {autoAlpha: 0});
-                        TweenLite.to($card, 0.3, {x: d1, y: d2, scale: s2, autoAlpha: 0});
+                        TweenLite.to($gsap, 0.3, {x: d1, y: d2, scale: s2, autoAlpha: 0});
 
                         // after this, animate the draw
                         var newHand = this.props.playerInfo.hand.filter((x) => { return x.cardId !== cardPlayed.cardId});
@@ -326,6 +323,8 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             var manager = this.props.manager;
             var hand = this.props.playerInfo.hand;
             var cardDisc = gameEvent.discarded;
+
+            manager.wait(2600);
             
             manager.preloadResource(manager.getCardRes(cardDisc), () => {
                 setTimeout(() => {
@@ -337,19 +336,41 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                         }
                     });
 
-                    this.animateToTrash(idx);
+                    var menuBar = this.props.manager.getMenuBarRef();
+                    // animate the card going into the trash...
+                    var finalPos = menuBar.getPositionOf("delete");
+                    var finalSize = menuBar.getSizeOf("delete");
+                    var $card = $(React.findDOMNode(this.refs["gsap" + idx]));
+                    var $delete = $(React.findDOMNode(this.refs["delete" + idx]));
+                    var startPos = $card.offset();
+                    var finalScale = finalSize.width / $(React.findDOMNode(this.refs["card" + idx])).innerWidth();
+                    var finalX = finalPos.left - startPos.left - (($card.innerWidth() - finalSize.width) / 2);
+                    var finalY = finalPos.top - startPos.top - (($card.innerHeight() - finalSize.height) / 2);
 
                     // trigger a hints update...
                     manager.setHints(gameEvent.hints);
+
+                    var midX = Math.floor(window.innerWidth/2) - $card.innerWidth()/2 - startPos.left;
+                    var midY = Math.floor(window.innerHeight/2) - $card.innerHeight()/2 - startPos.top;
                     
-                    var newHand = this.props.playerInfo.hand.filter((x) => { return x.cardId !== cardDisc.cardId});
-                    newHand.push(gameEvent.draw);
-                    setTimeout(() => {
+                    // three step animation after flip, first animate to center of screen...
+                    // then slowly animate it going toward trash (with trash icon glowing on card)
+                    // finally animate the card to the trash
+                    TweenLite.lagSmoothing(0);
+                    TweenMax.lagSmoothing(0);
+
+                    TweenLite.to($card, 0.3, {x: midX, y: midY});
+                    var stepScale = finalScale / 5;
+                    TweenLite.to($card, 40, {x: finalX, y: finalY, scale: stepScale, delay: 0.3});
+                    TweenMax.to($delete, 0.3, {delay: 0.4, yoyo:true, repeat:5, autoAlpha: 0.9});
+                    TweenLite.to($card, 0.3, {x: finalX, y: finalY, scale: finalScale, delay: 2.3, autoAlpha: 0, onComplete: () => {
+                        var newHand = this.props.playerInfo.hand.filter((x) => { return x.cardId !== cardDisc.cardId});
+                        newHand.push(gameEvent.draw);
                         this.animateDraw(idx, newHand, () => {
                             manager.addToDiscards(cardDisc);
                             manager.commitState();
                         });
-                    }, 300);
+                    }});
                 }, 300);
             });
         },
@@ -430,7 +451,6 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                         var numberHint = "a";
                         var numberClass = " no-number";
                         var isWhite = false;
-                        console.log(whatWeKnow);
                         if (whatWeKnow.color !== undefined) {
                             switch (CardUtils.getHintColor(whatWeKnow.color)) {
                                 case CardUtils.Color.BLUE:
@@ -466,21 +486,24 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                             </div>
                         );
                     }
-
+                    
                     return (
-                        <span className={"card-in-hand" + (selected || isHinted ? " active-card" : "")} ref={"card" + index} key={val.cardId}>
-                            <ReactCSSTransitionGroup transitionName="hint-view-transition" transitionEnterTimeout={300} transitionLeaveTimeout={300} >
-                                {hintView}
-                            </ReactCSSTransitionGroup>
-                            <img 
-                                className={isHinted ? appendClass : ""}
-                                src={"res/cards/" + CardUtils.getResourceNameForCard(val.cardType)}
-                                onMouseOver={this.onMouseOverCardHandler}
-                                onMouseLeave={this.onMouseLeaveCardHandler}
-                                onClick={this.onCardClickHandler}
-                                data-index={index}></img>
-                            <div ref={"no-sign" + index} className="invisible no-sign"> </div>
-                        </span>
+                        <div className="gsap-container" ref={"gsap" + index} key={val.cardId}>
+                            <span className={"card-in-hand" + (selected || isHinted ? " active-card" : "")} ref={"card" + index}>
+                                <ReactCSSTransitionGroup transitionName="hint-view-transition" transitionEnterTimeout={300} transitionLeaveTimeout={300} >
+                                    {hintView}
+                                </ReactCSSTransitionGroup>
+                                <img 
+                                    className={isHinted ? appendClass : ""}
+                                    src={"res/cards/" + CardUtils.getResourceNameForCard(val.cardType)}
+                                    onMouseOver={this.onMouseOverCardHandler}
+                                    onMouseLeave={this.onMouseLeaveCardHandler}
+                                    onClick={this.onCardClickHandler}
+                                    data-index={index}></img>
+                                <div ref={"no-sign" + index} className="invisible no-sign"> </div>
+                                <div ref={"delete" + index} className="invisible delete"> </div>
+                            </span>
+                        </div>
                     );
                 });
             }
@@ -540,7 +563,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                             <a href="javascript:;" className={hintColor ? "selected" : ""} onClick={this.onColorClick}>Color</a>
                             <a href="javascript:;" className={!hintColor ? "selected" : ""} onClick={this.onNumberClick}>Number</a>
                             <div className="horizontal-spacer"></div>
-                            <a href="javascript:;" onClick={this.onHintClick}>Hint</a>
+                            <button className="theme-button" href="javascript:;" onClick={this.onHintClick}>Hint</button>
                         </div>
                     </div>
                     <div className={"menu" + (this.state.showMenu ? "" : " invisible")}>

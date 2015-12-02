@@ -1,7 +1,8 @@
 define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_player', 'app/info_bar', 'app/menu_bar', 'app/game_board', 
-    'app/dialog_game_over', 'app/history_dialog', 'app/prefs', 'app/leave_game_dialog', 'app/lobby/how_to_play_view', 'app/surrender_vote_view'], 
+    'app/dialog_game_over', 'app/history_dialog', 'app/prefs', 'app/leave_game_dialog', 'app/lobby/how_to_play_view', 'app/surrender_vote_view',
+    'app/options_view'], 
     function ($, React, Log, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog, HistoryDialog, Prefs, LeaveGameDialog, 
-        HowToPlayView, SurrenderVoteView) {
+        HowToPlayView, SurrenderVoteView, OptionsView) {
 
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
@@ -26,9 +27,13 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
     const UI_EVENT_SHOW_YOUR_TURN = 4;
     const UI_EVENT_SHOW_GAME_OVER = 5;
 
+    const JOIN_REGULAR = 1;
+    const JOIN_SPECTATOR = 2;
+
     var GameRoom = React.createClass({displayName: "GameRoom",
         batchState: {},
         getInitialState:function() {
+            Log.d(TAG, "state initialized");
             return {
                 playerInfo: undefined,
                 mode: MODE_LOADING,
@@ -64,6 +69,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
 
                 showLeaveGameDialog: false,
                 showHowToPlayDialog: false,
+                showOptionsDialog: false,
 
                 showSurrenderVoteView: false,
                 _isPlayerWhoStartedVote: false,
@@ -99,7 +105,14 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             socket.removeAllListeners('sgetPlayerHands');
             socket.removeAllListeners('gameEvent');
         },
+        setUpSpectatorMode:function() {
+            this.props.socket.once('getGameHistory', function(msg)  {
+                Log.d(TAG, 'History: %O', msg.history);
+            });
+            this.props.socket.emit('getGameHistory');
+        },
         componentWillMount:function() {
+            this.batchState = {}; // reset the batch state or else a 'ghosting' effect will occur
             var s = this.props.socket;
             s.on('getSelf', function(msg)  {
                 Log.d(TAG, 'getSelf: %O', msg);
@@ -110,16 +123,21 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 Log.d(TAG, 'getGameInfo: %O', msg);
                 if (msg.gameStarted) {
                     this.setState({mode: MODE_SPECTATOR, playersInGame: this.sanatizePlayerList(msg.playersInGame)});
+                    this.setUpSpectatorMode();
                 } else {
                     this.setState({mode: MODE_WAITING, playersInGame: this.sanatizePlayerList(msg.playersInGame), isHost: msg.isHost});
                 }
             }.bind(this));
             s.on('playerJoined', function(msg)  {
-                this.refs.chatbox.v("Player '" + msg.playerName + "' has joined the room.");
                 Log.d(TAG, 'playerJoined: %O', msg);
-                var ps = this.state.playersInGame;
-                ps.push(msg);
-                this.setState({playersInGame: this.sanatizePlayerList(ps)});
+                if (msg.joinType === JOIN_SPECTATOR) {
+                    this.refs.chatbox.v("Player '" + msg.playerName + "' has joined the room as a spectator.");
+                } else if(msg.joinType === JOIN_REGULAR) {
+                    this.refs.chatbox.v("Player '" + msg.playerName + "' has joined the room.");
+                    var ps = this.state.playersInGame;
+                    ps.push(msg);
+                    this.setState({playersInGame: this.sanatizePlayerList(ps)});
+                }
             }.bind(this));
             s.on('playerLeft', function(msg)  {
                 this.refs.chatbox.v("Player '" + this.getPlayerWithId(msg.playerId).playerName + "' has left the room.");
@@ -148,10 +166,15 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             }.bind(this));
 
             s.on('surrenderUpdate', function(msg)  {
-                this.setState({surrenderVotes: msg.votes, surrenderPlayers: msg.numPlayers, showSurrenderVoteView: true});
+                if (msg.votes.length === msg.numPlayers) {
+                    this.setState({surrenderVotes: msg.votes, surrenderPlayers: msg.numPlayers});
+                } else {
+                    this.setState({surrenderVotes: msg.votes, surrenderPlayers: msg.numPlayers, showSurrenderVoteView: true});
+                }
             }.bind(this));
 
             s.on('gameStarted', function(msg)  {
+                Log.d(TAG, 'gameStarted: %O', msg);
                 var pi = this.state.playerInfo;
                 var players = msg.players;
                 var playersInGame = []; // use to align items...
@@ -374,7 +397,6 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     break;
                 case EVENT_DECLARE_GAME_OVER:
                     var hand = gameEvent.data[this.state.playerInfo.playerId].hand;
-                    Log.d(TAG, "GG hand: %O", hand);
                     this.state.playerInfo.hand = hand;
                     this.setState();
 
@@ -473,6 +495,10 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             var players = this.state.playersInGame.length;
             if (players >= 2 && players <= 5) {
                 this.props.socket.emit('startGame');
+            } else if (players < 2) {
+                this.showToast("Too few players.", 3000);
+            } else if (players > 5) {
+                this.showToast("Too many players.", 3000);
             }
         },
         handleSpecialCommand:function(msg) {
@@ -694,6 +720,19 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
         onHowToPlayOkClick:function(e) {
             this.setState({showHowToPlayDialog: false});
         },
+        onOptionsClick:function(e) {
+            this.setState({showMenu: false});
+            this.setState({showOptionsDialog: true});
+        },
+        onOptionsCancelClick:function(e) {
+            this.setState({showOptionsDialog: false});
+        },
+        onOptionsOkClick:function(e) {
+            this.setState({showOptionsDialog: false});
+            // certain options may have changed...
+            // to start, reload the message box
+            this.refs.chatbox.refreshKeepingMessages();
+        },
         onGameOverOkClick:function(e) {
             this.onLeaveGameOkClick(e);
         },
@@ -747,7 +786,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 menuButton = (
                     React.createElement("div", {className: "in-game-menu", key: "in-game-menu"}, 
                         React.createElement("button", {onClick: this.onHowToPlayClick}, "How to play"), 
-                        React.createElement("button", null, "Options"), 
+                        React.createElement("button", {onClick: this.onOptionsClick}, "Options"), 
                         React.createElement("button", {onClick: this.onLeaveGameClick}, "Leave game"), 
                         React.createElement("button", {onClick: this.onMenuCancelClick}, "Cancel")
                     )
@@ -769,6 +808,16 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     React.createElement("div", {className: "dialog-container"}, 
                         React.createElement(HowToPlayView, {
                             onOkClickHandler: this.onHowToPlayOkClick})
+                    )
+                );
+            }
+
+            if (this.state.showOptionsDialog) {
+                dialogViews.push(
+                    React.createElement("div", {className: "dialog-container"}, 
+                        React.createElement(OptionsView, {
+                            onCancelClickHandler: this.onOptionsCancelClick, 
+                            onOkClickHandler: this.onOptionsOkClick})
                     )
                 );
             }
@@ -852,7 +901,12 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
 
                     bottomInterface.push(
                         React.createElement("div", {key: "spacer", className: "bottom-player-space"}, 
-                            React.createElement(ThisPlayer, {playerInfo: this.state.playerInfo, ref: "thisPlayer", onOpen: this.onThisPlayerOpen, manager: this})
+                            React.createElement(ThisPlayer, {
+                                playerInfo: this.state.playerInfo, 
+                                ref: "thisPlayer", 
+                                onOpen: this.onThisPlayerOpen, 
+                                manager: this, 
+                                isMyTurn: this.isMyTurn()})
                         )
                     );
 
@@ -944,6 +998,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             if (this.state.showSurrenderVoteView) {
                 dialogViews.push(
                     React.createElement(SurrenderVoteView, {
+                        key: "SurrenderVoteView", 
                         onNoClickHandler: this.onSurrenderVoteNoClick, 
                         onYesClickHandler: this.onSurrenderVoteYesClick, 
                         getStartPosition: this.getSurrenderVoteStartPosition, 

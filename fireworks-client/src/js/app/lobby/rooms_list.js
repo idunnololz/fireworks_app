@@ -33,7 +33,8 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     React.createElement("div", {className: "resizable-spacer"}), 
                     React.createElement("div", {className: "col", style: styles[2]}, room.numPlayers + "/" + room.maxPlayers), 
                     React.createElement("div", {className: "resizable-spacer"}), 
-                    React.createElement("div", {className: "col", style: styles[3]}, status)
+                    React.createElement("div", {className: "col", style: styles[3]}, status), 
+                    React.createElement("button", {className: "join-game-button", onClick: this.props.onJoinGameClick}, "Join Game")
                 )
             );
         }
@@ -55,6 +56,9 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
         },
         onItemClick:function(gameId, e) {
             this.props.onRoomSelected(gameId);
+        },
+        onJoinGameClickHandler:function(gameId, e) {
+            this.props.onJoinGame(gameId);
         },
         handleResizable:function() {
             var $resizable = $('.resizable');
@@ -114,7 +118,8 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                         styles: styles, 
                         room: val, 
                         index: i, 
-                        onClick: this.onItemClick.bind(this, val.gameId)}
+                        onClick: this.onItemClick.bind(this, val.gameId), 
+                        onJoinGameClick: this.onJoinGameClickHandler.bind(this, val.gameId)}
                         )
                 );
             }
@@ -129,7 +134,8 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                             React.createElement("div", {className: "resizable", "data-index": "1"}), 
                             React.createElement("div", {className: "sortable col", style: styles[2]}, "Players"), 
                             React.createElement("div", {className: "resizable", "data-index": "2"}), 
-                            React.createElement("div", {className: "sortable col", style: styles[3]}, "Status")
+                            React.createElement("div", {className: "sortable col", style: styles[3]}, "Status"), 
+                            React.createElement("button", {className: "join-game-button", style: {opacity: 0}, disabled: "true"}, "Join Game")
                         )
                     ), 
                     React.createElement("div", {className: "list-body nano"}, 

@@ -19,6 +19,11 @@ define(['jquery', 'React', 'libs/nano_scroller', 'app/log', 'app/prefs'], functi
                 baseAlpha: Prefs.get(KEY_BG_ALPHA, 0.5)
             };
         },
+        refreshKeepingMessages:function() {
+            var initState = this.getInitialState();
+            initState.messages = this.state.messages;
+            this.replaceState(initState);
+        },
         handleSubmit:function(e) {
             if (e.preventDefault) e.preventDefault();
             if (!this.props.playerInfo) return;

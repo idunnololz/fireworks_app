@@ -153,6 +153,8 @@
         opacity: 0;
         @include animation(fade-in-out 1.3s);
 
+        z-index: 1;
+
         div {
             font-family: $theme-condensed-style;
             font-size: 5vh;
@@ -229,11 +231,13 @@
         
         align-items: center;
         justify-content: center;
-
+        pointer-events: none;
+        
         .toast-inner-container {
             padding-top: 4vh;
+            
             .toast {
-
+                pointer-events: auto;
                 background: $color-theme-second;
                 padding: 20px;
 
@@ -298,6 +302,7 @@
         }
 
         .bottom-player-space {
+            margin-top: 6vh;
             flex: 3 0;
             position: relative;
             display: flex;
@@ -360,6 +365,55 @@
 
         width: 40vw;
         height: 70vh;
+
+        .nano > .nano-pane > .nano-slider {
+            background: #444;
+        }
+
+        p {
+            margin-top: 0.5em;
+        }
+
+        h1 {
+            font-size: x-large;
+            font-weight: 300;
+        }
+
+        h2 {
+            font-size: large;
+            font-weight: 700;
+
+            margin-bottom: 0.5em;
+        }
+
+        h3 {
+            font-size: medium;
+            font-weight: 700;
+
+            margin-bottom: 0px;   
+        }
+
+        .instructions-container {
+            flex: 1 0 0;
+        }
+
+        .instructions {
+            margin-right: 20px;
+        }
+    }
+
+
+    .options-view {
+        display: flex;
+        flex-direction: column;
+        background: $color-theme-second;
+        padding: 20px;
+
+        border-radius: 5px;
+
+        @include box-shadow(0px, 0px, 32px, rgba(0,0,0,0.5));
+
+        min-width: 40vw;
 
         .nano > .nano-pane > .nano-slider {
             background: #444;

@@ -47,8 +47,12 @@ button.theme-button {
 	color: $theme-font-color;
 	border: none;
 
+	min-width: 40px;
+	min-height: 40px;
+
 	&:hover {
 		background-color: $color-theme-darker;
+		@include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.2));
 	}
 
 	&:focus { 

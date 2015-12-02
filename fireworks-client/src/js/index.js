@@ -1,5 +1,5 @@
-require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'libs/timeout_transition_group', 'app/sign_in_view', 'app/lobby/lobby_view',
-    'app/prefs', 'app/resource_loader'], 
+require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'libs/timeout_transition_group', 'app/sign_in_view', 
+    'app/lobby/lobby_view', 'app/prefs', 'app/resource_loader'], 
     function (Consts, $, React, io, GameRoom, TimeoutTransitionGroup, SignInView, LobbyView, Prefs, ResourceLoader) {
 
     Prefs.load();    
@@ -31,15 +31,34 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
         // heroku keep alive
         setInterval(function() {
             $.get("https://murmuring-mountain-5923.herokuapp.com/ping", function(data) {
-                console.log("result: " + data);
             });
         }, 300000); // every 5 minutes (300000)
+    }
+
+    var navHandler = function(evt)  {
+        var message = 'You are in a game.';
+        if (typeof evt == 'undefined') {
+            evt = window.event;
+        }
+        if (evt) {
+            evt.returnValue = message;
+        }
+        return message;
+    };
+
+    function onChangeLocation(newLocation) {
+        if (newLocation === PAGE_IN_ROOM) {
+            window.onbeforeunload = navHandler;
+        } else {
+            window.onbeforeunload = null;
+        }
     }
 
     var GameUi = React.createClass({displayName: "GameUi",
         getInitialState:function() {
             return {
-                where: PAGE_SIGN_IN
+                where: PAGE_SIGN_IN,
+                gameCount: 0
             };
         },
         joinTestGame:function() {
@@ -65,10 +84,13 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                 this.setState(m);
 
                 // TEST LINE
-                //this.joinTestGame();
+                this.joinTestGame();
                 // TEST LINE
             }.bind(this));
             s.emit('getSelf');
+        },
+        componentDidUpdate:function() {
+            this.props.onChangeLocation(this.state.where);
         },
         onResourceLoaded:function() {
             this.setState({where: this.state.dest});
@@ -94,6 +116,7 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
             this.setState({where: PAGE_LOBBY});
         },
         onNewGame:function(roomName) {
+            this.setState({gameCount: this.state.gameCount + 1});
             if (Consts.PROD) {
                 this.setState({where: PAGE_LOAD, dest: PAGE_IN_ROOM});
             } else {
@@ -125,7 +148,7 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                     break;
                 case PAGE_IN_ROOM:
                     content = (
-                        React.createElement(GameRoom, {ref: "gameRoom", key: PAGE_IN_ROOM, socket: this.props.socket, onLeaveRoom: this.onLeaveRoom})
+                        React.createElement(GameRoom, {ref: "gameRoom", key: 'gameCount' + this.state.gameCount, socket: this.props.socket, onLeaveRoom: this.onLeaveRoom})
                     );
                     break;
                 case PAGE_SIGN_IN:
@@ -156,7 +179,7 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
     });
 
     var gameUi = React.render(
-        React.createElement(GameUi, {socket: io(endpoint)}),
+        React.createElement(GameUi, {socket: io(endpoint), onChangeLocation: onChangeLocation}),
         $("#main")[0]
     );
 });

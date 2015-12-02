@@ -65,7 +65,7 @@ $topBarHeight: 70px;
             display: flex;
             flex-direction: column;
 
-            max-width: 1000px;
+            max-width: 1200px;
             flex: 1 0 auto;
 
             position: relative;
@@ -115,6 +115,8 @@ $topBarHeight: 70px;
     }
 
     .options-view {
+        z-index: 1;
+
         top: 0px;
         margin-top: 2vh;
         background: $color-theme-dark-light;
@@ -150,6 +152,8 @@ $topBarHeight: 70px;
     }
 
     .join-game-view {
+        z-index: 1;
+
         background: $color-theme-dark-light;
         @include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.5));
 
@@ -185,6 +189,8 @@ $topBarHeight: 70px;
     }
 
     .new-game-view {
+        z-index: 1;
+
         top: 0px;
         margin-top: 2vh;
         background: $color-theme-dark-light;
@@ -209,6 +215,8 @@ $topBarHeight: 70px;
     }
 
     .how-to-play-view {
+        z-index: 1;
+
         top: 0px;
         bottom: 0px;
         margin-top: 2vh;
@@ -254,6 +262,8 @@ $topBarHeight: 70px;
     }
 
     .about-view {
+        z-index: 1;
+
         top: 0px;
         margin-top: 2vh;
         margin-bottom: 2vh;
@@ -406,14 +416,35 @@ $topBarHeight: 70px;
         }
 
         .col {
-            padding: 10px;
+            padding: 16px 10px 16px 10px;
         }
 
         .selectable {
             @include transition(background .3s ease);
 
+            // &:hover {
+            //     background: $color-theme-light-dark;
+            // }
+        }
+
+        .join-game-button {
+            flex: 1 0 auto;
+            border-radius: 5px;
+            background-color: $color-theme-dark;
+            text-decoration: none;
+            color: $theme-font-color;
+            border: none;
+            @include transition(background .3s ease);
+
+            margin: 5px 10px 5px 0px;
+
             &:hover {
-                background: $color-theme-dark;
+                background-color: $color-theme-darker;
+            }
+
+            &:focus { 
+                background-color: darken($color-theme-darker, 5%);
+                outline: none;
             }
         }
     }

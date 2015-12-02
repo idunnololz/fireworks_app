@@ -79,12 +79,11 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
             socket.emit('makeRoom', {roomName: roomName});
         },
         onRoomSelected:function(gameId) {
-            var handler = function(msg)  {
-                this.setState({roomSelected: msg});
-                this.props.socket.removeListener('getRoomInfo', handler);
-            }.bind(this);
-
-            this.props.socket.on('getRoomInfo', handler);
+        },
+        onJoinGameClick:function(gameId) {
+            this.props.socket.once('getRoomInfo', function(msg)  {
+                this.onJoinGame(msg.name, gameId);
+            }.bind(this));
             this.props.socket.emit('getRoomInfo', {gameId: gameId});
         },
         onJoinGameCancelClick:function(e) {
@@ -172,7 +171,7 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
                         ), 
                         React.createElement("div", {className: "body-right"}, 
                             React.createElement("div", {className: "top-spacer"}, " "), 
-                            React.createElement(RoomsList, {rooms: this.state.rooms, onRoomSelected: this.onRoomSelected}), 
+                            React.createElement(RoomsList, {rooms: this.state.rooms, onRoomSelected: this.onRoomSelected, onJoinGame: this.onJoinGameClick}), 
                             
                             React.createElement(ReactTransitionGroup, {
                                 transitionName: "slide-up", 

@@ -13,11 +13,6 @@ define(['jquery', 'React', 'libs/tooltip'], function ($, React, ToolTip) {
                 $menuBarContainer.tooltip({
                     position: {my: "right-10", at: "left"}
                 });
-
-                // $(this.refs.info.getDOMNode()).tooltip({
-                //     position: {my: "right-10", at: "left"},
-                //     content: "Show hinted"
-                // });
             }
 
             var img = new Image();
