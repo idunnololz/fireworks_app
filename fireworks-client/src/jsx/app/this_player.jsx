@@ -18,6 +18,10 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             };
         },
         componentWillMount() {
+            if (this.props.hinted !== undefined) {
+                var hand = this.props.playerInfo.hand;
+                this.setState({hinted: this.props.hinted, lastCardId: hand[hand.length - 1].cardId});
+            }
         },
         showHinted() {
             this.setState({showHinted: true});
@@ -25,13 +29,14 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
         hideHinted() {
             this.setState({showHinted: false});
         },
-        onCardClickHandler(e) {
-            if (!this.props.isMyTurn || this.props.manager.isGameOver()) return;
+        onCardClickHandler(index, e) {
+            if (this.props.manager.isGameOver()) return;
+            if (this.props.manager.isSpectator()) {
+                this.props.manager.showToast("You are a spectator.", 3000);
+                return;
+            }
+            if (!this.props.manager.isMyTurn()) return;
             
-            var $card = $(e.target);
-            var index = parseInt($card.attr("data-index"));
-            $card.removeClass('hover-card');
-
             this.props.onOpen();
             this.setState({active: index});
         },
@@ -55,6 +60,9 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
         revealHand() {
             this.setState({revealHand: true});
         },
+        hideHand() {
+            this.setState({revealHand: false});
+        },
         componentDidUpdate(prevProps, prevState) {
             var menuDom = React.findDOMNode(this.refs.menu);
             if (menuDom !== undefined) {
@@ -71,10 +79,11 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                 var prevLastCard = oldHand[oldHand.length - 1];
                 var newLastCard = newHand[newHand.length - 1];
 
+                // TODO this is bugged... fix it
                 if (prevLastCard !== null && prevLastCard.cardId !== this.state.lastCardId) {
                     // we just drew a card... animate the last card...
-                    var $card = $(React.findDOMNode(this.refs["card" + (newHand.length - 1)]));
-                    $card.addClass('card-draw');
+                    var $gsap = $(React.findDOMNode(this.refs["gsap" + (newHand.length - 1)]));
+                    TweenLite.from($gsap, 0.3, {top: '+=20vw', opacity: '0'});
 
                     this.setState({lastCardId: newLastCard.cardId});
                 }
@@ -516,8 +525,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                             <div className="gsap-container" ref={"gsap" + index}>
                                 <a 
                                     className={cardClass + " card-container" + (isActive || isHinted ? "" : " hoverable")}
-                                    onClick={this.onCardClickHandler}
-                                    data-index={index}
+                                    onClick={this.onCardClickHandler.bind(this, index)}
                                     href="javascript:;"
                                     ref={"card" + index}>
                                     <div className={"card" + (isAnimatingPlay || revealHand ? " flip" : "")}>

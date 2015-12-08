@@ -30,10 +30,9 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
         },
         componentWillMount:function() {
             var socket = this.props.socket;
-            var handler = function(msg)  {
+            socket.on('getRooms', function(msg)  {
                 this.setState({rooms: msg.rooms});
-            }.bind(this);
-            socket.on('getRooms', handler);
+            }.bind(this));
             socket.emit('getRooms');
 
             socket.on('roomsUpdate', function(msg)  {
@@ -108,6 +107,9 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
         onOptionsCancelClick:function(e) {
             this.setState({leftView: NONE});
         },
+        onRefreshClick:function(e) {
+            this.props.socket.emit('getRooms');
+        },
         render:function() {
             var value = this.state.value;
             var leftView;
@@ -171,7 +173,11 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
                         ), 
                         React.createElement("div", {className: "body-right"}, 
                             React.createElement("div", {className: "top-spacer"}, " "), 
-                            React.createElement(RoomsList, {rooms: this.state.rooms, onRoomSelected: this.onRoomSelected, onJoinGame: this.onJoinGameClick}), 
+                            React.createElement(RoomsList, {
+                                rooms: this.state.rooms, 
+                                onRoomSelected: this.onRoomSelected, 
+                                onJoinGame: this.onJoinGameClick, 
+                                onRefreshClickHandler: this.onRefreshClick}), 
                             
                             React.createElement(ReactTransitionGroup, {
                                 transitionName: "slide-up", 

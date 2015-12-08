@@ -12,13 +12,16 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             var room = this.props.room;    
 
             var status;
+            var enterRoomText;
 
             switch (room.status) {
                 case STATUS_WAITING:
                     status = "Waiting";
+                    enterRoomText = 'Join Game';
                     break;
                 case STATUS_PLAYING:
                     status = "Playing";
+                    enterRoomText = 'Spectate';
                     break;
                 default:
                     status = "Unknown";
@@ -34,7 +37,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     <div className="col" style={styles[2]}>{room.numPlayers + "/" + room.maxPlayers}</div>
                     <div className="resizable-spacer"></div>
                     <div className="col" style={styles[3]}>{status}</div>
-                    <button className="join-game-button" onClick={this.props.onJoinGameClick}>Join Game</button>
+                    <button className="join-game-button" onClick={this.props.onJoinGameClick}>{enterRoomText}</button>
                 </div>
             );
         }
@@ -73,7 +76,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                 var $this = $(this);
                 var index = parseInt($this.attr('data-index'));
 
-                var tableWidth = $('.list-header').width();
+                var tableWidth = $('.join-game-button').offset().left - $('.list-header').offset().left;
                 var tableLeft = $('.sortable').eq(index).offset().left;
                 var draggableWidth = $this.outerWidth();
 
@@ -81,9 +84,10 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     $(document).off('mouseup').off('mousemove');
                 });
                 $(document).on('mousemove', function(e){
-                    var mx = e.pageX - tableLeft;
-                    var newRatio = mx / (tableWidth - draggableWidth * 3) * 100;
-                    Log.d(TAG, "e: %O, tl: %f mx: %f new ratio: %f", e, tableLeft, mx, newRatio);
+                    // flex doesn't count padding so we need to account for this
+                    var mx = e.pageX - tableLeft - 20;  // 20 = padding per element
+                    var newRatio = mx / (tableWidth - draggableWidth * 3 - 80) * 100; // 80 = total padding (4 items * 20 padding)
+                    //Log.d(TAG, "e: %O, tl: %f mx: %f new ratio: %f", e, tableLeft, mx, newRatio);
                     if (newRatio < 5) {
                         newRatio = 5;
                     }
@@ -135,7 +139,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                             <div className="sortable col" style={styles[2]}>Players</div>
                             <div className="resizable" data-index="2"></div>
                             <div className="sortable col" style={styles[3]}>Status</div>
-                            <button className="join-game-button" style={{opacity: 0}} disabled="true">Join Game</button>
+                            <button className="join-game-button sync-button" onClick={this.props.onRefreshClickHandler}></button>
                         </div>
                     </div>
                     <div className="list-body nano">

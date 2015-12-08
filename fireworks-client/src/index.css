@@ -16,10 +16,6 @@ a.theme-button {
     background-color: #11112b; }
 
 button.theme-button {
-  -webkit-transition: all 0.3s ease;
-  -moz-transition: all 0.3s ease;
-  -o-transition: all 0.3s ease;
-  transition: all 0.3s ease;
   display: inline-block;
   padding: 0.7vw 2vw 0.7vw 2vw;
   align-self: flex-end;
@@ -31,7 +27,11 @@ button.theme-button {
   color: #ddd;
   border: none;
   min-width: 40px;
-  min-height: 40px; }
+  min-height: 40px;
+  -webkit-transition: background-color .3s ease, box-shadow .3s ease;
+  -moz-transition: background-color .3s ease, box-shadow .3s ease;
+  -o-transition: background-color .3s ease, box-shadow .3s ease;
+  transition: background-color .3s ease, box-shadow .3s ease; }
   button.theme-button:hover {
     background-color: #11112b;
     -webkit-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.2);
@@ -713,7 +713,8 @@ input[type=range]::-ms-track {
       transform: translateY(-3vh); }
     .player-container .card-container .gsap-container {
       display: inline-block;
-      -webkit-transform: translate3d(0, 0, 0); }
+      -webkit-transform: translate3d(0, 0, 0);
+      position: relative; }
     .player-container .card-container .card-in-hand {
       -webkit-transition: all 0.3s ease;
       -moz-transition: all 0.3s ease;
@@ -1532,7 +1533,8 @@ input[type=range]::-ms-track {
     transition: all 0.3s ease; }
   .hand-container .gsap-container {
     display: inline-block;
-    -webkit-transform: translate3d(0, 0, 0); }
+    -webkit-transform: translate3d(0, 0, 0);
+    position: relative; }
   .hand-container .card-container {
     -webkit-transition: all 0.3s ease;
     -moz-transition: all 0.3s ease;
@@ -2108,6 +2110,7 @@ input[type=range]::-ms-track {
       display: flex;
       flex-direction: column;
       max-width: 1200px;
+      width: 100%;
       flex: 1 0 auto;
       position: relative;
       z-index: 1; }
@@ -2118,20 +2121,6 @@ input[type=range]::-ms-track {
       left: 0;
       width: 100%;
       height: 100%; }
-    .lobby-view .body .slide-up-enter {
-      transform: translateY(100%);
-      opacity: 0.01; }
-    .lobby-view .body .slide-up-enter.slide-up-enter-active {
-      transform: none;
-      opacity: 1;
-      transition: all .3s ease; }
-    .lobby-view .body .slide-up-leave {
-      transform: none;
-      opacity: 1; }
-    .lobby-view .body .slide-up-leave.slide-up-leave-active {
-      transform: translateY(100%);
-      opacity: 0.01;
-      transition: all .3s ease; }
   .lobby-view .bottom-sticky {
     position: absolute;
     bottom: 0px;
@@ -2352,7 +2341,7 @@ input[type=range]::-ms-track {
       -o-transition: background 0.3s ease;
       transition: background 0.3s ease; }
     .lobby-view .rooms-list .join-game-button {
-      flex: 1 0 auto;
+      flex: 1 0 90px;
       border-radius: 5px;
       background-color: #141534;
       text-decoration: none;
@@ -2362,12 +2351,16 @@ input[type=range]::-ms-track {
       -moz-transition: background 0.3s ease;
       -o-transition: background 0.3s ease;
       transition: background 0.3s ease;
-      margin: 5px 10px 5px 0px; }
+      margin: 5px 10px 5px 10px; }
       .lobby-view .rooms-list .join-game-button:hover {
         background-color: #11112b; }
       .lobby-view .rooms-list .join-game-button:focus {
         background-color: #0a0a19;
         outline: none; }
+    .lobby-view .rooms-list .sync-button {
+      border: 6px solid #141534;
+      background: url("/res/ic_sync_white.png") no-repeat center #141534;
+      background-size: contain; }
   .lobby-view .vertical-divider {
     margin-top: 10px;
     margin-bottom: 10px;
@@ -2409,10 +2402,33 @@ input[type=range]::-ms-track {
       background-size: cover;
       width: 3vw;
       height: 3vw; }
-  .game-room .menu-button:focus {
-    outline: none; }
-  .game-room .menu-button:hover {
-    left: 0; }
+    .game-room .menu-button:focus {
+      outline: none; }
+    .game-room .menu-button:hover {
+      left: 0; }
+  .game-room .spectator-controls-show-hand {
+    position: absolute;
+    right: 0;
+    top: -70px;
+    height: 48px; }
+  .game-room .spectator-controls-left {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: url("/res/ic_left_arrow.png") no-repeat center #141534;
+    background-size: 40px 40px;
+    width: 48px;
+    height: 84px; }
+  .game-room .spectator-controls-right {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: url("/res/ic_right_arrow.png") no-repeat center #141534;
+    background-size: 40px 40px;
+    width: 48px;
+    height: 84px; }
   .game-room .in-game-menu {
     position: absolute;
     display: flex;
@@ -2885,7 +2901,34 @@ input[type=range]::-ms-track {
 
 html, body {
   height: 100%;
+  width: 100%;
   overflow: hidden; }
+
+.main-container {
+  width: 100%;
+  height: 100%; }
+  .main-container .dim-filter {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    z-index: 100; }
+    .main-container .dim-filter .message-box {
+      padding: 0.7vw 2vw 0.7vw 2vw;
+      background-color: #131313;
+      -webkit-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+      -moz-box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+      box-shadow: 0px 0px 1vw rgba(0, 0, 0, 0.5);
+      text-decoration: none;
+      color: #ddd;
+      display: flex;
+      flex-direction: column; }
 
 .ui-tooltip {
   position: absolute;
@@ -2988,10 +3031,6 @@ html, body {
   align-items: center;
   justify-content: center; }
 
-.main-container {
-  width: 100%;
-  height: 100%; }
-
 .spinner {
   text-align: center; }
 
@@ -3076,6 +3115,24 @@ html, body {
 
 .slide-right-leave.slide-right-leave-active {
   transform: translateX(-100%);
+  opacity: 0.01;
+  transition: all .3s ease; }
+
+.slide-up-enter {
+  transform: translateY(100%);
+  opacity: 0.01; }
+
+.slide-up-enter.slide-up-enter-active {
+  transform: none;
+  opacity: 1;
+  transition: all .3s ease; }
+
+.slide-up-leave {
+  transform: none;
+  opacity: 1; }
+
+.slide-up-leave.slide-up-leave-active {
+  transform: translateY(100%);
   opacity: 0.01;
   transition: all .3s ease; }
 

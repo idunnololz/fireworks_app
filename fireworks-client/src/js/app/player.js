@@ -1,5 +1,5 @@
 define(['jquery', 'React', 'app/log'], function ($, React, Log) {
-    var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
+    var ReactTransitionGroup = React.addons.CSSTransitionGroup;
 
     const TAG = "Player";
 
@@ -24,6 +24,12 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                 showHinted: true,
             };
         },
+        componentWillMount:function() {
+            if (this.props.hinted !== undefined) {
+                var hand = this.props.playerInfo.hand;
+                this.setState({hinted: this.props.hinted, lastCardId: hand[hand.length - 1].cardId});
+            }
+        },
         componentDidUpdate:function(prevProps, prevState) {
             if (prevProps.playerInfo !== undefined && prevProps.playerInfo.hand !== undefined) {
                 // because we are modifying the original obj (playerInfo), nothing changes so we need to employ
@@ -33,12 +39,12 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                 var prevLastCard = oldHand[oldHand.length - 1];
                 var newLastCard = newHand[newHand.length - 1];
 
-                if (prevLastCard === null) {
-
-                } else if (prevLastCard.cardId !== this.state.lastCardId) {
+                // TODO this is bugged... fix it
+                if (prevLastCard !== null && prevLastCard.cardId !== this.state.lastCardId) {
                     // we just drew a card... animate the last card...
-                    var $card = $(React.findDOMNode(this.refs["card" + (newHand.length - 1)]));
-                    $card.addClass('card-draw');
+                    var $gsap = $(React.findDOMNode(this.refs["gsap" + (newHand.length - 1)]));
+
+                    TweenLite.from($gsap, 0.3, {top: '+=20vw', opacity: '0'});
 
                     this.setState({lastCardId: newLastCard.cardId});
                 }
@@ -47,6 +53,9 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             if (this.state.isOpen) {
                 document.addEventListener('click', this.handleClickOutside, false);
             }
+        },
+        componentWillUnmount:function(){
+            document.removeEventListener('click', this.handleClickOutside, false);
         },
         handleClickOutside:function(e) {
             if (this.getDOMNode().contains(e.target)) {
@@ -62,12 +71,16 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             var $card = $(e.target);
             $card.removeClass('hover-card');
         },
-        onCardClickHandler:function(e) {
-            if (!this.props.manager.isMyTurn() || this.props.manager.isGameOver()) return;
+        onCardClickHandler:function(index, e) {
+            if (this.props.manager.isGameOver()) return;
+            if (this.props.manager.isSpectator()) {
+                this.props.manager.showToast("You are a spectator.", 3000);
+                return;
+            }
+            if (!this.props.manager.isMyTurn()) return;
 
             var playerInfo = this.props.playerInfo;
             var $card = $(e.target);
-            var index = parseInt($card.attr("data-index"));
             $card.removeClass('hover-card');
 
             this.props.onOpen(this.props.playerInfo);
@@ -238,7 +251,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                 if (manager.getHints() !== gameEvent.hints) {
                     manager.setHints(gameEvent.hints);
                     manager.commitState();
-                }
+                }   
                     
                 if (!gameEvent.playable) {
                     // Animate the card going to the center.
@@ -358,6 +371,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     // finally animate the card to the trash
                     TweenLite.lagSmoothing(0);
                     TweenMax.lagSmoothing(0);
+                    TweenLite.set($card, {css:{zIndex:1}});
 
                     TweenLite.to($card, 0.3, {x: midX, y: midY});
                     var stepScale = finalScale / 5;
@@ -490,7 +504,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     return (
                         React.createElement("div", {className: "gsap-container", ref: "gsap" + index, key: val.cardId}, 
                             React.createElement("span", {className: "card-in-hand" + (selected || isHinted ? " active-card" : ""), ref: "card" + index}, 
-                                React.createElement(ReactCSSTransitionGroup, {transitionName: "hint-view-transition", transitionEnterTimeout: 300, transitionLeaveTimeout: 300}, 
+                                React.createElement(ReactTransitionGroup, {transitionName: "hint-view-transition", transitionEnterTimeout: 300, transitionLeaveTimeout: 300}, 
                                     hintView
                                 ), 
                                 React.createElement("img", {
@@ -498,8 +512,8 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                                     src: "res/cards/" + CardUtils.getResourceNameForCard(val.cardType), 
                                     onMouseOver: this.onMouseOverCardHandler, 
                                     onMouseLeave: this.onMouseLeaveCardHandler, 
-                                    onClick: this.onCardClickHandler, 
-                                    "data-index": index}), 
+                                    onClick: this.onCardClickHandler.bind(this, index)}
+                                    ), 
                                 React.createElement("div", {ref: "no-sign" + index, className: "invisible no-sign"}, " "), 
                                 React.createElement("div", {ref: "delete" + index, className: "invisible delete"}, " ")
                             )
@@ -517,7 +531,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     React.createElement("div", {style: {position: 'relative'}}, 
                         React.createElement("div", {className: "title invisible"}, 
                             React.createElement("h1", {className: titleClass}, playerInfo.playerName), 
-                            React.createElement("div", {className: "show-menu-button", onClick: this.onShowMenuClick}, 
+                            React.createElement("div", {className: "show-menu-button gone", onClick: this.onShowMenuClick}, 
                                 React.createElement("div", {className: "arrow-down"})
                             )
                         ), 
@@ -542,7 +556,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                             ), 
 
                             React.createElement("h1", {className: titleClass}, playerInfo.playerName), 
-                            React.createElement("div", {className: "show-menu-button", onClick: this.onShowMenuClick}, 
+                            React.createElement("div", {className: "show-menu-button gone", onClick: this.onShowMenuClick}, 
                                 React.createElement("div", {className: "arrow-down"})
                             )
                         ), 

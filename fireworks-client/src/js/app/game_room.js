@@ -1,8 +1,8 @@
 define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_player', 'app/info_bar', 'app/menu_bar', 'app/game_board', 
     'app/dialog_game_over', 'app/history_dialog', 'app/prefs', 'app/leave_game_dialog', 'app/lobby/how_to_play_view', 'app/surrender_vote_view',
-    'app/options_view'], 
+    'app/options_view', 'app/hyperbolic_time_chamber'], 
     function ($, React, Log, ChatBox, Player, ThisPlayer, InfoBar, MenuBar, GameBoard, GameOverDialog, HistoryDialog, Prefs, LeaveGameDialog, 
-        HowToPlayView, SurrenderVoteView, OptionsView) {
+        HowToPlayView, SurrenderVoteView, OptionsView, Htc) {
 
     var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
@@ -30,15 +30,19 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
     const JOIN_REGULAR = 1;
     const JOIN_SPECTATOR = 2;
 
+    var htc;
+
     var GameRoom = React.createClass({displayName: "GameRoom",
         batchState: {},
         getInitialState:function() {
             Log.d(TAG, "state initialized");
             return {
+                realInfo: undefined, // used for spectator mode where playerInfo will become the info of the player being spec'd
                 playerInfo: undefined,
                 mode: MODE_LOADING,
                 isHost: false,
                 playersInGame: [],
+                spectators: [],
                 lives: 0,
                 hints: 0,
                 cardsLeft: 0,
@@ -74,7 +78,16 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 showSurrenderVoteView: false,
                 _isPlayerWhoStartedVote: false,
                 surrenderPlayers: 0,
+                _isSpectator: false,
+
+                spectatorVersion: 0,
+                spectatorShowShowHandButton: true,
+
+                gameStartTime: 0
             };
+        },
+        isSpectator:function() {
+            return this.state._isSpectator;
         },
         isGameOver:function() {
             return this.state.isGameOver;
@@ -105,25 +118,59 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             socket.removeAllListeners('sgetPlayerHands');
             socket.removeAllListeners('gameEvent');
         },
-        setUpSpectatorMode:function() {
-            this.props.socket.once('getGameHistory', function(msg)  {
-                Log.d(TAG, 'History: %O', msg.history);
+        loadHtcState:function() {
+            Log.d(TAG, "loadHtcState()");
+            // update state to match the htc state
+            var playerInfo = htc.getSpecPlayer();
+            playersInGame = htc.getAllPlayers();
+            this.setState({
+                board: htc.getBoard(), 
+                playersInGame: playersInGame, 
+                playerInfo: playerInfo, 
+                numPlayers: htc.getNumPlayers(),
+                turnIndex: htc.getTurnIndex(),
+                _isSpectator: true,
+                cardsLeft: htc.getCardsLeft(),
+                hints: htc.getHints(),
+                lives: htc.getLives(),
+                spectatorVersion: this.state.spectatorVersion + 1,
             });
+        },
+        setUpSpectatorMode:function(playersInGame) {
+            htc = new Htc();
+            this.props.socket.once('getGameHistory', function(msg)  {
+                // {history: , startingHints:, startingLives:, deckSize:}
+                htc.consume(playersInGame, msg.history, msg.startingHints, msg.startingLives, msg.deckSize);
+
+                if (htc.isInErrorState()) {
+                    Log.e(TAG, 'Error loading game history: %s', htc.getErrorMessage());
+                } else {
+                    this.loadHtcState();
+                }
+            }.bind(this));
             this.props.socket.emit('getGameHistory');
+
+            this.refs.chatbox.v("You have joined the room as a spectator. All messages you send will only be visible to other spectators.");
         },
         componentWillMount:function() {
             this.batchState = {}; // reset the batch state or else a 'ghosting' effect will occur
             var s = this.props.socket;
             s.on('getSelf', function(msg)  {
                 Log.d(TAG, 'getSelf: %O', msg);
-                var m = {playerInfo: {playerName: msg.playerName, playerId: msg.playerId}};
-                this.setState(m);
+                this.setState({
+                    realInfo: {playerName: msg.playerName, playerId: msg.playerId}, 
+                    playerInfo: {playerName: msg.playerName, playerId: msg.playerId}
+                });
             }.bind(this));
             s.on('getGameInfo', function(msg)  {
                 Log.d(TAG, 'getGameInfo: %O', msg);
                 if (msg.gameStarted) {
-                    this.setState({mode: MODE_SPECTATOR, playersInGame: this.sanatizePlayerList(msg.playersInGame)});
-                    this.setUpSpectatorMode();
+                    this.setUpSpectatorMode(msg.playersInGame);
+                    this.setState({
+                        mode: MODE_SPECTATOR, 
+                        playersInGame: this.sanatizePlayerList(msg.playersInGame), 
+                        gameStartTime: msg.gameStartTime
+                    });
                 } else {
                     this.setState({mode: MODE_WAITING, playersInGame: this.sanatizePlayerList(msg.playersInGame), isHost: msg.isHost});
                 }
@@ -132,6 +179,8 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 Log.d(TAG, 'playerJoined: %O', msg);
                 if (msg.joinType === JOIN_SPECTATOR) {
                     this.refs.chatbox.v("Player '" + msg.playerName + "' has joined the room as a spectator.");
+                    this.state.spectators.push(msg);
+                    this.setState();
                 } else if(msg.joinType === JOIN_REGULAR) {
                     this.refs.chatbox.v("Player '" + msg.playerName + "' has joined the room.");
                     var ps = this.state.playersInGame;
@@ -194,12 +243,14 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     turnIndex: 0,
                     playersInGame: playersInGame,
                     numPlayers: players.length,
-                    hints: msg.hints,
-                    lives: msg.lives,
-                    cardsLeft: msg.deckSize
+                    hints: msg.startingHints,
+                    lives: msg.startingLives,
+                    cardsLeft: msg.deckSize,
+                    gameStartTime: msg.gameStartTime
                 });
             }.bind(this));
             s.on('sgetPlayerHands', function(msg)  {
+                if (this.isSpectator()) return; 
                 Log.d(TAG, "sgetPlayerHands");
                 var filteredPlayers = this.state.playersInGame.filter(function(x)  {return x.playerId !== this.state.playerInfo.playerId}.bind(this));
                 var obj = {};
@@ -220,7 +271,6 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
         sanatizePlayerList:function(players) {
             var good = true;
             // check if list is in right order...
-            Log.d(TAG, "In: %O", players);
             for (var i = 0; i < players.length; i++) {
                 var p = players[i];
 
@@ -232,7 +282,6 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     players[p.playerIndex] = p;
                 }
             }
-            Log.d(TAG, "Out: %O", players);
             return players;
         },
         getTurnIndex:function() {
@@ -302,6 +351,14 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     return p;
                 }
             }
+            var spectators = this.state.spectators;
+            len = spectators.length;
+            for (var i = 0; i < len; i++) {
+                var p = spectators[i];
+                if (p.playerId === playerId) {
+                    return p;
+                }
+            }
             return null;
         },
         batchUpdatePlayer:function(newPlayerInfo) {
@@ -324,6 +381,10 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
         handleGameEvent:function(gameEvent) {
             var newHistory = this.state.history;
             newHistory.push(gameEvent);
+            if (this.isSpectator()) {
+                htc.consumeOne(gameEvent);
+            }
+            Log.d(TAG, "GameEvent: %O", gameEvent);
             switch (gameEvent.eventType) {
                 case EVENT_DRAW_HAND:
                     var p = this.getPlayerWithId(gameEvent.playerId);
@@ -396,9 +457,12 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     this.checkIfMyTurn();
                     break;
                 case EVENT_DECLARE_GAME_OVER:
-                    var hand = gameEvent.data[this.state.playerInfo.playerId].hand;
-                    this.state.playerInfo.hand = hand;
-                    this.setState();
+                    if (!this.isSpectator()) {
+                        // If it's a spectator, it already has all hand info so don't need this
+                        var hand = gameEvent.data[this.state.playerInfo.playerId].hand;
+                        this.state.playerInfo.hand = hand;
+                        this.setState();
+                    }
 
                     this.showGameOverDialog();
                     break;
@@ -770,6 +834,42 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
         onSurrenderVoteClose:function() {
             this.setState({showSurrenderVoteView: false});
         },
+        onShufflePerspectiveLeft:function() {
+            htc.toPrevPlayer();
+            this.loadHtcState();
+
+            if (!this.state.spectatorShowShowHandButton) {
+                this.onHideHandClick();
+            }
+        },
+        onShufflePerspectiveRight:function() {
+            htc.toNextPlayer();
+            this.loadHtcState();
+
+            if (!this.state.spectatorShowShowHandButton) {
+                this.onHideHandClick();
+            }
+        },
+        onShowHandClick:function() {
+            this.refs.thisPlayer.revealHand();
+            var $showHandButton = $(React.findDOMNode(this.refs.spectatorControlsShowHand));
+            var $hideHandButton = $(React.findDOMNode(this.refs.spectatorControlsHideHand));
+            TweenMax.set($hideHandButton, {y: $showHandButton.outerHeight(), display: 'block'});
+            TweenMax.to($showHandButton, 0.3, {autoAlpha: 0, y: -$hideHandButton.outerHeight()});
+            TweenMax.to($hideHandButton, 0.3, {autoAlpha: 1, y: 0});
+
+            this.setState({spectatorShowShowHandButton: false});
+        },
+        onHideHandClick:function() {
+            this.refs.thisPlayer.hideHand();
+            var $showHandButton = $(React.findDOMNode(this.refs.spectatorControlsShowHand));
+            var $hideHandButton = $(React.findDOMNode(this.refs.spectatorControlsHideHand));
+            TweenMax.set($showHandButton, {y: $hideHandButton.outerHeight(), display: 'block'});
+            TweenMax.to($hideHandButton, 0.3, {autoAlpha: 0, y: -$showHandButton.outerHeight()});
+            TweenMax.to($showHandButton, 0.3, {autoAlpha: 1, y: 0});
+
+            this.setState({spectatorShowShowHandButton: true});
+        },
         render:function() {
             var thisPlayer = this.state.playerInfo;
             var topInterface = [];
@@ -777,6 +877,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             var toastView;
             var specialView;
             var dialogViews = [];
+            var spectatorVersion = this.state.spectatorVersion;
 
             var menuButton = (
                 React.createElement("button", {className: "menu-button", onClick: this.onMenuClick, key: "menu-button"}, React.createElement("div", {className: "ic-menu"}))
@@ -822,7 +923,9 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 );
             }
 
-            switch (this.state.mode) {
+            var mode = this.state.mode;
+
+            switch (mode) {
                 case MODE_LOADING:
                     bottomInterface.push(React.createElement("div", {key: "spacer", className: "bottom-spacer"}, " "));
                     break;
@@ -849,6 +952,10 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     );
                     bottomInterface.push(React.createElement("div", {key: "spacer", className: "bottom-spacer2"}, " "));
                     break;
+                case MODE_SPECTATOR:
+                    if (!htc.isReady()) {
+                        break;
+                    }
                 case MODE_PLAYING:
                     var myCards = [];
                     var playerInterfaces = [];
@@ -857,9 +964,15 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     var right = [];
 
                     var allPlayers = this.state.playersInGame;
+
                     var playersExcludingSelf = [];
                     var index = this.state.playerInfo.playerIndex;
                     var len = allPlayers.length;
+                    var thisPlayerInfo = this.state.playerInfo;
+                    // if (mode === MODE_SPECTATOR) {
+                    //     playersExcludingSelf = htc.getAllOtherPlayers();
+                    //     thisPlayerInfo = htc.getSpecPlayer();
+                    // } else 
                     if (len > 1) {
                         for (var i = (index + 1) % len; i !== index; i = (i + 1) % len) {
                             playersExcludingSelf.push(allPlayers[i]);
@@ -869,11 +982,13 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                         return (
                             React.createElement("div", {className: "player-holder"}, 
                                 React.createElement(Player, {
+                                    key: val.playerId + "_" + spectatorVersion, 
                                     ref: "player" + val.playerId, 
                                     playerInfo: val, 
                                     onOpen: this.onPlayerOpen, 
                                     hint: this.hint, 
-                                    manager: this})
+                                    manager: this, 
+                                    hinted: val.hinted})
                             )
                         );
                     }.bind(this));
@@ -899,14 +1014,50 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                             break;
                     }
 
+                    var spectatorControls;
+
+                    if (mode === MODE_SPECTATOR) {
+                        // show controls to allow player to switch views
+                        spectatorControls = [    
+                            React.createElement("button", {
+                                key: "spectator-controls-l", 
+                                className: "spectator-controls-left theme-button", 
+                                onClick: this.onShufflePerspectiveLeft}
+                            ),
+                            React.createElement("button", {
+                                key: "spectator-controls-r", 
+                                className: "spectator-controls-right theme-button", 
+                                onClick: this.onShufflePerspectiveRight}
+                            ),
+                            React.createElement("button", {
+                                ref: "spectatorControlsShowHand", 
+                                key: "spectator-controls-show-hand", 
+                                className: "spectator-controls-show-hand theme-button", 
+                                onClick: this.onShowHandClick}, 
+                                "show hand"
+                            ),
+                            React.createElement("button", {
+                                ref: "spectatorControlsHideHand", 
+                                key: "spectator-controls-hide-hand", 
+                                className: "spectator-controls-show-hand theme-button", 
+                                onClick: this.onHideHandClick, 
+                                style: {display: 'none'}}, 
+                                "hide hand"
+                            ),
+                        ];
+                    }
+
                     bottomInterface.push(
                         React.createElement("div", {key: "spacer", className: "bottom-player-space"}, 
                             React.createElement(ThisPlayer, {
-                                playerInfo: this.state.playerInfo, 
+                                key: "thisPlayer_" + spectatorVersion, 
+                                playerInfo: thisPlayerInfo, 
                                 ref: "thisPlayer", 
                                 onOpen: this.onThisPlayerOpen, 
                                 manager: this, 
-                                isMyTurn: this.isMyTurn()})
+                                isMyTurn: this.isMyTurn(), 
+                                hinted: thisPlayerInfo.hinted}), 
+                            spectatorControls
                         )
                     );
 
@@ -1029,7 +1180,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                         React.createElement(ChatBox, {
                             key: this.state.objectVersion, 
                             ref: "chatbox", 
-                            playerInfo: this.state.playerInfo, 
+                            playerInfo: this.state.realInfo, 
                             socket: this.props.socket, 
                             className: "chat-box", 
                             handleSpecialCommand: this.handleSpecialCommand}), 

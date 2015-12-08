@@ -1,41 +1,50 @@
 export default class Player {
     constructor(id, socket) {
-        this.socket = socket;
-        this.id = id;
-        this.name = "";
-        this.index = -1;
-        this.location = -1;
+        this._socket = socket;
+        this._id = id;
+        this._name = "";
+        this._index = -1;
+        this._location = -1;
+        this._chatRoomId = '';
     }
 
     getId() {
-        return this.id;
+        return this._id;
     }
 
     getSocketId() {
-        return this.socket.id;
+        return this._socket.id;
     }
 
     setName(name) {
-        this.name = name;
+        this._name = name;
     }
 
     getName() {
-        return this.name;
+        return this._name;
     }
 
     setIndex(index) {
-        this.index = index;
+        this._index = index;
     }
 
     getIndex() {
-        return this.index;
+        return this._index;
     }
 
     getSocket() {
-        return this.socket;
+        return this._socket;
     }
 
     setLocation(loc) {
-        this.location = loc;
+        this._location = loc;
+    }
+
+    setChatRoomId(chatRoomId) {
+        this._chatRoomId = chatRoomId;
+    }
+
+    getChatRoomId() {
+        return this._chatRoomId;
     }
 }

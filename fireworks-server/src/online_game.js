@@ -16,7 +16,7 @@ export default class OnlineGame extends Game {
     constructor(gameId, name, log = false) {
         super();
         this.log = log;
-        this.players = {};
+        this.players = new Map();
         this.playersArr = [];
         this.gameId = gameId;
         this.host = undefined;
@@ -27,7 +27,7 @@ export default class OnlineGame extends Game {
 
         this.status = STATUS_WAITING;
 
-        this.spectators = [];
+        this.spectators = new Map();
 
         this.history = [];
 
@@ -42,15 +42,16 @@ export default class OnlineGame extends Game {
         this.nextVoteTime = 0;
         this.votesFor = 0;
         this.voteSuccess = false;
+
+        this._startTime = 0;
     }
 
-    isSpectator(player) {
-        var s = this.spectators;
-        var id = player.getId();
-        for (var i = 0; i < s.length; i++) {
-            if (s[i].getId() === id) return true;
-        }
-        return false;
+    getStartTime() {
+        return this._startTime;
+    }
+
+    isSpectator(playerId) {
+        return this.spectators.has(playerId);
     }
 
     isVoting() {
@@ -127,7 +128,7 @@ export default class OnlineGame extends Game {
     // 2 = spectator
     addPlayer(player) {
         if (this.isGameStarted()) {
-            this.spectators.push(player);
+            this.spectators.set(player.getId(), player);
             Log.d(TAG, "Added spectator with id " + player.getId());
             return 2;
         } else {
@@ -136,7 +137,7 @@ export default class OnlineGame extends Game {
             if (this.log) {
                 Log.d(TAG, "Added player with id " + id);
             }
-            this.players[id] = player;
+            this.players.set(id, player);
             if (this.host === undefined) {
                 this.host = player;
             }
@@ -148,15 +149,18 @@ export default class OnlineGame extends Game {
 
     getAllPlayersInGame() {
         var ps = [];
-        for (var key in this.players) {
-            var p = this.players[key];
+        var len = this.playersArr.length;
+        for (var i = 0; i < len; i++) {
+            var p = this.playersArr[i];
             ps.push({playerId: p.getId(), playerName: p.getName(), playerIndex: p.getIndex()});
         }
         return ps;
     }
 
     removePlayer(id) {
-        if (this.isGameStarted()) {
+        if (this.isSpectator(id)) {
+            this.spectators.delete(id);
+        } else if (this.isGameStarted()) {
             // although in the real game, players cannot simply leave, since we are making an online version
             // this is totally a possibility. To support this we need to support 'hotswapping'.
             this.state = STATE_NEED_PLAYERS;
@@ -167,13 +171,13 @@ export default class OnlineGame extends Game {
         if (this.log) {
             Log.d(TAG, "Removed player with id " + id);
         }
-        var removedPlayer = this.players[id];
-        delete this.players[id];
+        var removedPlayer = this.players.get(id);
+        this.players.delete(id);
         if (this.host !== undefined && removedPlayer !== undefined && 
             this.host.getId() === removedPlayer.getId()) {
-            if (Object.keys(this.players).length) {
+            if (this.players.size > 0) {
                 // pick a new host if the host just left...
-                this.host = this.players[Object.keys(this.players)[0]];
+                this.host = this.players.values().next().value;
             } else {
                 this.host = undefined;
             }
@@ -185,11 +189,13 @@ export default class OnlineGame extends Game {
     }
 
     getIndex(playerId) {
-        this.players[playerId].getIndex();
+        this.players.get(playerId).getIndex();
     }
 
     startGame() {
         super.startGame();
+
+        this._startTime = new Date().getTime();
 
         this.status = STATUS_PLAYING;
 
@@ -201,21 +207,23 @@ export default class OnlineGame extends Game {
 
     drawHand(playerId) {
         if (this.state === STATE_OK) {
-            return this.transformCards(super.drawHand(this.players[playerId].getIndex()));
+            return this.transformCards(super.drawHand(this.players.get(playerId).getIndex()));
         } else {
             // handle issue...
+            Log.d(TAG, `Game in unhandled state: ${this.state}`);
         }
     }
 
     hint(playerId, targetPlayerId, hint) {
         if (this.state === STATE_OK) {
             try {
-                return super.hint(this.players[playerId].getIndex(), this.players[targetPlayerId].getIndex(), hint);
+                return super.hint(this.players.get(playerId).getIndex(), this.players.get(targetPlayerId).getIndex(), hint);
             } catch (e) {
                 return e;
             }
         } else {
             // handle issue...
+            Log.d(TAG, `Game in unhandled state: ${this.state}`);
         }
     }
 
@@ -224,9 +232,10 @@ export default class OnlineGame extends Game {
         if (cardObj === undefined) {
             Log.d(TAG, `Player with id ${playerId} tried to play invalid card with id ${cardId}.`);
         } else if (this.state === STATE_OK) {
-            return this.transformCard(super.play(this.players[playerId].getIndex(), cardObj.cardType));
+            return this.transformCard(super.play(this.players.get(playerId).getIndex(), cardObj.cardType));
         } else {
             // handle issue...
+            Log.d(TAG, `Game in unhandled state: ${this.state}`);
         }
     }
 
@@ -235,9 +244,10 @@ export default class OnlineGame extends Game {
         if (cardObj === undefined) {
             Log.d(TAG, `Player with id ${playerId} tried to discard invalid card with id ${cardId}.`);
         } else if (this.state === STATE_OK) {
-            return this.transformCard(super.discard(this.players[playerId].getIndex(), cardObj.cardType));
+            return this.transformCard(super.discard(this.players.get(playerId).getIndex(), cardObj.cardType));
         } else {
             // handle issue...
+            Log.d(TAG, `Game in unhandled state: ${this.state}`);
         }
     }
 
@@ -250,7 +260,7 @@ export default class OnlineGame extends Game {
     }
 
     getRealNumPlayers() {
-        return Object.keys(this.players).length;
+        return this.players.size;
     }
 
     transformCard(card) {
@@ -277,7 +287,7 @@ export default class OnlineGame extends Game {
     }
 
     getHistoryForPlayer(player) {
-        if (this.isSpectator(player)) {
+        if (this.isSpectator(player.getId())) {
             return this.history;
         } else {
             // we need to censor the player's draws

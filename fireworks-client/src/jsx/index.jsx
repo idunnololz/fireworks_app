@@ -1,6 +1,6 @@
 require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'libs/timeout_transition_group', 'app/sign_in_view', 
-    'app/lobby/lobby_view', 'app/prefs', 'app/resource_loader'], 
-    function (Consts, $, React, io, GameRoom, TimeoutTransitionGroup, SignInView, LobbyView, Prefs, ResourceLoader) {
+    'app/lobby/lobby_view', 'app/prefs', 'app/resource_loader', 'app/log'], 
+    function (Consts, $, React, io, GameRoom, TimeoutTransitionGroup, SignInView, LobbyView, Prefs, ResourceLoader, Log) {
 
     Prefs.load();    
     var ReactTransitionGroup = React.addons.CSSTransitionGroup;
@@ -11,6 +11,8 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
     const PAGE_SIGN_IN = 4;
     const PAGE_LOBBY = 5;
 
+    const TAG = "Index";
+
     var endpoint;
     if (Consts.PROD) {
         endpoint = "https://murmuring-mountain-5923.herokuapp.com";
@@ -18,6 +20,16 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
     } else {
         endpoint = "http://localhost:3000";
     }
+
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+            // refresh the page when the user tabs back. This is to address some weird chrome render bug
+            var main = document.getElementById('main');
+            main.style.display='none';
+            main.offsetHeight; // no need to store this anywhere, the reference is enough
+            main.style.display='';
+        }
+    });
 
     document.onkeypress = function (e) {
         e = e || window.event;
@@ -58,10 +70,13 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
         getInitialState() {
             return {
                 where: PAGE_SIGN_IN,
-                gameCount: 0
+                gameCount: 0,
+                isDisconnected: false,
+                isConnecting: false,
             };
         },
         joinTestGame() {
+            if (Consts.PROD) return;
             // hack this sht so we can go into a room immediately...
             var socket = this.props.socket;
             socket.once('joinGame', (msg) => {
@@ -69,7 +84,7 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                     this.onJoinGame('tester');
                 } else {
                     // must mean we couldn't join the game...
-                    socket.once('makeRoom', (msg) => {
+                    socket.once('joinGame', (msg) => {
                         this.onJoinGame('tester');
                     });
                     socket.emit('makeRoom', {gameId: 1000, roomName: 'tester', enterRoom: true});
@@ -88,6 +103,21 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                 // TEST LINE
             });
             s.emit('getSelf');
+
+            s.on('disconnect', () => {
+                Log.d(TAG, "Disconnected.");
+                this.setState({isDisconnected: true});
+                // $('*').css({
+                //     filter: 'grayscale(100%)',
+                //     '-moz-filter': 'grayscale(100%)',
+                //     '-webkit-filter': 'grayscale(100%)'
+                // });
+                // $('body,html').css('background','#282828');
+            });
+
+            // setTimeout(() => {
+            //     s.disconnect();
+            // }, 5000);
         },
         componentDidUpdate() {
             this.props.onChangeLocation(this.state.where);
@@ -129,8 +159,17 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
         onLeaveRoom() {
             this.setState({where: PAGE_LOBBY});
         },
+        onReconnectClick() {
+            this.setState({isConnecting: true});
+            var socket = io.connect(endpoint, {'forceNew': true});
+            socket.once('connect', () => {
+                this.setState({where: PAGE_SIGN_IN, isConnecting: false, isDisconnected: false});      
+            });
+            this.setProps({socket: socket});
+        },
         render() {
             var content;
+            var dimFilter;
             switch (this.state.where) {
                 /** Deprecated. Original Join Game page. */
                 case PAGE_JOIN_GAME:
@@ -165,6 +204,17 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                     break;
             }
 
+            if (this.state.isDisconnected) {
+                dimFilter = (
+                    <div className="dim-filter">
+                        <div className="message-box">
+                            <p>You have been disconnected</p>
+                            <button className="theme-button" onClick={this.onReconnectClick}>Reconnect</button>
+                        </div>
+                    </div>
+                );
+            }
+
             return (
                 <div className="main-container">
                     <ReactTransitionGroup  
@@ -172,6 +222,12 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                         transitionEnterTimeout={300} transitionLeaveTimeout={300}
                         transitionAppear={true}>
                         {content}
+                    </ReactTransitionGroup>
+                    <ReactTransitionGroup  
+                        transitionName="fade"
+                        transitionEnterTimeout={300} transitionLeaveTimeout={300}
+                        transitionAppear={true}>
+                        {dimFilter}
                     </ReactTransitionGroup>
                 </div>
             );

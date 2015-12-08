@@ -30,10 +30,9 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
         },
         componentWillMount() {
             var socket = this.props.socket;
-            var handler = (msg) => {
+            socket.on('getRooms', (msg) => {
                 this.setState({rooms: msg.rooms});
-            };
-            socket.on('getRooms', handler);
+            });
             socket.emit('getRooms');
 
             socket.on('roomsUpdate', (msg) => {
@@ -108,6 +107,9 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
         onOptionsCancelClick(e) {
             this.setState({leftView: NONE});
         },
+        onRefreshClick(e) {
+            this.props.socket.emit('getRooms');
+        },
         render() {
             var value = this.state.value;
             var leftView;
@@ -171,7 +173,11 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
                         </div>
                         <div className="body-right">
                             <div className="top-spacer"> </div>
-                            <RoomsList rooms={this.state.rooms} onRoomSelected={this.onRoomSelected} onJoinGame={this.onJoinGameClick}/>
+                            <RoomsList 
+                                rooms={this.state.rooms} 
+                                onRoomSelected={this.onRoomSelected} 
+                                onJoinGame={this.onJoinGameClick}
+                                onRefreshClickHandler={this.onRefreshClick}/>
                             
                             <ReactTransitionGroup 
                                 transitionName="slide-up" 

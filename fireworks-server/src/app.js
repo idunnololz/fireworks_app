@@ -100,6 +100,9 @@ const TAG = "App";
 const ERROR_SURRENDER = 0x80000;
 const ERROR_SURRENDER_NOT_ENOUGH_TIME_SINCE_LAST_VOTE = 1;
 
+const SPECTATOR_CHAT = '_spectator';
+const PLAYER_CHAT = '_player';
+
 io.on('connection', function(socket){
     // new player has joined! Create a player id and obj for the player
     var playerId = genId();
@@ -189,8 +192,12 @@ io.on('connection', function(socket){
         console.log("PlayerId " + playerId + " joined game with name " + game.getName());
         var joinType = game.addPlayer(player);
 
+        var isSpectator = game.isSpectator(player.getId());
+
         socket.emit('joinGame', true);
         socket.join(game.getId());
+        player.setChatRoomId(game.getId() + (isSpectator ? SPECTATOR_CHAT : PLAYER_CHAT));
+        socket.join(player.getChatRoomId());
         socket.broadcast.to(game.getId()).emit('playerJoined', {'playerId': playerId, playerName: player.getName(), joinType: joinType});
 
         // check if we can start the game
@@ -203,9 +210,13 @@ io.on('connection', function(socket){
 
     var leaveGameHandler = (msg) => {
         if (game !== undefined) {
+            console.log("PlayerId " + playerId + " left game with name " + game.getName());
+
             var host = game.getHost();
+            var isSpectator = game.isSpectator(player.getId());
             game.removePlayer(player.getId());
             socket.broadcast.to(game.getId()).emit('playerLeft', {'playerId': playerId, playerName: player.getName()});
+            if (isSpectator) return;
             if (host !== game.getHost()) {
                 // host changed... try to notify the new host
                 var newHost = game.getHost();
@@ -222,6 +233,9 @@ io.on('connection', function(socket){
                 gameIdToGame.delete(gameId);
                 io.in(LOCATION_LOBBY).emit('roomsUpdate', {removed: [gameId]});
             }
+
+            socket.leave(game.getId());
+            socket.leave(player.getChatRoomId());
         }
     };
     socket.on('leaveGame', (msg) => {
@@ -236,7 +250,7 @@ io.on('connection', function(socket){
         socket.emit('getPlayers', game.getNumPlayers());
     })
     socket.on('sendMessage', (msg) => {
-        io.to(game.getId()).emit('sendMessage', msg);
+        io.to(player.getChatRoomId()).emit('sendMessage', msg);
     });
     socket.on('isHost', (msg) => {
         var host = game.getHost();
@@ -254,7 +268,8 @@ io.on('connection', function(socket){
         socket.emit('getGameInfo', {
             isHost: game.getHost() !== undefined && game.getHost().getId() === player.getId(),
             playersInGame: getPlayersInGame(),
-            gameStarted: game.isGameStarted()
+            gameStarted: game.isGameStarted(),
+            gameStartTime: (game.isGameStarted() ? game.getStartTime() : undefined)
         });
     });
 
@@ -267,9 +282,10 @@ io.on('connection', function(socket){
             // give everyone information about all players... 
             io.to(game.getId()).emit('gameStarted', {
                 players: game.getAllPlayersInGame(), 
-                hints: game.getHints(), 
-                lives: game.getLives(), 
-                deckSize: game.getDeck().getDeckSize()});
+                startingHints: game.getStartingHints(), 
+                startingLives: game.getStartingLives(),
+                deckSize: game.getDeck().getDeckSize(),
+                gameStartTime: game.getStartTime()});
             Log.d(TAG, "Game started!");
         }
     });
@@ -431,7 +447,11 @@ io.on('connection', function(socket){
     });
 
     socket.on('getGameHistory', () => {
-        socket.emit('getGameHistory', {history: game.getHistoryForPlayer(player)});
+        socket.emit('getGameHistory', {
+            history: game.getHistoryForPlayer(player),  
+            startingHints: game.getStartingHints(), 
+            startingLives: game.getStartingLives(),
+            deckSize: game.getDeck().getDeckSize()});
     });
 
     socket.on('disconnect', () => {

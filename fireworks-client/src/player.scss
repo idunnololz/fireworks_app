@@ -175,6 +175,8 @@
         .gsap-container {
             display: inline-block;
             -webkit-transform: translate3d(0,0,0);
+
+            position: relative;
         }
 
         .card-in-hand {

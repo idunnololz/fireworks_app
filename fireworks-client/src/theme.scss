@@ -37,7 +37,6 @@ a.theme-button {
 }
 
 button.theme-button {
-	@include transition(all .3s ease);
 	display: inline-block;
 	padding: 0.7vw 2vw 0.7vw 2vw;
 	align-self: flex-end;
@@ -49,6 +48,11 @@ button.theme-button {
 
 	min-width: 40px;
 	min-height: 40px;
+
+	-webkit-transition: background-color .3s ease, box-shadow .3s ease;
+    -moz-transition: background-color .3s ease, box-shadow .3s ease;
+    -o-transition: background-color .3s ease, box-shadow .3s ease;
+    transition: background-color .3s ease, box-shadow .3s ease;
 
 	&:hover {
 		background-color: $color-theme-darker;

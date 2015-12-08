@@ -44,12 +44,43 @@
             width: 3vw;
             height: 3vw;
         }
+        
+        &:focus { outline:none; }
+        &:hover { left: 0; }
     }
 
-    .menu-button:focus { outline:none; }
+    .spectator-controls-show-hand {
+        position: absolute;
+        right: 0;
+        top: -70px;
 
-    .menu-button:hover {
+        height: 48px;
+    }
+
+    .spectator-controls-left {
+        position: absolute;
         left: 0;
+        top: 0;
+        bottom: 0;
+
+        background: url("/res/ic_left_arrow.png") no-repeat center $color-theme-dark;
+        background-size: 40px 40px;
+
+        width: 48px;
+        height: 84px;
+    }
+
+    .spectator-controls-right {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+
+        background: url("/res/ic_right_arrow.png") no-repeat center $color-theme-dark;
+        background-size: 40px 40px;
+
+        width: 48px;
+        height: 84px;
     }
 
     .in-game-menu {

@@ -11,8 +11,11 @@ export default class Game {
         this.turnIndex = 0;
         this.deck = new Deck();
 
-        this.hints = 8;
-        this.lives = 3;
+        this._startingHints = 8;
+        this._startingLives = 3;
+
+        this.hints = this._startingHints;
+        this.lives = this._startingLives;
 
         this.gameStarted = false;
         this.gameOver = false;
@@ -33,6 +36,14 @@ export default class Game {
             this.danger[c] = true;
             this.endangered[c] = 1;
         }
+    }
+
+    getStartingHints() {
+        return this._startingHints;
+    }
+
+    getStartingLives() {
+        return this._startingLives;
     }
 
     addPlayer() {
