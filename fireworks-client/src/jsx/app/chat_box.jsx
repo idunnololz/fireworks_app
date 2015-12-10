@@ -88,7 +88,7 @@ define(['jquery', 'React', 'libs/nano_scroller', 'app/log', 'app/prefs'], functi
 
             return (
                 <form className="chat-box" onSubmit={this.handleSubmit}>
-                    <div className="message-content nano" style={{background: 'rgba(0, 0, 0, ' + this.state.baseAlpha + ')'}}>
+                    <div className="message-content nano" style={{height: 'auto', background: 'rgba(0, 0, 0, ' + this.state.baseAlpha + ')'}}>
                         <div className="nano-content message-container">
                             {msgViews}
                         </div>

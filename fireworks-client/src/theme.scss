@@ -202,3 +202,9 @@ input[type=range] {
 		background: lighten($track-color, $contrast);
 	}
 }
+
+select {
+   -webkit-appearance: none;
+   -moz-appearance: none;
+   appearance: none;
+}

@@ -45,6 +45,8 @@
     position: relative;
     @include transition(all .3s ease);
 
+    z-index: 1;
+
     @include keyframes(anim-draw) {
         0% {  
             opacity: 0;
@@ -139,6 +141,27 @@
         @include transition(all .3s ease);
         display: flex;
         justify-content: center;
+
+        position: relative;
+    }
+
+    $card-radius: 0.8vw;
+
+    .dark-filter {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+
+        background-color: rgba(0, 0, 0, 0.5);
+
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+
+        @include radius($card-radius);
     }
 
     .card-container {
@@ -159,7 +182,7 @@
             width: 10vw;
             position: relative;
 
-            @include radius(0.8vw);
+            @include radius($card-radius);
             @include box-shadow(0px, 5px, 16px, rgba(0,0,0,0.5));
             @include transition(all .3s ease);
         }
@@ -258,26 +281,26 @@
     .invisible {
         visibility: hidden;
     }
-}
 
-.hint-view-transition-enter {
-    @include transform(translateY(-2vw));
-}
+    .hint-view-transition-enter {
+        @include transform(translateY(-2vw));
+    }
 
-.hint-view-transition-enter.hint-view-transition-enter-active {
-    @include transform(none);
-    @include transition(all .3s ease);
-}
+    .hint-view-transition-enter.hint-view-transition-enter-active {
+        @include transform(none);
+        @include transition(all .3s ease);
+    }
 
-.hint-view-transition-leave {
-    @include transform(none);
-}
+    .hint-view-transition-leave {
+        @include transform(none);
+    }
 
-.hint-view-transition-leave.hint-view-transition-leave-active {
-    @include transform(translateY(-2vw));
-    @include transition(all .3s ease);
-}
+    .hint-view-transition-leave.hint-view-transition-leave-active {
+        @include transform(translateY(-2vw));
+        @include transition(all .3s ease);
+    }
 
+}
 
 
 

@@ -417,8 +417,19 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             var cardViews = [];
             var appendClass = "";
             var isHintActive = this.state.activeHint !== undefined;
+            var isConnected = playerInfo.isConnected === undefined ? true : playerInfo.isConnected;
 
             var isMyTurn = this.props.manager.getTurnIndex() === playerInfo.playerIndex;
+
+            var cardFilter;
+
+            if (!isConnected) {
+                cardFilter = (
+                    React.createElement("div", {className: "dark-filter"}, 
+                        React.createElement("p", null, "Disconnected")
+                    )
+                );
+            }
 
             if (isHintActive) {
                 var isColorHint = CardUtils.isColorHint(this.state.activeHint.hintType);
@@ -571,7 +582,8 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                         React.createElement("div", {className: "centering-container"}, 
                             React.createElement("div", {className: "card-container"}, 
                                 cardViews
-                            )
+                            ), 
+                            cardFilter
                         ), 
                         React.createElement("div", {className: "option-container" + (open ? "" : " gone")}, 
                             React.createElement("a", {href: "javascript:;", className: hintColor ? "selected" : "", onClick: this.onColorClick}, "Color"), 

@@ -189,9 +189,14 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 }
             });
             s.on('playerLeft', (msg) => {
-                this.refs.chatbox.v("Player '" + this.getPlayerWithId(msg.playerId).playerName + "' has left the room.");
+                this.refs.chatbox.v("Player '" + this.getUserWithId(msg.playerId).playerName + "' has left the room.");
                 if (this.state.mode === MODE_PLAYING) {
                     // TODO
+
+                    // show some indication that they left...
+                    var player = this.getPlayerWithId(msg.playerId);
+                    player.isConnected = false;
+                    this.setState();
                 } else {
                     var ps = this.state.playersInGame;
                     ps = ps.filter((val) => {
@@ -209,7 +214,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 if (msg.errorType !== undefined) {
                     this.refs.chatbox.v('A surrender vote just recently concluded. Please wait a while before starting another vote.');
                 } else {
-                    this.refs.chatbox.v(this.getPlayerWithId(msg.playerId).playerName + ' has started a surrender vote.');
+                    this.refs.chatbox.v(this.getUserWithId(msg.playerId).playerName + ' has started a surrender vote.');
                     this.setState({_isPlayerWhoStartedVote: (msg.playerId === this.state.playerInfo.playerId)});
                 }
             });
@@ -342,6 +347,25 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
         getThisPlayerRef() {
             return this.refs.thisPlayer;
         },
+        getUserWithId(userId) {
+            var players = this.state.playersInGame;
+            var len = players.length;
+            for (var i = 0; i < len; i++) {
+                var p = players[i];
+                if (p.playerId === userId) {
+                    return p;
+                }
+            }
+            var spectators = this.state.spectators;
+            len = spectators.length;
+            for (var i = 0; i < len; i++) {
+                var p = spectators[i];
+                if (p.playerId === userId) {
+                    return p;
+                }
+            }
+            return null;
+        },
         getPlayerWithId(playerId) {
             var players = this.state.playersInGame;
             var len = players.length;
@@ -351,15 +375,6 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                     return p;
                 }
             }
-            var spectators = this.state.spectators;
-            len = spectators.length;
-            for (var i = 0; i < len; i++) {
-                var p = spectators[i];
-                if (p.playerId === playerId) {
-                    return p;
-                }
-            }
-            return null;
         },
         batchUpdatePlayer(newPlayerInfo) {
             var playerId = newPlayerInfo.playerId;
@@ -387,7 +402,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             Log.d(TAG, "GameEvent: %O", gameEvent);
             switch (gameEvent.eventType) {
                 case EVENT_DRAW_HAND:
-                    var p = this.getPlayerWithId(gameEvent.playerId);
+                    var p = this.getUserWithId(gameEvent.playerId);
                     p.hand = gameEvent.data;
 
                     this.setState({
@@ -496,7 +511,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             $.extend(this.batchState, {board: curBoard});
         },
         onNewHand(playerId, newHand) {
-            var player = this.getPlayerWithId(playerId);
+            var player = this.getUserWithId(playerId);
             player.hand = newHand;
             this.batchUpdatePlayer(player);
         },

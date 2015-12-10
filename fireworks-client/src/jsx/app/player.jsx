@@ -417,8 +417,19 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             var cardViews = [];
             var appendClass = "";
             var isHintActive = this.state.activeHint !== undefined;
+            var isConnected = playerInfo.isConnected === undefined ? true : playerInfo.isConnected;
 
             var isMyTurn = this.props.manager.getTurnIndex() === playerInfo.playerIndex;
+
+            var cardFilter;
+
+            if (!isConnected) {
+                cardFilter = (
+                    <div className="dark-filter">
+                        <p>Disconnected</p>
+                    </div>
+                );
+            }
 
             if (isHintActive) {
                 var isColorHint = CardUtils.isColorHint(this.state.activeHint.hintType);
@@ -572,6 +583,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                             <div className="card-container">
                                 {cardViews}
                             </div>
+                            {cardFilter}
                         </div>
                         <div className={"option-container" + (open ? "" : " gone")}>
                             <a href="javascript:;" className={hintColor ? "selected" : ""} onClick={this.onColorClick}>Color</a>

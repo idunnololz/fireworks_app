@@ -236,7 +236,7 @@ $topBarHeight: 70px;
         }
 
         .instructions {
-            margin-right: 20px;
+            // margin-right: 20px; // this causes the scrollbar to appear in firefox... ugh
         }
     }
 

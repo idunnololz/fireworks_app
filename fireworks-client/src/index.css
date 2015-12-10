@@ -133,6 +133,11 @@ input[type=range] {
   input[type=range]:focus::-ms-fill-upper {
     background: #4444a8; }
 
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none; }
+
 /*! normalize.css v3.0.0 | MIT License | git.io/normalize */
 /**
  * 1. Set default font family to sans-serif.
@@ -562,7 +567,8 @@ input[type=range]::-ms-track {
   -webkit-transition: all 0.3s ease;
   -moz-transition: all 0.3s ease;
   -o-transition: all 0.3s ease;
-  transition: all 0.3s ease; }
+  transition: all 0.3s ease;
+  z-index: 1; }
 @-webkit-keyframes anim-draw {
   0% {
     opacity: 0; }
@@ -671,7 +677,23 @@ input[type=range]::-ms-track {
     -o-transition: all 0.3s ease;
     transition: all 0.3s ease;
     display: flex;
-    justify-content: center; }
+    justify-content: center;
+    position: relative; }
+  .player-container .dark-filter {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    -webkit-border-radius: 0.8vw;
+    -moz-border-radius: 0.8vw;
+    border-radius: 0.8vw;
+    -khtml-border-radius: 0.8vw; }
   .player-container .card-container {
     margin-left: 7vw;
     flex: 0 auto;
@@ -776,38 +798,34 @@ input[type=range]::-ms-track {
     z-index: 1; }
   .player-container .invisible {
     visibility: hidden; }
-
-.hint-view-transition-enter {
-  -webkit-transform: translateY(-2vw);
-  -moz-transform: translateY(-2vw);
-  -ms-transform: translateY(-2vw);
-  transform: translateY(-2vw); }
-
-.hint-view-transition-enter.hint-view-transition-enter-active {
-  -webkit-transform: none;
-  -moz-transform: none;
-  -ms-transform: none;
-  transform: none;
-  -webkit-transition: all 0.3s ease;
-  -moz-transition: all 0.3s ease;
-  -o-transition: all 0.3s ease;
-  transition: all 0.3s ease; }
-
-.hint-view-transition-leave {
-  -webkit-transform: none;
-  -moz-transform: none;
-  -ms-transform: none;
-  transform: none; }
-
-.hint-view-transition-leave.hint-view-transition-leave-active {
-  -webkit-transform: translateY(-2vw);
-  -moz-transform: translateY(-2vw);
-  -ms-transform: translateY(-2vw);
-  transform: translateY(-2vw);
-  -webkit-transition: all 0.3s ease;
-  -moz-transition: all 0.3s ease;
-  -o-transition: all 0.3s ease;
-  transition: all 0.3s ease; }
+  .player-container .hint-view-transition-enter {
+    -webkit-transform: translateY(-2vw);
+    -moz-transform: translateY(-2vw);
+    -ms-transform: translateY(-2vw);
+    transform: translateY(-2vw); }
+  .player-container .hint-view-transition-enter.hint-view-transition-enter-active {
+    -webkit-transform: none;
+    -moz-transform: none;
+    -ms-transform: none;
+    transform: none;
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease; }
+  .player-container .hint-view-transition-leave {
+    -webkit-transform: none;
+    -moz-transform: none;
+    -ms-transform: none;
+    transform: none; }
+  .player-container .hint-view-transition-leave.hint-view-transition-leave-active {
+    -webkit-transform: translateY(-2vw);
+    -moz-transform: translateY(-2vw);
+    -ms-transform: translateY(-2vw);
+    transform: translateY(-2vw);
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease; }
 
 @-webkit-keyframes spin {
   from {
@@ -2217,8 +2235,6 @@ input[type=range]::-ms-track {
       margin-bottom: 0px; }
     .lobby-view .how-to-play-view .instructions-container {
       flex: 1 0 0; }
-    .lobby-view .how-to-play-view .instructions {
-      margin-right: 20px; }
   .lobby-view .about-view {
     z-index: 1;
     top: 0px;
