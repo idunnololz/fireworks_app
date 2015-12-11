@@ -11,6 +11,7 @@
 @import 'lobby_view';
 @import 'game_room';
 @import 'surrender_vote_view';
+@import 'dev_console';
 
 html, body {
     height: 100%;
@@ -48,6 +49,46 @@ html, body {
 
             display: flex;
             flex-direction: column;
+        }
+    }
+
+    .broadcast-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+
+        max-height: 53px;
+
+        background: #111;
+        @include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.5));
+
+        position: relative;
+
+        .broadcast {
+            display: inline-block;
+        }
+
+        .btn-close {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 53px;
+            background: url("/res/ic_close.png") center no-repeat;
+            text-decoration: none;
+            border: none;
+
+            @include transition(all .3s ease);
+
+            &:hover {
+                background-color: $color-theme-darker;
+            }
+
+            &:focus { 
+                background-color: darken($color-theme-darker, 5%);
+                outline: none;
+            }
         }
     }
 }
@@ -296,6 +337,31 @@ html, body {
 
 .slide-up-leave.slide-up-leave-active {
     transform: translateY(100%);
+    opacity: 0.01;
+    transition: all .3s ease;
+}
+
+
+
+
+.expand-enter {
+    height: 0;
+    opacity: 0.01;
+}
+
+.expand-enter.expand-enter-active {
+    height: 53px;
+    opacity: 1;
+    transition: all .3s ease;
+}
+
+.expand-leave {
+    height: 53px;
+    opacity: 1;
+}
+
+.expand-leave.expand-leave-active {
+    height: 0;
     opacity: 0.01;
     transition: all .3s ease;
 }

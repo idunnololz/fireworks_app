@@ -167,7 +167,7 @@
     .card-container {
         margin-left: 7vw;
         flex: 0 auto;
-        @include transition(all .3s ease);
+        @include transition(transform .3s ease);
 
         span {
             display: inline-block;

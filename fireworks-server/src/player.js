@@ -6,6 +6,7 @@ export default class Player {
         this._index = -1;
         this._location = -1;
         this._chatRoomId = '';
+        this._isAdmin = false;
     }
 
     getId() {
@@ -46,5 +47,13 @@ export default class Player {
 
     getChatRoomId() {
         return this._chatRoomId;
+    }
+
+    setIsAdmin(val) {
+        this._isAdmin = val;
+    }
+
+    isAdmin() {
+        return this._isAdmin;
     }
 }

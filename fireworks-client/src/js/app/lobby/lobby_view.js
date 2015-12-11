@@ -120,7 +120,7 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
                     leftView = (
                         React.createElement(NewGameView, {
                             key: "newGameView", 
-                            defaultRoomName: this.props.playerInfo.playerName + "'s dank room", 
+                            defaultRoomName: this.props.playerInfo.playerName + "'s room", 
                             onCancelClickHandler: this.onNewGameCancelClick, 
                             onNewGameClickHandler: this.onNewGameMakeClick})
                     );

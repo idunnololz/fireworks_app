@@ -1,6 +1,6 @@
 require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'libs/timeout_transition_group', 'app/sign_in_view', 
-    'app/lobby/lobby_view', 'app/prefs', 'app/resource_loader', 'app/log'], 
-    function (Consts, $, React, io, GameRoom, TimeoutTransitionGroup, SignInView, LobbyView, Prefs, ResourceLoader, Log) {
+    'app/lobby/lobby_view', 'app/prefs', 'app/resource_loader', 'app/log', 'app/dev_console'], 
+    function (Consts, $, React, io, GameRoom, TimeoutTransitionGroup, SignInView, LobbyView, Prefs, ResourceLoader, Log, DevConsole) {
 
     Prefs.load();    
     var ReactTransitionGroup = React.addons.CSSTransitionGroup;
@@ -34,8 +34,13 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
     document.onkeypress = function (e) {
         e = e || window.event;
 
-        if (e.keyCode === 13 && gameUi !== undefined) {
-            gameUi.focus();
+        if (gameUi !== undefined) {
+            if (e.keyCode === 13) { // <enter>
+                gameUi.focus();
+            }
+            if (e.keyCode === 47) { // '/'
+                gameUi.showDevConsole();
+            }
         }
     };
 
@@ -73,6 +78,7 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                 gameCount: 0,
                 isDisconnected: false,
                 isConnecting: false,
+                showDevConsole: false,
             };
         },
         joinTestGame() {
@@ -93,13 +99,16 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
             socket.emit('joinGame', {gameId: 1000});
         },
         componentWillMount() {
+            this.setupSocketListeners();
+        },
+        setupSocketListeners() {
             var s = this.props.socket;
             s.once('getSelf', (msg) => {
                 var m = {playerInfo: {playerName: msg.playerName, playerId: msg.playerId}};
                 this.setState(m);
 
                 // TEST LINE
-                this.joinTestGame();
+                //this.joinTestGame();
                 // TEST LINE
             });
             s.emit('getSelf');
@@ -115,9 +124,10 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                 // $('body,html').css('background','#282828');
             });
 
-            // setTimeout(() => {
-            //     s.disconnect();
-            // }, 5000);
+            s.on('broadcast', (msg) => {
+                Log.d(TAG, '%O', msg);
+                this.showBroadcast(msg);
+            });
         },
         componentDidUpdate() {
             this.props.onChangeLocation(this.state.where);
@@ -135,9 +145,14 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
             }
         },
         focus() {
-            if (this.refs.gameRoom !== undefined) {
+            if (this.state.showDevConsole) {
+                this.refs.devConsole.focus();
+            } else if (this.refs.gameRoom !== undefined) {
                 this.refs.gameRoom.focus();
             }
+        },
+        showBroadcast(msg) {
+            this.setState({showBroadcast: true, broadcastMessage: msg});
         },
         setPlayerName(newName) {
             this.state.playerInfo.playerName = newName;
@@ -161,15 +176,29 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
         },
         onReconnectClick() {
             this.setState({isConnecting: true});
+            this.props.socket.disconnect();
             var socket = io.connect(endpoint, {'forceNew': true});
             socket.once('connect', () => {
-                this.setState({where: PAGE_SIGN_IN, isConnecting: false, isDisconnected: false});      
+                this.setState({where: PAGE_SIGN_IN, isConnecting: false, isDisconnected: false});   
+                this.setupSocketListeners();   
             });
             this.setProps({socket: socket});
+        },
+        showDevConsole() {
+            this.setState({showDevConsole: true});
+        },
+        hideDevConsole() {
+            this.setState({showDevConsole: false});
+        },
+        onBroadcastCloseClick() {
+            this.setState({showBroadcast: false});
         },
         render() {
             var content;
             var dimFilter;
+            var devConsole;
+            var broadcastMessage;
+
             switch (this.state.where) {
                 /** Deprecated. Original Join Game page. */
                 case PAGE_JOIN_GAME:
@@ -215,13 +244,49 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                 );
             }
 
+            if (this.state.showBroadcast) {
+                Log.d(TAG, this.state.broadcastMessage);
+                broadcastMessage = (
+                    <div className="broadcast-container" key="broadcast">
+                        <div className="broadcast">
+                            <p>{this.state.broadcastMessage}</p>
+                            <button className="btn-close" onClick={this.onBroadcastCloseClick}></button>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (this.state.showDevConsole) {
+                devConsole = (
+                    <div className="dim-filter">
+                        <DevConsole 
+                            ref="devConsole"
+                            socket={this.props.socket} 
+                            playerInfo={this.state.playerInfo}
+                            close={this.hideDevConsole}/>
+                    </div>
+                );
+            }
+
             return (
                 <div className="main-container">
+                    <ReactTransitionGroup  
+                        transitionName="expand"
+                        transitionEnterTimeout={300} transitionLeaveTimeout={300}
+                        transitionAppear={true}>
+                        {broadcastMessage}
+                    </ReactTransitionGroup>
                     <ReactTransitionGroup  
                         transitionName="fade"
                         transitionEnterTimeout={300} transitionLeaveTimeout={300}
                         transitionAppear={true}>
                         {content}
+                    </ReactTransitionGroup>
+                    <ReactTransitionGroup  
+                        transitionName="fade"
+                        transitionEnterTimeout={300} transitionLeaveTimeout={300}
+                        transitionAppear={true}>
+                        {devConsole}
                     </ReactTransitionGroup>
                     <ReactTransitionGroup  
                         transitionName="fade"
@@ -235,7 +300,7 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
     });
 
     var gameUi = React.render(
-        <GameUi socket={io(endpoint)} onChangeLocation={onChangeLocation}/>,
+        <GameUi socket={io(endpoint, {secure: true})} onChangeLocation={onChangeLocation}/>,
         $("#main")[0]
     );
 });

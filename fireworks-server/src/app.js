@@ -4,6 +4,10 @@ import Player from './player';
 import Log from './log';
 import PlayerManager from './player_manager';
 import CardUtils from './../shared/card_utils';
+import LoginManager from './login_manager';
+
+var rand = require('csprng');
+var crypto = require('crypto');
 
 var app = express();
 var http = require('http').createServer(app);
@@ -103,7 +107,9 @@ const ERROR_SURRENDER_NOT_ENOUGH_TIME_SINCE_LAST_VOTE = 1;
 const SPECTATOR_CHAT = '_spectator';
 const PLAYER_CHAT = '_player';
 
-io.on('connection', function(socket){
+var loginManager = new LoginManager();
+
+io.on('connection', function(socket) {
     // new player has joined! Create a player id and obj for the player
     var playerId = genId();
     var player = new Player(playerId, socket);
@@ -114,6 +120,24 @@ io.on('connection', function(socket){
     Log.d(TAG, "Player %s has connected to the server.", player.getId());
 
     socket.join(LOCATION_LOBBY);
+
+    socket.on('unlockAdmin', (msg) => {
+        var user = msg.user;
+        var pass = msg.pass;
+
+        loginManager.connect();
+        var result = loginManager.authenticate(user, pass, (result) => {
+            socket.emit('sendDevMessage', {
+                what: 'unlockAdmin',
+                result: result
+            });
+
+            if (result) {
+                player.setIsAdmin(true);
+            }
+        });
+        loginManager.end();
+    })
 
     socket.on('setName', (msg) => {
         if (names.has(msg.preferredName)) {
@@ -152,6 +176,12 @@ io.on('connection', function(socket){
             players: playerArr,
             capacity: g.getPlayerCapacity() 
         });
+    });
+
+    socket.on('broadcast', (msg) => {
+        if (player.isAdmin()) {
+            io.emit('broadcast', msg);
+        }
     });
 
     socket.on('makeRoom', (msg) => {

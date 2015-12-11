@@ -320,11 +320,11 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     var newHand = this.props.playerInfo.hand.filter((x) => { return x.cardId !== cardPlayed.cardId});
                     newHand.push(gameEvent.draw);
 
+
+                    TweenLite.to($card, 0.3, {autoAlpha: 0, delay: 0.2});
+
                     setTimeout(() => {
                         manager.updateBoard(cardPlayed);
-                        manager.preloadResource(manager.getSmallCardRes(cardPlayed), () => {
-                            $card.css("opacity", "0");
-                        });
                         this.animateDraw(idx, newHand, () => {
                             manager.commitState(); 
                         });
