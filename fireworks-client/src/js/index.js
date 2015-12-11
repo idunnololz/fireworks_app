@@ -39,8 +39,7 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                 gameUi.focus();
             }
             if (e.keyCode === 47) { // '/'
-                //gameUi.showDevConsole();
-            gameUi.showBroadcast("hi");
+                gameUi.showDevConsole();
             }
         }
     };
@@ -248,7 +247,7 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
             if (this.state.showBroadcast) {
                 Log.d(TAG, this.state.broadcastMessage);
                 broadcastMessage = (
-                    React.createElement("div", {className: "broadcast-container"}, 
+                    React.createElement("div", {className: "broadcast-container", key: "broadcast"}, 
                         React.createElement("div", {className: "broadcast"}, 
                             React.createElement("p", null, this.state.broadcastMessage), 
                             React.createElement("button", {className: "btn-close", onClick: this.onBroadcastCloseClick})

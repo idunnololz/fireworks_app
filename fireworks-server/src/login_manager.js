@@ -1,5 +1,3 @@
-import Secret from './secret';
-
 var pg = require('pg');
 var crypto = require('crypto');
 
@@ -12,6 +10,7 @@ export default class LoginManager {
 
     authenticate(userName, password, onAuthenticated) {
         if (process.env.DATABASE_URL === undefined) {
+            var Secret = require('./secret');
             process.env.DATABASE_URL = Secret.url;
         }
         pg.connect(process.env.DATABASE_URL, function(err, client, done) {
@@ -31,7 +30,7 @@ export default class LoginManager {
                 var pass = rows[0].pass;
 
                 var hash = crypto.createHash('sha256').update(salt + password).digest('base64');
-                
+
                 onAuthenticated(hash === pass);
             })
         });
