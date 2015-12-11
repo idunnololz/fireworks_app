@@ -1,3 +1,5 @@
 fireworks-client/bin
 .module-cache
 fireworks-server/node_modules
+fireworks-server/src/secret.js
+node_modules
