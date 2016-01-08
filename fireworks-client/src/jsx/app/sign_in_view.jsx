@@ -1,59 +1,163 @@
-define(['jquery', 'React', 'app/log'], function ($, React, Log) {
+define(['jquery', 'React', 'app/log', 'app/widget/text_field', 'app/widget/tooltip', 'app/secure', 'app/widget/progress_bar'], 
+function ($, React, Log, TextField, Tooltip, Secure, ProgressBar) {
+
     var ReactTransitionGroup = React.addons.CSSTransitionGroup;
+
+    var TAG = "SignInView";
 
     var SignInView = React.createClass({
         getInitialState() {
             return {
-                value: (this.props.playerInfo === undefined ? "" : this.props.playerInfo.playerName),
-                valueChanged: false
+                valueChanged: false,
+                state: 0,
+                signingIn: false,
             };
         },
         componentWillReceiveProps(nextProps) {
-            if (!this.state.valueChanged) {
-                this.setState({value: nextProps.playerInfo.playerName});
-            }
+            this.refs.name.setText(nextProps.playerInfo.playerName);
         },
-        handleChange(event) {
-            this.setState({value: event.target.value});
+        showError(component, msg) {
+            this.refs.tooltip.setText(msg);
+            this.refs.tooltip.show(component);
         },
-        handleSignIn(e) {
+        clearError() {
+            this.refs.tooltip.hide();
+        },
+        onSignInGuest(e) {
+            e.preventDefault();
             var socket = this.props.socket;
-            var handler = (msg) => {
+            var name = this.refs.name.getText();
+            socket.once('setName', (msg) => {
                 if (msg) {
                     // name OK! Proceed...
-                    this.props.pageController.setPlayerName(this.state.value);
+                    this.props.pageController.setPlayerName(name);
                     this.props.pageController.loginSuccess();
                 } else {
                     // name taken!
                     // TODO
                 }
-                socket.removeListener('setName', handler);
-            };
-            socket.on('setName', handler);
-            socket.emit('setName', {preferredName: this.state.value});
+            });
+            socket.emit('setName', {preferredName: name});
         },
-        onSignInSubmit(e) {
+        onSignIn(e) {
             e.preventDefault();
-            this.handleSignIn(null);
+
+            var refs = this.refs;
+            var user = this.refs.username.getText();
+            var pass = this.refs.password.getText();
+            var socket = this.props.socket;
+
+            if (user.length < 4) {
+                this.showError(this.refs.username, "Username must be at least 4 characters long")
+            } else {
+            }
+
+            if (user.length < 4) {
+                this.showError(refs.username, "Username must be at least 4 characters long");
+                return;
+            } else if (!/^[a-z0-9]+$/i.test(user)) {
+                this.showError(refs.username, "Username must alphanumeric (i.e. made up of characters: a-z, A-Z, 0-9)");
+                return;
+            } else if (pass.length < 8) {
+                this.showError(refs.password, "Password must be at least 8 characters long");
+                return;
+            }
+            
+            this.clearError();
+
+            var secure = Secure.getSecureFromPassword(user, pass);
+
+            socket.once('login', (msg) => {
+                Log.d(TAG, "OnLogin response: %O", msg);
+                if (msg.result) {
+                    // TODO login success
+                    this.props.pageController.setPlayerName(user);
+                    this.props.pageController.loginSuccess();
+                } else {
+                    // TODO login failure
+                }
+
+                this.setState({signingIn: false});
+            });
+            socket.emit('login', {user: user, pass: secure});
+            this.setState({signingIn: true});
+        },
+        useAccount() {
+            if (this.state.state === -1) return;
+
+            var $content = $('.sign-in-inner-container');
+            var $left = $('.left-side');
+            var $right = $('.right-side');
+
+            var xOff = Math.round(($content.outerWidth() - $left.outerWidth(true)) / 2);
+
+            if (this.state.state === 1) {
+                TweenLite.to($left, 0.3, {autoAlpha: 1});
+            }
+            TweenLite.to($right, 1, {autoAlpha: .33});
+            TweenLite.to($content, 0.3, {x: xOff});
+            this.setState({state: -1});
+        },
+        useGuest() {
+            if (this.state.state === 1) return;
+
+            var $content = $('.sign-in-inner-container');
+            var $left = $('.left-side');
+            var $right = $('.right-side');
+
+            var xOff = Math.round(($right.outerWidth(true) - $content.outerWidth()) / 2);
+
+            var $content = $('.sign-in-inner-container');
+            var $left = $('.left-side');
+            var $right = $('.right-side');
+
+            if (this.state.state === -1) {
+                TweenLite.to($right, 0.3, {autoAlpha: 1});
+            }
+            TweenLite.to($left, 1, {autoAlpha: .33});
+            TweenLite.to($content, 0.3, {x: xOff});
+            this.setState({state: 1});
         },
         render() {
             var value = this.state.value;
+
+            var signInButton;
+            if (!this.state.signingIn) {
+                signInButton = (
+                    <button className="theme-button">Sign in</button>
+                );
+            } else {
+                signInButton = (
+                    <button className="theme-button"><ProgressBar/></button>
+                );
+            }
+
             return (
                 <div className="sign-in-view">
-                    <div className="left-side">
-                        <p>
-                            We don’t have a login system yet. So just give youself a name and join the game.
-                        </p>
-                    </div>
-                    <div className="vertical-divider"> </div>
-                    <div className="right-side">
-                        <form className="sign-in-form" onSubmit={this.onSignInSubmit}>
-                            <p>
-                                Give yourself a name
-                            </p>
-                            <input className="name-input" type="text" value={value} onChange={this.handleChange}/>
+                    <div className="logo-small"/>
+                    <h1>Sign in to play</h1>
+                    <div className="sign-in-inner-container">
+                        <form className="left-side" onSubmit={this.onSignIn}>
+                            <h2 className="sign-in-account-text">
+                                Sign in with account
+                            </h2>
+                            <TextField hint="Username" ref="username" onFocus={this.useAccount}/>
+                            <TextField hint="Password" type="password" ref="password" onFocus={this.useAccount}/>
+                            {signInButton}
                         </form>
-                        <a className="theme-button" href="javascript:;" onClick={this.handleSignIn}>Go</a>
+                        <div className="vertical-divider"> </div>
+                        <form className="right-side" onSubmit={this.onSignInGuest}>
+                            <h2>
+                                Enter as a guest
+                            </h2>
+                            <TextField hint="Name" ref="name" onFocus={this.useGuest}/>
+                            <button className="theme-button">Go</button>
+                        </form>
+                        <Tooltip ref="tooltip"/>
+                    </div>
+                    <div className="sign-up-banner-container">
+                        <p>Don't have an account?</p>
+                        <p className="low-margin">Sign up <a href="/signup.html">here</a></p>
                     </div>
                 </div>
             );

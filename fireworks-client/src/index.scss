@@ -12,13 +12,16 @@
 @import 'game_room';
 @import 'surrender_vote_view';
 @import 'dev_console';
+@import 'options_view';
+@import 'signup';
+@import 'text_field';
+@import 'tooltip';
 
 html, body {
     height: 100%;
     width: 100%;
     overflow: hidden;
 }
-
 
 .main-container {
     width: 100%;

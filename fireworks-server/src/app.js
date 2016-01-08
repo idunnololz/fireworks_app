@@ -8,13 +8,19 @@ import LoginManager from './login_manager';
 
 var rand = require('csprng');
 var crypto = require('crypto');
+var assert = require('assert');
 
 var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
+var bodyParser = require('body-parser');
+var nodemailer = require('nodemailer');
+var smtpTransport = require('nodemailer-smtp-transport');
+
+const START_GUEST_ID = 2100000000;
 
 var genId = () => {
-    var lastId = 0;
+    var lastId = START_GUEST_ID;
     return () => {
         return ++lastId;
     }
@@ -30,6 +36,11 @@ var genRoomId = () => {
 var playerManager = new PlayerManager();
 var gameIdToGame = new Map();
 var names = new Set();
+
+var sessIdToPlayer = new Map();
+var verifyIdToSocket = new Map();
+
+var loginManager = new LoginManager();
 
 io.set( 'origins', '*idunnololz.com*:*' );
 
@@ -53,9 +64,23 @@ app.use(function (req, res, next) {
     // Pass to next layer of middleware
     next();
 });
+app.use(bodyParser.json()); // support json encoded bodies
+app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
 app.all("/ping", function(request, response){
     response.send('Ping success.');
+});
+
+app.post('/register', (req, response) => {
+    if (req.body && req.body.username) {
+        loginManager.signUp(req.body.username, req.body.password, req.body.email, (err, result) => {
+            if (err) {
+                response.status(400).json({err: err});
+            } else {
+                response.sendStatus(200);
+            }
+        });
+    }
 });
 
 /*
@@ -107,19 +132,30 @@ const ERROR_SURRENDER_NOT_ENOUGH_TIME_SINCE_LAST_VOTE = 1;
 const SPECTATOR_CHAT = '_spectator';
 const PLAYER_CHAT = '_player';
 
-var loginManager = new LoginManager();
-
 io.on('connection', function(socket) {
     // new player has joined! Create a player id and obj for the player
     var playerId = genId();
     var player = new Player(playerId, socket);
     var game;
-    player.setName("Player " + playerId);
+    player.setName("Player " + (playerId - START_GUEST_ID));
     player.setLocation(LOCATION_LOBBY);
     playerManager.addPlayer(player);
     Log.d(TAG, "Player %s has connected to the server.", player.getId());
 
+    if (playerId >= 2147483647) {
+        // this is an indicator that we ran out of valid ids...
+        assert(false, "We've exhausted all of our user ids!");
+    }
+
     socket.join(LOCATION_LOBBY);
+
+    socket.on('login', (msg) => {
+        loginManager.signIn(msg.user, msg.pass, (result) => {
+            socket.emit('login', {
+                result: result
+            });
+        });
+    });
 
     socket.on('unlockAdmin', (msg) => {
         var user = msg.user;
@@ -137,7 +173,7 @@ io.on('connection', function(socket) {
             }
         });
         loginManager.end();
-    })
+    });
 
     socket.on('setName', (msg) => {
         if (names.has(msg.preferredName)) {

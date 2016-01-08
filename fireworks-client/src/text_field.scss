@@ -1,0 +1,34 @@
+
+$text-padding: 20px 16px 9px 16px;
+
+.text-field {
+    position: relative;
+    background: rgba(255, 255, 255, 0.1);
+
+    .input {
+        width: 100%;
+        outline: none;
+        padding: $text-padding;
+        background: none;
+        border-style: none;
+    }
+
+    .hint-container {
+        pointer-events: none;
+        position: absolute;
+
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+
+        width: 100%;
+        height: 100%;
+        margin-left: 16px;
+
+        .hint {
+            -ms-transform-origin: 0% 0%; /* IE 9 */
+            -webkit-transform-origin: 0% 0%; /* Chrome, Safari, Opera */
+            transform-origin: 0% 0%;
+        }
+    }
+}

@@ -12,6 +12,7 @@ $topBarHeight: 70px;
         display: flex;
         flex-direction: row;
         align-items: center;
+        width: 100%;
         background: $color-theme-dark-light;
         
         @include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.5));
@@ -47,6 +48,49 @@ $topBarHeight: 70px;
                 background-color: darken($color-theme-darker, 5%);
                 outline: none;
             }
+        }
+
+        .player-menu {
+            position: absolute;
+            z-index: 2;
+
+            .submenu-button {
+                display: inline-block;
+                padding: 0.7vw 2vw 0.7vw 2vw;
+                align-self: flex-end;
+                background-color: $color-theme-dark;
+                @include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.5));
+                text-decoration: none;
+                color: $theme-font-color;
+                border: none;
+
+                min-width: 40px;
+                min-height: 40px;
+
+                -webkit-transition: background-color .3s ease, box-shadow .3s ease;
+                -moz-transition: background-color .3s ease, box-shadow .3s ease;
+                -o-transition: background-color .3s ease, box-shadow .3s ease;
+                transition: background-color .3s ease, box-shadow .3s ease;
+
+                &:hover {
+                    background-color: $color-theme-darker;
+                    @include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.2));
+                }
+
+                &:focus { 
+                    background-color: darken($color-theme-darker, 5%);
+                    outline: none;
+                }
+            }
+        }
+
+        .player-button {
+            font-size: medium;
+            font-weight: 400;
+        }
+
+        .vertical-spacer {
+            flex: 1 0 0;
         }
     }
 
@@ -101,7 +145,8 @@ $topBarHeight: 70px;
         background: $color-theme-dark-light;
         @include box-shadow(0px, 0px, 1vw, rgba(0,0,0,0.5));
 
-        max-width: 40vw;
+        max-width: 100vw;
+        width: 500px;
         display: flex;
         flex-direction: column;
 

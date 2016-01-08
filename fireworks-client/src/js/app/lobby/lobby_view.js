@@ -110,6 +110,10 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
         onRefreshClick:function(e) {
             this.props.socket.emit('getRooms');
         },
+        onSignOutClick:function(e) {
+            // TODO animate player going back to lobby
+            this.props.onLogoutHandler();
+        },
         render:function() {
             var value = this.state.value;
             var leftView;
@@ -163,10 +167,12 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
                 React.createElement("div", {className: "lobby-view"}, 
                     React.createElement("div", {style: {display: 'flex', 'flex-direction': 'row'}}, 
                         React.createElement(TopBar, {
+                            playerInfo: this.props.playerInfo, 
                             onNewGameClickHandler: this.onNewGameClick, 
                             onHowToPlayClickHandler: this.onHowToPlayClick, 
                             onOptionsClickHandler: this.onOptionsClick, 
-                            onAboutClickHandler: this.onAboutClick})
+                            onAboutClickHandler: this.onAboutClick, 
+                            onLogoutClickHandler: this.onSignOutClick})
                     ), 
                     React.createElement("div", {className: "body"}, 
                         React.createElement("div", {className: "body-left"}

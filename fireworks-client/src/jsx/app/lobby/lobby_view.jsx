@@ -110,6 +110,10 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
         onRefreshClick(e) {
             this.props.socket.emit('getRooms');
         },
+        onSignOutClick(e) {
+            // TODO animate player going back to lobby
+            this.props.onLogoutHandler();
+        },
         render() {
             var value = this.state.value;
             var leftView;
@@ -163,10 +167,12 @@ define(['jquery', 'React', 'app/lobby/top_bar', 'app/lobby/rooms_list', 'app/lob
                 <div className="lobby-view">
                     <div style={{display: 'flex', 'flex-direction': 'row'}}>
                         <TopBar 
+                            playerInfo={this.props.playerInfo}
                             onNewGameClickHandler={this.onNewGameClick}
                             onHowToPlayClickHandler={this.onHowToPlayClick}
                             onOptionsClickHandler={this.onOptionsClick}
-                            onAboutClickHandler={this.onAboutClick}/>
+                            onAboutClickHandler={this.onAboutClick}
+                            onLogoutClickHandler={this.onSignOutClick}/>
                     </div>
                     <div className="body">
                         <div className="body-left">

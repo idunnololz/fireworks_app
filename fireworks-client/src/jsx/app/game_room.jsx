@@ -35,7 +35,6 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
     var GameRoom = React.createClass({
         batchState: {},
         getInitialState() {
-            Log.d(TAG, "state initialized");
             return {
                 realInfo: undefined, // used for spectator mode where playerInfo will become the info of the player being spec'd
                 playerInfo: undefined,
@@ -83,7 +82,9 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
                 spectatorVersion: 0,
                 spectatorShowShowHandButton: true,
 
-                gameStartTime: 0
+                gameStartTime: 0,
+
+                animationCoeff: parseFloat(Prefs.get(Prefs.KEY_ANIMATION_SPEED, 1)),
             };
         },
         isSpectator() {
@@ -778,8 +779,12 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             this.setState({showMenu: false});
         },
         onLeaveGameClick(e) {
-            this.setState({showMenu: false});
-            this.setState({showLeaveGameDialog: true});
+            this.setState({
+                showMenu: false, 
+                showOptionsDialog: false,
+                showHowToPlayDialog: false,
+                showLeaveGameDialog: true
+            });
         },
         onLeaveGameCancelClick(e) {
             this.setState({showLeaveGameDialog: false});
@@ -793,15 +798,23 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             this.props.socket.emit('leaveGame');
         },
         onHowToPlayClick(e) {
-            this.setState({showMenu: false});
-            this.setState({showHowToPlayDialog: true});
+            this.setState({
+                showMenu: false, 
+                showOptionsDialog: false,
+                showLeaveGameDialog: false,
+                showHowToPlayDialog: true
+            });
         },
         onHowToPlayOkClick(e) {
             this.setState({showHowToPlayDialog: false});
         },
         onOptionsClick(e) {
-            this.setState({showMenu: false});
-            this.setState({showOptionsDialog: true});
+            this.setState({
+                showMenu: false, 
+                showHowToPlayDialog: false,
+                showLeaveGameDialog: false,
+                showOptionsDialog: true
+            });
         },
         onOptionsCancelClick(e) {
             this.setState({showOptionsDialog: false});
@@ -811,6 +824,14 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
             // certain options may have changed...
             // to start, reload the message box
             this.refs.chatbox.refreshKeepingMessages();
+            
+            // force recreate on all players
+            this.setState({spectatorVersion: this.state.spectatorVersion + 1});
+
+            // reload prefs on this view
+            this.setState({
+                animationCoeff: parseFloat(Prefs.get(Prefs.KEY_ANIMATION_SPEED, 1)),
+            })
         },
         onGameOverOkClick(e) {
             this.onLeaveGameOkClick(e);
@@ -1131,7 +1152,7 @@ define(['jquery', 'React', 'app/log', 'app/chat_box', 'app/player', 'app/this_pl
 
             if (this.state.showYourTurn) {
                 specialView = (
-                    <div className="special-text-container">
+                    <div className={this.state.animationCoeff === 1 ? "special-text-container" : "special-text-container-fast"}>
                         <div className="left">YOUR</div>
                         <div className="right">TURN</div>
                     </div>

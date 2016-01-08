@@ -140,16 +140,16 @@
         }
         name += " ";
 
-        if ((id & 0b11) != 0) {
-            if (id == 0b1) {
+        if ((id & 3) != 0) {
+            if (id == 1) {
                 name += NUMBER_NAMES[0];
             } else {
                 name += NUMBER_NAMES[1];
             }
         } else {
-            if (id == 0b100) {
+            if (id == 4) {
                 name += NUMBER_NAMES[2];
-            } else if (id == 0b1000) {
+            } else if (id == 8) {
                 name += NUMBER_NAMES[3];
             } else {
                 name += NUMBER_NAMES[4];

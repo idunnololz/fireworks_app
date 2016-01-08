@@ -5,7 +5,7 @@
     dir: 'fireworks-client/bin',
     fileExclusionRegExp: /^\..*|^jsx$|^exclude$/,
     optimizeCss: 'standard',
-    //removeCombined: true,
+    removeCombined: true,
     paths: {
         jquery: 'empty:',
         'React': 'empty:'

@@ -12,7 +12,11 @@
     "babel": "^5.8.23",
     "babel-core": "^5.8.23",
     "pg": "4.x",
-    "csprng": "0.1.1"
+    "csprng": "0.1.1",
+    "async": "1.5.0",
+    "body-parser": "1.14.1",
+    "nodemailer": "1.10.0",
+    "nodemailer-smtp-transport": "1.0.4"
   },
   "scripts": {
     "test": "cd fireworks-server && mocha --opts mocha.opts",

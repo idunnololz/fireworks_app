@@ -39,12 +39,7 @@ define(['jquery', 'React'], function ($, React) {
                     cb();
                 });
             }
-            var res = [];
-            CardUtils.getAllCardResources().forEach((val) => {
-                res.push(RESOURCE_DIR + "cards/" + val[0] + ".png");
-                res.push(RESOURCE_DIR + "cards/" + val[1] + ".png");
-            });
-            preload(res, cb, progressCb);
+            preload(this.props.res, cb, progressCb);
         },
         updateProgress(progress) {
             if ($c === undefined) {

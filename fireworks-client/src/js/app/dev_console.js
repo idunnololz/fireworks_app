@@ -61,8 +61,13 @@ define(['jquery', 'React', 'libs/nano_scroller', 'app/log', 'app/prefs', 'app/se
                 case 'exit':
                     this.props.close();
                     break;
+                case 'clearCookies':
+                    Prefs.deleteAllCookies();
+                    Prefs.load();
+                    v("Cookies cleared.");
+                    break;
                 case 'broadcast':
-                    this.props.socket.emit('broadcast', args[1]);
+                    this.props.socket.emit('broadcast', msg.substr(msg.indexOf(' ') + 1));
                     break;
             }
         },

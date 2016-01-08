@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Fireworks</title>
+        <meta name="description" content="A game of strategy and teamwork." />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href='http://fonts.googleapis.com/css?family=Roboto:400,100,300,700' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="index.css"/>
+        
+        <script type="text/javascript">
+            var recaptchaLoaded = false;
+            var recaptchaLoadedListener = function() {};
+            var onloadCallback = function() {
+                recaptchaLoaded = true;
+                recaptchaLoadedListener();
+            };
+        </script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.0/TweenMax.min.js"></script>
+        <script src="/js/libs/require.min.js"></script>
+        <script src="/js/shared/card_utils.js"></script>
+        <script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
+        <script>
+                require(['js/config'], function(){
+                        require(['app/signup/signup']);
+                })
+        </script>
+    </head>
+    
+    <body>
+        <div id="main">
+            <div class="spinner">
+                <div class="bounce1"></div>
+                <div class="bounce2"></div>
+                <div class="bounce3"></div>
+            </div>
+        </div>
+    </body>
+</html>

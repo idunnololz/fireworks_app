@@ -205,14 +205,14 @@ define(['app/log'], function(Log) {
                 this.consumeOne(e);
             }
 
-            for (var player of players.values()) {
+            players.forEach(function(player, key)  {
                 var cardNames = [];
                 var hand = player.getHand();
                 for (var i = 0; i < hand.length; i++) {
                     cardNames.push(CardUtils.getCardName(hand[i].cardType));
                 }
                 Log.d(TAG, 'Player %d has %O', player.getId(), cardNames);
-            }
+            });
 
             this.$Htc_isReady = true;
 

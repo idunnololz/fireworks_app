@@ -15,7 +15,7 @@ define(['jquery', 'React'], function ($, React) {
                         "Fireworks the game."
                     ), 
                     React.createElement("p", null, 
-                        "Version 0.1.0. Open alpha."
+                        "Version 0.2.0. Open beta."
                     ), 
                     React.createElement("p", null, 
                         "Game created by Gary Guo."

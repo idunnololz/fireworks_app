@@ -1,4 +1,4 @@
-define(['jquery', 'React', 'app/log'], function ($, React, Log) {
+define(['jquery', 'React', 'app/log', 'app/prefs'], function ($, React, Log, Prefs) {
     var ReactTransitionGroup = React.addons.CSSTransitionGroup;
 
     const TAG = "ThisPlayer";
@@ -15,6 +15,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                 hinted: {}, // hinted is a mapping from cardId to what is known about the card: {123:{color:3,number:undefined}}
                 showHinted: true,
                 revealHand: false,
+                animationCoeff: parseFloat(Prefs.get(Prefs.KEY_ANIMATION_SPEED, 1)),
             };
         },
         componentWillMount:function() {
@@ -132,15 +133,17 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             }.bind(this));
             this.setState({hintedCards: hintedIndices, activeHint: hintInfo, hinted: hinted});
 
+            var time = 5000 * this.state.animationCoeff;
+
             if (isColorHint) {
-                this.props.manager.showTimedDialog("YOU HAVE BEEN HINTED", ("These cards are " + CardUtils.getHint(hintInfo.hintType) + "!"), 5000);
+                this.props.manager.showTimedDialog("YOU HAVE BEEN HINTED", ("These cards are " + CardUtils.getHint(hintInfo.hintType) + "!"), time);
             } else {
-                this.props.manager.showTimedDialog("YOU HAVE BEEN HINTED", ("These cards are " + CardUtils.getHint(hintInfo.hintType) + "s!"), 5000);
+                this.props.manager.showTimedDialog("YOU HAVE BEEN HINTED", ("These cards are " + CardUtils.getHint(hintInfo.hintType) + "(s)!"), time);
             }
 
             setTimeout(function()  {
                 this.setState({hintedCards: [], activeHint: undefined});
-            }.bind(this), 5000);
+            }.bind(this), time);
         },
         animateDraw:function(removedIndex, newHand, callBack) {
             var idx = removedIndex;
@@ -213,7 +216,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             var cardPlayed = gameEvent.played;
 
             if (!gameEvent.playable) {
-                manager.wait(3900);
+                manager.wait(1200 * this.state.animationCoeff + 2700);
             } else {
                 manager.wait(900);
             }
@@ -274,7 +277,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                         TweenLite.lagSmoothing(0);
                         TweenMax.lagSmoothing(0);
                         TweenLite.to($gsap, 0.3, {x: deltaX, y: deltaY, scale: scale});
-                        TweenMax.to($noSign, 0.3, {delay: 0.4, yoyo:true, repeat:4, autoAlpha: 1, onComplete: function()  {
+                        TweenMax.to($noSign, 0.3, {delay: 0.4 * this.state.animationCoeff, yoyo:true, repeat:4, autoAlpha: 1, onComplete: function()  {
                             // trigger a lives update...
                             manager.setLives(gameEvent.lives);
 
@@ -321,7 +324,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             }.bind(this));
         },
         animateDiscard:function(gameEvent) {
-            this.props.manager.wait(900);
+            this.props.manager.wait(2600);
             
             var manager = this.props.manager;
             var hand = this.props.playerInfo.hand;
@@ -363,11 +366,14 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     TweenLite.lagSmoothing(0);
                     TweenMax.lagSmoothing(0);
 
+                    TweenLite.set($card, {css:{zIndex:2}});
                     TweenLite.to($card, 0.3, {x: midX, y: midY});
                     var stepScale = finalScale / 5;
                     TweenLite.to($card, 40, {x: finalX, y: finalY, scale: stepScale, delay: 0.3});
                     TweenMax.to($delete, 0.3, {delay: 0.4, yoyo:true, repeat:5, autoAlpha: 0.9});
-                    TweenLite.to($card, 0.3, {x: finalX, y: finalY, scale: finalScale, delay: 2.3, autoAlpha: 0, onComplete: function()  {
+                    TweenLite.to($card, 0.3, {x: finalX, y: finalY, scale: finalScale, delay: 2.3 * this.state.animationCoeff, 
+                        autoAlpha: 0, onComplete: function()  {
+                        
                         var newHand = this.props.playerInfo.hand.filter(function(x)  { return x.cardId !== cardDisc.cardId});
                         newHand.push(gameEvent.draw);
                         this.animateDraw(idx, newHand, function()  {

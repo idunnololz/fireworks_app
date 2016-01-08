@@ -15,7 +15,7 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
 
     var endpoint;
     if (Consts.PROD) {
-        endpoint = "https://murmuring-mountain-5923.herokuapp.com";
+        endpoint = Consts.PROD_ENDPOINT;
         //endpoint = "http://185.28.22.25:3000";
     } else {
         endpoint = "http://localhost:3000";
@@ -47,7 +47,7 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
     if (Consts.PROD) {
         // heroku keep alive
         setInterval(function() {
-            $.get("https://murmuring-mountain-5923.herokuapp.com/ping", function(data) {
+            $.get(Consts.PROD_ENDPOINT + "/ping", function(data) {
             });
         }, 300000); // every 5 minutes (300000)
     }
@@ -193,6 +193,9 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
         onBroadcastCloseClick() {
             this.setState({showBroadcast: false});
         },
+        logout() {
+            this.onReconnectClick();
+        },
         render() {
             var content;
             var dimFilter;
@@ -210,8 +213,13 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                     break;
                 /** ^^^ Deprecated. Original Join Game page. ^^^ */
                 case PAGE_LOAD:
+                    var res = [];
+                    CardUtils.getAllCardResources().forEach((val) => {
+                        res.push(RESOURCE_DIR + "cards/" + val[0] + ".png");
+                        res.push(RESOURCE_DIR + "cards/" + val[1] + ".png");
+                    });
                     content = (
-                        <ResourceLoader key={PAGE_LOAD} onLoaded={this.onResourceLoaded}/>
+                        <ResourceLoader key={PAGE_LOAD} onLoaded={this.onResourceLoaded} res={res}/>
                     );
                     break;
                 case PAGE_IN_ROOM:
@@ -229,11 +237,20 @@ require(['app/consts', 'jquery', 'React', 'libs/socket.io', 'app/game_room', 'li
                         socket={this.props.socket} 
                         playerInfo={this.state.playerInfo}
                         onNewGame={this.onNewGame}
-                        onJoinGame={this.onJoinGame}/>);
+                        onJoinGame={this.onJoinGame}
+                        onLogoutHandler={this.logout}/>);
                     break;
             }
 
-            if (this.state.isDisconnected) {
+            if (this.state.isConnecting) {
+                dimFilter = (
+                    <div className="dim-filter">
+                        <div className="message-box">
+                            <p>Connecting...</p>
+                        </div>
+                    </div>
+                );
+            } else if (this.state.isDisconnected) {
                 dimFilter = (
                     <div className="dim-filter">
                         <div className="message-box">

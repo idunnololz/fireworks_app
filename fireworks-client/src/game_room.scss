@@ -202,6 +202,26 @@
         }
     }
 
+    .special-text-container-fast {
+        @extend .special-text-container;
+        @include animation(fade-in-out 0.8s);
+
+        div {
+            font-family: $theme-condensed-style;
+            font-size: 5vh;
+            color: #fff;
+        }
+
+        div.right {
+            opacity: 0;
+            @include animation(special-text-animation-r 0.8s ease-in);
+        }
+        div.left {
+            opacity: 0;
+            @include animation(special-text-animation-l 0.8s ease-in);
+        }   
+    }
+
     .dialog-container {
         position: fixed;
         top: 50%;
@@ -445,6 +465,8 @@
         @include box-shadow(0px, 0px, 32px, rgba(0,0,0,0.5));
 
         min-width: 40vw;
+
+        max-width: 800px;
 
         .nano > .nano-pane > .nano-slider {
             background: #444;

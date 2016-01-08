@@ -1,7 +1,9 @@
-define(['jquery', 'React', 'app/log'], function ($, React, Log) {
+define(['jquery', 'React', 'app/log', 'app/prefs'], function ($, React, Log, Prefs) {
     var ReactTransitionGroup = React.addons.CSSTransitionGroup;
 
     const TAG = "Player";
+
+    const KEY_REALISTIC_CARD_ORDER = "b$realistic_card_order";
 
     const HINT_COLOR = 1;
     const HINT_NUMBER = 2;
@@ -22,6 +24,8 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
 
                 hinted: {}, // hinted is a mapping from cardId to what is known about the card: {123:{color:3,number:undefined}}
                 showHinted: true,
+                realOrder: Prefs.get(KEY_REALISTIC_CARD_ORDER, false),
+                animationCoeff: parseFloat(Prefs.get(Prefs.KEY_ANIMATION_SPEED, 1)),
             };
         },
         componentWillMount:function() {
@@ -214,11 +218,11 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                 showSpecialText: true,
                 hinted: hinted
             });
-            this.props.manager.wait(5000);
+            this.props.manager.wait(5000 * this.state.animationCoeff);
 
             setTimeout(function()  {
                 this.setState({hintedCards: [], activeHint: undefined, showSpecialText: false});
-            }.bind(this), 5000);
+            }.bind(this), 5000 * this.state.animationCoeff);
         },
         animatePlay:function(gameEvent) {
             var manager = this.props.manager;
@@ -228,7 +232,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             if (gameEvent.playable) {
                 manager.wait(900);
             } else {
-                manager.wait(3900);
+                manager.wait(1200 * this.state.animationCoeff + 2700);
             }
 
             manager.preloadResource(manager.getCardRes(cardPlayed), function()  {
@@ -286,7 +290,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     TweenMax.lagSmoothing(0);
                     TweenLite.set($card, {css:{zIndex:1}});
                     TweenLite.to($gsap, 0.3, {x: deltaX, y: deltaY, scale: scale});
-                    TweenMax.to($noSign, 0.3, {delay: 0.3, yoyo:true, repeat:4, autoAlpha: 1, onComplete: function()  {
+                    TweenMax.to($noSign, 0.3 * this.state.animationCoeff, {delay: 0.3, yoyo:true, repeat:4, autoAlpha: 1, onComplete: function()  {
                         // trigger a lives update...
                         manager.setLives(gameEvent.lives);
 
@@ -337,7 +341,7 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
             var hand = this.props.playerInfo.hand;
             var cardDisc = gameEvent.discarded;
 
-            manager.wait(2600);
+            manager.wait(2600 * this.state.animationCoeff);
             
             manager.preloadResource(manager.getCardRes(cardDisc), function()  {
                 setTimeout(function()  {
@@ -377,7 +381,9 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                     var stepScale = finalScale / 5;
                     TweenLite.to($card, 40, {x: finalX, y: finalY, scale: stepScale, delay: 0.3});
                     TweenMax.to($delete, 0.3, {delay: 0.4, yoyo:true, repeat:5, autoAlpha: 0.9});
-                    TweenLite.to($card, 0.3, {x: finalX, y: finalY, scale: finalScale, delay: 2.3, autoAlpha: 0, onComplete: function()  {
+                    TweenLite.to($card, 0.3, {x: finalX, y: finalY, scale: finalScale, 
+                        delay: 2.3 * this.state.animationCoeff, autoAlpha: 0, onComplete: function()  {
+                        
                         var newHand = this.props.playerInfo.hand.filter(function(x)  { return x.cardId !== cardDisc.cardId});
                         newHand.push(gameEvent.draw);
                         this.animateDraw(idx, newHand, function()  {
@@ -531,6 +537,10 @@ define(['jquery', 'React', 'app/log'], function ($, React, Log) {
                         )
                     );
                 }.bind(this));
+
+                if (this.state.realOrder) {
+                    cardViews.reverse();
+                }
             }
 
             var titleClass = isMyTurn ? " turn-indicator" : "";
