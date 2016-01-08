@@ -176,13 +176,14 @@ io.on('connection', function(socket) {
     });
 
     socket.on('setName', (msg) => {
-        if (names.has(msg.preferredName)) {
+        var guestName = '~' + msg.preferredName;
+        if (names.has(guestName)) {
             // someone with this name already connected... reject...
             socket.emit('setName', false);
             return;
         }
-        names.add(msg.preferredName);
-        player.setName(msg.preferredName);
+        names.add(guestName);
+        player.setName(guestName);
         socket.emit('setName', true);
     });
 
